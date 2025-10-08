@@ -1,31 +1,31 @@
-// En: src/pages/Home.js
-
 import React, { useEffect, useState } from 'react';
 import { View, Text, Button, StyleSheet, ActivityIndicator } from 'react-native';
 import { TaskContextProvider } from '../context/TaskContext';
 import TaskForm from '../components/TaskForm';
 import TaskList from '../components/TaskList';
+import { signOut } from '../services/authService';
 import { supabase } from '../supabase/client';
 
 function Home() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-
+    
     useEffect(() => {
-        async function getUserData() {
+        const fetchUser = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             setUser(user);
             setLoading(false);
-        }
-        getUserData();
+        };
+        fetchUser();
     }, []);
 
     const handleLogout = async () => {
-        await supabase.auth.signOut();
+        await signOut();
+        // No se navega aquí. App.js se encarga de todo.
     };
-
+    
     if (loading || !user) {
-        return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#2575fc" /></View>
+        return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#2575fc" /></View>;
     }
 
     return (
