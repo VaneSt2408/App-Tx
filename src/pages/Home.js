@@ -1,30 +1,31 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Button, StyleSheet, ActivityIndicator } from 'react-native';
-import { TaskContextProvider } from '../context/TaskContext';
-import TaskForm from '../components/TaskForm';
-import TaskList from '../components/TaskList';
-import { signOut } from '../services/authService';
-import { supabase } from '../supabase/client';
+import React, { useEffect, useState } from 'react'; // En: src/pages/Home.js
+import { View, Text, Button, StyleSheet, ActivityIndicator } from 'react-native'; // En: src/pages/Home.js
+import { TaskContextProvider } from '../context/TaskContext'; // En: src/pages/Home.js
+import TaskForm from '../components/TaskForm'; // En: src/pages/Home.js
+import TaskList from '../components/TaskList'; // En: src/pages/Home.js
+import { signOut } from '../services/authService'; // En: src/pages/Home.js
+import { supabase } from '../supabase/client'; // En: src/pages/Home.js
 
 function Home() {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState(null); // En: src/pages/Home.js
+    const [loading, setLoading] = useState(true); // En: src/pages/Home.js
+    // useEffect ahora solo obtiene los datos del usuario para mostrarlos
     
-    useEffect(() => {
-        const fetchUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            setUser(user);
-            setLoading(false);
+    useEffect(() => { // Similar al de ClientPage.js pero sin lógica de tareas
+        const fetchUser = async () => { // Función para obtener los datos del usuario
+            const { data: { user } } = await supabase.auth.getUser(); // Obtiene el usuario actual
+            setUser(user); // Actualiza el estado del usuario
+            setLoading(false); // Actualiza el estado de carga
         };
-        fetchUser();
+        fetchUser(); // Llama a la función para obtener los datos del usuario
     }, []);
 
-    const handleLogout = async () => {
-        await signOut();
+    const handleLogout = async () => { // Función para manejar el cierre de sesión
+        await signOut(); // Llama a la función signOut
         // No se navega aquí. App.js se encarga de todo.
     };
     
-    if (loading || !user) {
+    if (loading || !user) { // Muestra un indicador de carga mientras se obtienen los datos del usuario
         return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#2575fc" /></View>;
     }
 

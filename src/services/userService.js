@@ -12,12 +12,6 @@ export const registrarNuevoArtesano = async (datosArtesano) => {
   return data;
 };
 
-
-
-
-
-
-
 //Ver lista de artesanos
 export const getArtesanos = async () => {
 //Obtener el usuario autenticado

@@ -1,26 +1,29 @@
 // En: src/pages/login.js
-import React, { useState } from 'react';
-import { View, TextInput, Button, Text, Alert, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { signInWithPassword, signInWithGoogle } from '../services/authService';
+import React, { useState } from 'react'; // Importa UseState desde React para manejar el estado
+import { View, TextInput, Button, Text, Alert, StyleSheet } from 'react-native'; // Importa componentes necesarios de React Native
+import { LinearGradient } from 'expo-linear-gradient'; // Importa LinearGradient para el fondo degradado
+import { signInWithPassword, signInWithGoogle } from '../services/authService'; // Importa funciones de autenticación desde el servicio 
 
-export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+export default function Login() { 
+  const [email, setEmail] = useState(''); // Estado para el correo electronico
+  const [password, setPassword] = useState(''); // Estado para la contraseña
 
+  // Funcion para manejar el inicio de sesión con Google
   const handleGoogleLogin = async () => {
-    await signInWithGoogle();
+    await signInWithGoogle(); // Llama al servicio de autenticación
+    //La redirección se maneja en App.js 
   };
 
+  // Función para manejar el inicio de sesión con correo y contraseña
   const handleLogin = async () => {
-    const { error } = await signInWithPassword(email, password);
+    const { error } = await signInWithPassword(email, password); // Llama al servicio de autencación
     if (error) {
-      Alert.alert('Error', 'Credenciales incorrectas');
+      Alert.alert('Error', 'Credenciales incorrectas'); // Muestra una alerta si hay un error (Credenciales incorrectas o campos incompletos)
     }
   };
 
   return (
-    <LinearGradient colors={["#6a11cb", "#2575fc"]} style={styles.gradient}>
+    <LinearGradient colors={["#6a11cb", "#2575fc"]} style={styles.gradient}> 
       <View style={styles.card}>
         <Text style={styles.title}>Iniciar Sesión</Text>
         <TextInput style={styles.input} placeholder="Correo electrónico" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" placeholderTextColor="#888" />
@@ -42,4 +45,4 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: 'bold', marginBottom: 24, color: '#2575fc', textAlign: 'center' },
   input: { width: '100%', borderWidth: 1, borderColor: '#2575fc', padding: 12, marginBottom: 16, borderRadius: 8, fontSize: 16, backgroundColor: '#f5f6fa', color: '#333' },
   buttonContainer: { width: '100%', marginTop: 8, borderRadius: 8, overflow: 'hidden' },
-});
+}); 

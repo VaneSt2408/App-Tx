@@ -1,31 +1,31 @@
 // En: src/pages/ArtPage.js
 
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { signOut } from '../services/authService';
-import { supabase } from '../supabase/client';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import React, { useEffect, useState } from 'react'; // Similar a ClientPage.js
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native'; // Similar a ClientPage.js
+import { signOut } from '../services/authService'; // Similar a ClientPage.js
+import { supabase } from '../supabase/client'; // Similar a ClientPage.js
+import { MaterialCommunityIcons } from '@expo/vector-icons'; // Similar a ClientPage.js
 
 function ArtPage() {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState(null); // Estado para almacenar los datos del usuario
+    const [loading, setLoading] = useState(true); // Estado para manejar la carga
 
     // useEffect ahora solo obtiene los datos del usuario para mostrarlos
     useEffect(() => {
-        const fetchUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            setUser(user);
-            setLoading(false);
+        const fetchUser = async () => { // Función para obtener los datos del usuario
+            const { data: { user } } = await supabase.auth.getUser(); // Obtiene el usuario actual
+            setUser(user); // Actualiza el estado del usuario
+            setLoading(false); // Actualiza el estado de carga
         };
-        fetchUser();
+        fetchUser(); // Llama a la función para obtener los datos del usuario
     }, []);
 
-    const handleLogout = async () => {
-        await signOut();
+    const handleLogout = async () => { // Función para manejar el cierre de sesión
+        await signOut(); // Llama a la función signOut
         // App.js se encarga de la redirección
     };
 
-    if (loading || !user) {
+    if (loading || !user) { // Muestra un indicador de carga mientras se obtienen los datos del usuario
         return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#2575fc" /></View>;
     }
 

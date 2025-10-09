@@ -1,30 +1,31 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { signOut } from '../services/authService';
-import { supabase } from '../supabase/client';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import React, { useEffect, useState } from 'react'; // En: src/pages/PageAdmin.js
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native'; // Asegúrate de importar TouchableOpacity
+import { useNavigation } from '@react-navigation/native'; // Importa useNavigation para la navegación
+import { signOut } from '../services/authService'; // Importa la función signOut desde tu servicio de autenticación
+import { supabase } from '../supabase/client'; // Importa el cliente de SupaBase
+import { MaterialCommunityIcons } from '@expo/vector-icons'; // Importa los íconos de MaterialCommunityIcons
 
-function PageAdmin() {
-    const navigation = useNavigation();
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+function PageAdmin() { // Asegúrate de que el nombre del componente coincida con el del archivo
+    const navigation = useNavigation(); // Hook para la navegación
+    const [user, setUser] = useState(null); // Estado para almacenar los datos del usuario
+    const [loading, setLoading] = useState(true); // Estado para manejar la carga
 
-    useEffect(() => {
-        const fetchUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            setUser(user);
-            setLoading(false);
+    // useEffect ahora solo obtiene los datos del usuario para mostrarlos
+    useEffect(() => { // Similar al de Home.js pero sin lógica de tareas
+        const fetchUser = async () => { // Función para obtener los datos del usuario
+            const { data: { user } } = await supabase.auth.getUser(); // Obtiene el usuario actual
+            setUser(user); // Actualiza el estado del usuario
+            setLoading(false); // Actualiza el estado de carga
         };
-        fetchUser();
+        fetchUser(); // Llama a la función para obtener los datos del usuario
     }, []);
 
-    const handleLogout = async () => {
-        await signOut();
+    const handleLogout = async () => { // Función para manejar el cierre de sesión
+        await signOut(); // Llama a la función signOut
         // No se navega aquí. App.js se encarga de todo.
     };
 
-    if (loading || !user) {
+    if (loading || !user) { // Muestra un indicador de carga mientras se obtienen los datos del usuario
         return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#2575fc" /></View>;
     }
 
@@ -40,6 +41,23 @@ function PageAdmin() {
             <TouchableOpacity style={styles.botonPersonalizado} onPress={() => navigation.navigate('RegisterArtesano')}>
                 <Text style={styles.textoDelBoton}>Registrar Nuevo Artesano</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity style={styles.botonPersonalizado2} onPress={() => navigation.navigate('RegisterArtesano')}>
+            <Text style={styles.textoDelBoton}>Lista de artesanos</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.botonPersonalizado3} onPress={() => navigation.navigate('RegisterArtesano')}>
+            <Text style={styles.textoDelBoton}>Estadisticas</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.botonPersonalizado4} onPress={() => navigation.navigate('RegisterArtesano')}>
+            <Text style={styles.textoDelBoton}>Modificar/Eliminar</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.botonPersonalizado5} onPress={() => navigation.navigate('RegisterArtesano')}>
+            <Text style={styles.textoDelBoton}>Configuracion general</Text>
+            </TouchableOpacity>
+
         </View>
     );
 }
@@ -102,6 +120,87 @@ const styles = StyleSheet.create({
     borderRadius: 8,           // Bordes redondeados
     borderWidth: 2,            // Ancho del borde
     borderColor: '#177eaaff',    // Color del borde
+    top: 10, 
+
+    // Para centrar el texto (opcional)
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Estilos para el texto dentro del botón
+  textoDelBoton: {
+    color: 'white',            // Color del texto
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  
+    botonPersonalizado2: {
+    backgroundColor: '#8a17aaff', // Color de fondo
+    paddingVertical: 10,       // Relleno vertical
+    paddingHorizontal: 20,   // Relleno horizontal
+    borderRadius: 8,           // Bordes redondeados
+    borderWidth: 2,            // Ancho del borde
+    borderColor: '#8a17aaff',    // Color del borde
+    top: 20,
+
+    // Para centrar el texto (opcional)
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Estilos para el texto dentro del botón
+  textoDelBoton: {
+    color: 'white',            // Color del texto
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+
+    botonPersonalizado3: {
+    backgroundColor: '#8a17aaff', // Color de fondo
+    paddingVertical: 10,       // Relleno vertical
+    paddingHorizontal: 20,   // Relleno horizontal
+    borderRadius: 8,           // Bordes redondeados
+    borderWidth: 2,            // Ancho del borde
+    borderColor: '#8a17aaff',    // Color del borde
+    top: 30,
+
+    // Para centrar el texto (opcional)
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Estilos para el texto dentro del botón
+  textoDelBoton: {
+    color: 'white',            // Color del texto
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+    
+    botonPersonalizado4: {
+    backgroundColor: '#8a17aaff', // Color de fondo
+    paddingVertical: 10,       // Relleno vertical
+    paddingHorizontal: 20,   // Relleno horizontal
+    borderRadius: 8,           // Bordes redondeados
+    borderWidth: 2,            // Ancho del borde
+    borderColor: '#8a17aaff',    // Color del borde
+    top: 40,
+
+    // Para centrar el texto (opcional)
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Estilos para el texto dentro del botón
+  textoDelBoton: {
+    color: 'white',            // Color del texto
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+
+    botonPersonalizado5: {
+    backgroundColor: '#8a17aaff', // Color de fondo
+    paddingVertical: 10,       // Relleno vertical
+    paddingHorizontal: 20,   // Relleno horizontal
+    borderRadius: 8,           // Bordes redondeados
+    borderWidth: 2,            // Ancho del borde
+    borderColor: '#8a17aaff',    // Color del borde
+    top: 50,
 
     // Para centrar el texto (opcional)
     alignItems: 'center',
@@ -113,6 +212,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   }
+
+
 });
 
 export default PageAdmin
