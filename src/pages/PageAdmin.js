@@ -38,7 +38,7 @@ function PageAdmin() { // Asegúrate de que el nombre del componente coincida co
                 </TouchableOpacity>
             </View>
             <Text style={styles.title}>Modo: Administrador</Text>
-            <TouchableOpacity style={styles.botonPersonalizado} onPress={() => navigation.navigate('RegisterArtesano')}>
+            <TouchableOpacity style={styles.botonPersonalizado} onPress={() => navigation.navigate('MagicLink')}>
                 <Text style={styles.textoDelBoton}>Registrar Nuevo Artesano</Text>
             </TouchableOpacity>
 

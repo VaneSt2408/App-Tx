@@ -1,4 +1,5 @@
-//Frontend
+// En: src/pages/RegisterArtesano.js
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   TextInput, 
@@ -6,264 +7,128 @@ import {
   Alert, 
   StyleSheet, 
   TouchableOpacity, 
-  Text 
-} from 'react-native'; // Importa los componentes necesarios de React Native
-import { registrarNuevoArtesano } from '../services/userService'; // Importa la función para registrar un nuevo artesano
-import React, { useState, useEffect } from 'react'; // Importa React y useState, useEffect para manejar el estado y efectos secundarios
-import { MaterialCommunityIcons } from '@expo/vector-icons'; // Importa los íconos de MaterialCommunityIcons
+  Text, 
+  ScrollView, 
+  ActivityIndicator 
+} from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { supabase } from '../supabase/client';
+import { completeArtesanoRegistration } from '../services/userService';
+import { signOut } from '../services/authService'; // En: src/pages/Home.js
+export default function RegisterArtesano() {
+  // Estados principales
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-export default function RegisterArtesano() { // Componente principal para registrar un nuevo artesano
-  const [email, setEmail] = useState(''); // Estado para el correo electrónico
-  const [password, setPassword] = useState(''); // Importa React y useState, useEffect para manejar el estado y efectos secundarios
-  const [nombre, setNombre] = useState(''); // Estado para el nombre del artesano
-  const [ubicacion, setUbicacion] = useState(''); // Estado para la ubicación del artesano
-  const [categoria, setCategoria] = useState(''); // Estado para la categoría del artesano
-  const [curp, setCurp] = useState(''); // Estado para el CURP del artesano
-  const [telefono, setTelefono] = useState(''); // Estado para el teléfono del artesano
-  const [numero_ine, setNumero_Ine] = useState(''); // Estado para el número de INE del artesano
-  const [folio, setFolio] = useState(''); // Estado para el folio del artesano
-  const [isEmailValid, setIsEmailValid] = useState(true); // Estado para validar el formato del email
-  const [confirmEmail, setConfirmEmail] = useState(''); // Estado para confirmar el correo electrónico
-  const [emailError, setEmailError] = useState(''); // Estado para el mensaje de error del correo electrónico
+  // Estados del formulario
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [nombre, setNombre] = useState('');
+  const [ubicacion, setUbicacion] = useState('');
+  const [categoria, setCategoria] = useState('');
+  const [curp, setCurp] = useState('');
+  const [telefono, setTelefono] = useState('');
+  const [numero_ine, setNumero_Ine] = useState('');
+  const [folio, setFolio] = useState('');
 
-  // Validar que los correos coincidan
-useEffect(() => { // Se ejecuta cada vez que email o confirmEmail cambian
-  if (confirmEmail.length > 0 && email !== confirmEmail) { // Si los correos no coinciden
-    setEmailError('Los correos electrónicos no coinciden.'); // Muestra un mensaje de error
-  } else {
-    setEmailError(''); // Limpia el mensaje de error si coinciden
-  }
-}, [email, confirmEmail]); // Se ejecuta cada vez que email o confirmEmail cambian
 
-// Validar formato del correo electrónico
-  const validateEmail = (text) => { // Función para validar el formato del correo electrónico
-    // Expresión regular simple para validar el formato del email
-    const regex = /\S+@\S+\.\S+/; // Patrón básico para un email válido
-    if (regex.test(text)) { // Si el formato es válido
-      setIsEmailValid(true); // Actualiza el estado a válido
-    } else {
-      setIsEmailValid(false); // Actualiza el estado a inválido
-    }
-    setEmail(text); // Actualiza el estado del correo electrónico con el texto ingresado
+  const handleLogout = async () => { // Función para manejar el cierre de sesión
+          await signOut(); // Llama a la función signOut
+          // No se navega aquí. App.js se encarga de todo.
+      };
+
+  // Obtener usuario autenticado al cargar
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) setUser(user);
+      setLoading(false);
+    };
+    fetchUser();
+  }, []);
+
+  // Función para generar folio automático
+  const generarFolio = () => {
+    const nuevoFolio = 'FOL-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+    setFolio(nuevoFolio);
   };
 
-  //Generar folio automático
-  const generarFolio = () => { // Función para generar el folio automáticamente
-  if (!nombre.trim() || !curp.trim()) { // Verifica que nombre y CURP no estén vacíos
-    Alert.alert('Datos insuficientes', 'Por favor, introduce el nombre y el CURP primero.'); // Muestra una alerta si faltan datos
-    return; // Detiene la ejecución si faltan datos
-  }
+  const handleRegister = async () => {
+    console.log("[handleRegister] --- Iniciando proceso de registro ---");
 
-  const iniciales = nombre //.trim() // Elimina espacios en blanco al inicio y al final
-    .split(' ') // Divide el nombre en palabras
-    .map(palabra => palabra[0]) // Toma la primera letra de cada palabra
-    .join(''); // Une las letras para formar las iniciales
-
-  const curpSlice = curp.substring(0, 5); // Toma los primeros 5 caracteres del CURP
-
-  const folioGenerado = `${iniciales}${curpSlice}`.toUpperCase(); // Combina las iniciales y el CURP, y convierte a mayúsculas
-  setFolio(folioGenerado); // Actualiza el estado del folio con el valor generado
-};
-
-  
-  //Registra los datos agregados en el formulario
-  const handleRegister = async () => { // Función para manejar el registro del artesano
-    if (!email || !password || !nombre || !curp || !numero_ine || !ubicacion || !categoria || !telefono || !folio) { // Verifica que todos los campos obligatorios estén llenos
-      Alert.alert('Error', 'Por favor, completa los campos obligatorios.'); // Muestra una alerta si faltan campos
-      return; // Detiene el proceso si faltan campos
+    if (!user) {
+        console.error("[handleRegister] ❌ ERROR: El objeto 'user' es nulo.");
+        return Alert.alert('Error', 'No se ha podido identificar al usuario.');
     }
-    if (email !== confirmEmail) { // Verifica que los correos coincidan
-    Alert.alert('Error', 'Los correos electrónicos no coinciden.'); // Muestra una alerta si no coinciden
-    return; // Detiene el proceso si no coinciden
-  }
+    console.log("[handleRegister] ✅ 1. Usuario identificado:", { id: user.id, email: user.email });
+
+    if (password !== confirmPassword) {
+        return Alert.alert('Error', 'Las contraseñas no coinciden.');
+    }
+    if (password.length < 8) {
+        return Alert.alert('Error', 'La contraseña debe tener al menos 8 caracteres.');
+    }
+    if (!nombre || !telefono) {
+        return Alert.alert('Error', 'El nombre y teléfono son obligatorios.');
+    }
+    console.log("[handleRegister] ✅ 2. Validaciones básicas superadas.");
 
     try {
-      const datos = {
-        email,
-        password,
-        nombre,
-        ubicacion,
-        categoria,
-        curp,
-        telefono,
-        numero_ine,
-        folio
-      }; // Crea un objeto con los datos del formulario
-
-      console.log("DATOS ENVIADOS DESDE EL FRONTEND:", datos); // Muestra los datos en la consola para depuración
-      const result = await registrarNuevoArtesano(datos); // Llama a la función para registrar el nuevo artesano
-      Alert.alert('Éxito', result.message); // Muestra el mensaje de éxito de la Edge Function
-
-      // Limpiar el formulario
-      setEmail('');
-      setPassword('');
-      setNombre('');
-      setUbicacion('');
-      setCategoria('');
-      setCurp('');
-      setTelefono('');
-      setNumero_Ine('');
-      setFolio('');
+        const registrationData = { password, nombre, telefono, ubicacion, categoria, curp, numero_ine, folio };
+        console.log("[handleRegister] ➡️ 3. Enviando datos al servicio:", registrationData);
+        
+        await completeArtesanoRegistration(user, registrationData);
+        console.log("[handleRegister] ✅ 4. El servicio se ejecutó con éxito.");
+        
+        Alert.alert('¡Registro Completo!', 'Tu cuenta ha sido creada. Por favor, inicia sesión.');
+        
+        console.log("[handleRegister] 🚪 5. Cerrando sesión.");
+        await supabase.auth.signOut();
 
     } catch (error) {
-      Alert.alert('Error', error.message); // Muestra una alerta si ocurre un error
-       console.error("OBJETO DE ERROR COMPLETO:", JSON.stringify(error, null, 2)); // Muestra el objeto de error completo en la consola para depuración
+        console.error("[handleRegister] ❌ ERROR ATRAPADO EN CATCH:", error);
+        Alert.alert('Error en el Registro', error.message);
     }
   };
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.container}>
-      <TextInput
-        style={styles.input}
-        placeholder="Nombre del artesano"
-        value={nombre}
-        onChangeText={setNombre}
-      />
-
-        <TextInput
-        style={[styles.input, !isEmailValid && styles.inputError]}
-        placeholder="Correo electrónico"
-        value={email}
-        onChangeText={validateEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      {!isEmailValid && <Text style={styles.errorText}>Formato de correo incorrecto.</Text>}
-
-      <TextInput
-        style={styles.input}
-        placeholder="Confirmar correo electrónico"
-        value={confirmEmail}
-        onChangeText={setConfirmEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        />
-        {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
-
-      <TextInput
-        style={styles.input}
-        placeholder="Contraseña temporal"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-
-        <TextInput
-        style={styles.input}
-        placeholder="Categoría"
-        value={categoria}
-        onChangeText={setCategoria}
-        secureTextEntry
-      />
-
-        <TextInput
-        style={styles.input}
-        placeholder="Ubicación"
-        value={ubicacion}
-        onChangeText={setUbicacion}
-        secureTextEntry
-      />
-
-        <TextInput
-        style={styles.input}
-        placeholder="CURP"
-        value={curp}
-        onChangeText={setCurp}
-        secureTextEntry
-      />
-
-        <TextInput
-        style={styles.input}
-        placeholder="Número de télefono"
-        value={telefono}
-        onChangeText={setTelefono}
-        secureTextEntry
-      />
-
-        <TextInput
-        style={styles.input}
-        placeholder="Número de Identificación (INE)"
-        value={numero_ine}
-        onChangeText={setNumero_Ine}
-        secureTextEntry
-      />
-
-        <View style={styles.folioContainer}>
-            <TextInput
-            style={styles.folioInput}
-            placeholder="Folio"
-            value={folio}
-            onChangeText={setFolio}
-            />
-            <TouchableOpacity style={styles.generateButton} onPress={generarFolio}>
-            <MaterialCommunityIcons name="auto-fix" size={24} color="#2575fc" />
-            </TouchableOpacity>
-        </View>
-      
-      <TouchableOpacity style={styles.botonPersonalizado} onPress={handleRegister}></TouchableOpacity>
-      <Button title="Registrar Artesano" onPress={handleRegister} />
-    </View>
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>Completa tu Registro</Text>
+      <Button title="Cerrar Sesión" onPress={handleLogout} color="#db4437" />
+      <TextInput style={[styles.input, styles.disabledInput]} value={user?.email} editable={false} />
+      <TextInput style={styles.input} placeholder="Nombre completo" value={nombre} onChangeText={setNombre} />
+      <TextInput style={styles.input} placeholder="Número de teléfono" value={telefono} onChangeText={setTelefono} keyboardType="phone-pad" />
+      <TextInput style={styles.input} placeholder="Crea una contraseña" value={password} onChangeText={setPassword} secureTextEntry />
+      <TextInput style={styles.input} placeholder="Confirma tu contraseña" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry />
+      <TextInput style={styles.input} placeholder="Categoría" value={categoria} onChangeText={setCategoria} />
+      <TextInput style={styles.input} placeholder="Ubicación" value={ubicacion} onChangeText={setUbicacion} />
+      <TextInput style={styles.input} placeholder="CURP" value={curp} onChangeText={setCurp} />
+      <TextInput style={styles.input} placeholder="Número de Identificación (INE)" value={numero_ine} onChangeText={setNumero_Ine} />
+      <View style={styles.folioContainer}>
+        <TextInput style={[styles.input, { flex: 1, marginBottom: 0 }]} placeholder="Folio" value={folio} onChangeText={setFolio} />
+        <TouchableOpacity style={styles.generateButton} onPress={generarFolio}>
+          <MaterialCommunityIcons name="auto-fix" size={28} color="#2575fc" />
+        </TouchableOpacity>
+      </View>
+      <Button title="Finalizar Registro" onPress={handleRegister}/>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    marginBottom: 15,
-    borderRadius: 5,
-  },
-    botonPersonalizado: {
-    backgroundColor: '#177eaaff', 
-    paddingVertical: 10,       
-    paddingHorizontal: 20,   
-    borderRadius: 8,           
-    borderWidth: 2,            
-    borderColor: '#177eaaff',    
-
-    
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  
-  textoDelBoton: {
-    color: 'white',            
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-    inputError: {
-    borderColor: 'red', 
-  },
-  errorText: {
-    color: 'red',
-    marginBottom: -10,
-  },
-   input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    marginBottom: 15,
-    borderRadius: 5,
-  },
-  folioContainer: {
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    marginBottom: 15,
-  },
-  folioInput: {
-    flex: 1, 
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    borderRadius: 5,
-  },
-  generateButton: {
-    padding: 8, 
-    marginLeft: 8,
-  }
+  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  title: { fontSize: 22, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
+  input: { borderWidth: 1, borderColor: '#ccc', padding: 12, marginBottom: 15, borderRadius: 8 },
+  disabledInput: { backgroundColor: '#f0f0f0', color: '#888' },
+  folioContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 15 },
+  generateButton: { marginLeft: 10 },
 });

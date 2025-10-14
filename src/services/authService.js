@@ -11,35 +11,30 @@ export const signInWithPassword = async (email, password) => { // Recibe email y
 };
 
 //Iniciar sesión con Google
-export const signInWithGoogle = async () => { // No recibe parámetros
+export const signInWithGoogle = async () => {
   try {
-    const redirectTo = makeRedirectUri({ native: 'mitaskapp://' }); // Crea la URI de redirección para la aplicación nativa
+    const redirectTo = makeRedirectUri(); // No necesita 'native' para Expo Go
 
-    const { data, error } = await supabase.auth.signInWithOAuth({ // Llama al método de SupaBase para iniciar sesión con OAuth
-      provider: 'google', // Especifica Google como proveedor
-      options: { // Opciones adicionales
-        redirectTo, // Usa la URI de redirección creada
-        queryParams: { // Parámetros de consulta adicionales
-          access_type: 'offline', // Solicita acceso offline para obtener un refresh token
-          prompt: 'consent', // Solicita el consentimiento del usuario en cada inicio de sesión
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { 
+        redirectTo,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
         },
       }
     });
 
-    if (error) throw new Error(error.message); // Si hay un error, lanza una excepción
-    // Abre la sesión de autenticación en el navegador
-    // En React Native, esto abrirá el navegador del dispositivo
-    // Asegúrate de que la URL de redirección esté configurada correctamente en la consola de Google y en SupaBase
-    // La redirección de vuelta a la app se maneja automáticamente por Expo
+    if (error) throw new Error(error.message);
 
-    if (data?.url) { // Si hay una URL en los datos, abre la sesión de autenticación
-      await WebBrowser.openAuthSessionAsync(data.url); // Abre la URL en el navegador
+    if (data?.url) {
+      await WebBrowser.openAuthSessionAsync(data.url);
     }
   } catch (e) {
-    Alert.alert('Error', 'Ocurrió un error inesperado con Google: ' + e.message); // Muestra una alerta si ocurre un error
+    Alert.alert('Error', 'Ocurrió un error con Google: ' + e.message);
   }
 };
-
 
 //Cerrar sesión
 export const signOut = async () => { // No recibe parámetros
