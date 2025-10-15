@@ -1,26 +1,21 @@
 // En: src/pages/RegisterArtesano.js
 import React, { useState, useEffect } from 'react';
 import { 
-  View, 
-  TextInput, 
-  Button, 
-  Alert, 
-  StyleSheet, 
-  TouchableOpacity, 
-  Text, 
-  ScrollView, 
-  ActivityIndicator 
+  View, TextInput, Button, Alert, StyleSheet, TouchableOpacity, Text, 
+  ScrollView, ActivityIndicator 
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../supabase/client';
 import { completeArtesanoRegistration } from '../services/userService';
-import { signOut } from '../services/authService'; // En: src/pages/Home.js
-export default function RegisterArtesano() {
-  // Estados principales
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
 
-  // Estados del formulario
+export default function RegisterArtesano() {
+  const navigation = useNavigation();
+
+  const [user, setUser] = useState(null);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [registerLoading, setRegisterLoading] = useState(false);
+
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [nombre, setNombre] = useState('');
@@ -31,70 +26,70 @@ export default function RegisterArtesano() {
   const [numero_ine, setNumero_Ine] = useState('');
   const [folio, setFolio] = useState('');
 
-
-  const handleLogout = async () => { // Función para manejar el cierre de sesión
-          await signOut(); // Llama a la función signOut
-          // No se navega aquí. App.js se encarga de todo.
-      };
-
-  // Obtener usuario autenticado al cargar
   useEffect(() => {
     const fetchUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) setUser(user);
-      setLoading(false);
+      setInitialLoading(false);
     };
     fetchUser();
   }, []);
 
-  // Función para generar folio automático
   const generarFolio = () => {
     const nuevoFolio = 'FOL-' + Math.random().toString(36).substring(2, 8).toUpperCase();
     setFolio(nuevoFolio);
   };
 
   const handleRegister = async () => {
-    console.log("[handleRegister] --- Iniciando proceso de registro ---");
-
-    if (!user) {
-        console.error("[handleRegister] ❌ ERROR: El objeto 'user' es nulo.");
-        return Alert.alert('Error', 'No se ha podido identificar al usuario.');
+    if (registerLoading) return;
+    if (password !== confirmPassword) return Alert.alert('Error', 'Las contraseñas no coinciden.');
+    if (!nombre || !telefono || !password || !categoria || !ubicacion || !curp || !numero_ine || !folio) {
+      return Alert.alert('Error', 'Por favor completa todos los campos obligatorios.');
     }
-    console.log("[handleRegister] ✅ 1. Usuario identificado:", { id: user.id, email: user.email });
-
-    if (password !== confirmPassword) {
-        return Alert.alert('Error', 'Las contraseñas no coinciden.');
-    }
-    if (password.length < 8) {
-        return Alert.alert('Error', 'La contraseña debe tener al menos 8 caracteres.');
-    }
-    if (!nombre || !telefono) {
-        return Alert.alert('Error', 'El nombre y teléfono son obligatorios.');
-    }
-    console.log("[handleRegister] ✅ 2. Validaciones básicas superadas.");
 
     try {
-        const registrationData = { password, nombre, telefono, ubicacion, categoria, curp, numero_ine, folio };
-        console.log("[handleRegister] ➡️ 3. Enviando datos al servicio:", registrationData);
-        
-        await completeArtesanoRegistration(user, registrationData);
-        console.log("[handleRegister] ✅ 4. El servicio se ejecutó con éxito.");
-        
-        Alert.alert('¡Registro Completo!', 'Tu cuenta ha sido creada. Por favor, inicia sesión.');
-        
-        console.log("[handleRegister] 🚪 5. Cerrando sesión.");
-        await supabase.auth.signOut();
+      setRegisterLoading(true);
+      const registrationData = {
+        password,
+        nombre,
+        telefono,
+        ubicacion,
+        categoria,
+        curp,
+        numero_ine,
+        folio
+      };
 
+      const result = await completeArtesanoRegistration(registrationData);
+
+      if (result.success) {
+        Alert.alert(
+          '¡Registro Exitoso!',
+          'Tu cuenta de artesano ha sido creada exitosamente. Ahora crea tu contraseña definitiva.',
+          [
+            {
+              text: 'Continuar',
+              onPress: () => {
+                navigation.navigate('ChangePassword', { tempPassword: password });
+              },
+            },
+          ]
+        );
+      } else {
+        Alert.alert('Error en el Registro', result.error || 'Ocurrió un error inesperado.');
+      }
     } catch (error) {
-        console.error("[handleRegister] ❌ ERROR ATRAPADO EN CATCH:", error);
-        Alert.alert('Error en el Registro', error.message);
+      Alert.alert('Error Crítico', 'No se pudo conectar con el servicio. Inténtalo de nuevo.');
+    } finally {
+      setRegisterLoading(false);
     }
   };
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color="#2575fc" />
+        <Text style={{ marginTop: 10, fontSize: 16 }}>Cargando información...</Text>
       </View>
     );
   }
@@ -102,7 +97,6 @@ export default function RegisterArtesano() {
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Completa tu Registro</Text>
-      <Button title="Cerrar Sesión" onPress={handleLogout} color="#db4437" />
       <TextInput style={[styles.input, styles.disabledInput]} value={user?.email} editable={false} />
       <TextInput style={styles.input} placeholder="Nombre completo" value={nombre} onChangeText={setNombre} />
       <TextInput style={styles.input} placeholder="Número de teléfono" value={telefono} onChangeText={setTelefono} keyboardType="phone-pad" />
@@ -118,7 +112,11 @@ export default function RegisterArtesano() {
           <MaterialCommunityIcons name="auto-fix" size={28} color="#2575fc" />
         </TouchableOpacity>
       </View>
-      <Button title="Finalizar Registro" onPress={handleRegister}/>
+      <Button 
+        title={registerLoading ? "Procesando..." : "Finalizar Registro"} 
+        onPress={handleRegister}
+        disabled={registerLoading}
+      />
     </ScrollView>
   );
 }

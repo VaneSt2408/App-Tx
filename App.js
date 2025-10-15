@@ -14,6 +14,7 @@ import ArtPage from './src/pages/ArtPage';
 import ClientPage from './src/pages/ClientPage';
 import NotFoundPage from './src/pages/NotFoundPage';
 import MagicLink from './src/pages/MagicLink';
+import ChangePassword from './src/pages/ChangePassword';
 
 // Componente de carga
 const LoadingScreen = () => (
@@ -216,13 +217,20 @@ export default function App() {
           </>
         );
       case 'artesano':
-        return <Stack.Screen name="ArtPage" component={ArtPage} options={{ title: 'Página del Artesano' }} />;
+        return <Stack.Screen name="ArtPage" component={ArtPage} options={{ title: 'Página del Artesano' }} />
       case 'cliente':
-        return <Stack.Screen name="ClientPage" component={ClientPage} options={{ title: 'Página del Cliente' }} />;
+        return <Stack.Screen name="ClientPage" component={ClientPage} options={{ title: 'Página del Cliente' }} />
       case 'En proceso':
-        return <Stack.Screen name="RegisterArtesano" component={RegisterArtesano} options={{ title: 'Completa tu Registro' }} />;
+        return (
+          <>
+            <Stack.Screen name="RegisterArtesano" component={RegisterArtesano} options={{ title: 'Completa tu Registro' }} />
+            <Stack.Screen name="ChangePassword" component={ChangePassword} options={{title: 'Establecer una contraseña'}} />
+          </>
+        );
+        
+        
       default:
-        return <Stack.Screen name="NotFound" component={NotFoundPage} options={{ title: 'Error' }} />;
+        return <Stack.Screen name="NotFound" component={NotFoundPage} options={{ title: 'Error' }} />
     }
   };
 

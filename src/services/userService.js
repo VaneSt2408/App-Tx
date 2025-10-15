@@ -3,7 +3,7 @@ import { supabase } from '../supabase/client';
 import { Alert } from 'react-native';
 import { makeRedirectUri } from 'expo-auth-session';
 
-// Función para enviar el link mágico
+// Función para enviar el link mágico (No tocar)
 export const sendArtesanoInvite = async (email) => { 
   const { data, error } = await supabase.auth.signInWithOtp({
     email,
@@ -23,36 +23,25 @@ export const sendArtesanoInvite = async (email) => {
   return data;
 };
 
-// Registrar artesano (CON LOGS)
-export const completeArtesanoRegistration = async (user, registrationData) => {
+
+
+export const completeArtesanoRegistration = async (registrationData) => {
   console.log("[userService] --- Iniciando completeArtesanoRegistration ---");
 
-  const { password, nombre, telefono, ubicacion, categoria, curp, numero_ine, folio } = registrationData;
+  const { nombre, telefono, ubicacion, categoria, curp, numero_ine, folio } = registrationData;
 
   try {
-    // 1. Actualizar la contraseña
-    console.log(`[userService] 1. Actualizando contraseña para el usuario: ${user.id}`);
-    const { error: updateError } = await supabase.auth.updateUser({ password });
-    if (updateError) {
-      console.error("[userService] ❌ ERROR al actualizar contraseña:", updateError);
-      throw updateError;
-    }
-    console.log("[userService] ✅ Contraseña actualizada con éxito.");
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("No hay sesión activa. El usuario debe autenticarse primero.");
 
-    // 2. Actualizar perfil
-    console.log(`[userService] 2. Actualizando 'perfiles' para el usuario: ${user.id}`);
+    // Actualizar perfil
     const { error: profileError } = await supabase
       .from('perfiles')
       .update({ rol: 'artesano', telefono })
       .eq('id', user.id);
-    if (profileError) {
-      console.error("[userService] ❌ ERROR al actualizar perfil:", profileError);
-      throw profileError;
-    }
-    console.log("[userService] ✅ Perfil actualizado con éxito.");
+    if (profileError) throw profileError;
 
-    // 3. Insertar datos en artesanos
-    console.log(`[userService] 3. Insertando en 'artesanos' para el usuario: ${user.id}`);
+    // Insertar en artesanos
     const { data: artesanoData, error: artesanoError } = await supabase
       .from('artesanos')
       .insert({
@@ -64,20 +53,14 @@ export const completeArtesanoRegistration = async (user, registrationData) => {
         numero_ine,
         folio,
       })
-      .select(); // Confirmar lo que se insertó
+      .select();
+    if (artesanoError) throw artesanoError;
 
-    if (artesanoError) {
-      console.error("[userService] ❌ ERROR al insertar en 'artesanos':", artesanoError);
-      throw artesanoError;
-    }
+    console.log("[userService] ✅ Datos de artesano insertados con éxito.");
 
-    console.log("[userService] ✅ Datos de artesano insertados con éxito:", artesanoData);
-    console.log("[userService] --- Registro completado con éxito ---");
-
-    return { success: true };
-
+    return { success: true, artesanoData };
   } catch (error) {
     console.error("[userService] ❌ ERROR GENERAL ATRAPADO:", error);
-    throw error; // Re-lanza para manejo en el componente frontend
+    return { success: false, error: error.message || error };
   }
 };
