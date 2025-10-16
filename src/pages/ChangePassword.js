@@ -1,11 +1,10 @@
 // En: src/pages/ChangePassword.js
 import React, { useState } from 'react';
 import { View, TextInput, Button, Alert, StyleSheet, Text } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+// Se elimina useNavigation porque ya no lo necesitamos para forzar la redirección
 import { supabase } from '../supabase/client';
 
 export default function ChangePassword() {
-  const navigation = useNavigation();
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,31 +27,19 @@ export default function ChangePassword() {
       if (error) {
         console.error('[ChangePassword] ❌ Error al actualizar:', error);
         Alert.alert('Error', 'No se pudo actualizar la contraseña.');
-        setLoading(false);
+        // Nota: No es necesario setLoading(false) aquí por el bloque `finally`
         return;
       }
 
       console.log('[ChangePassword] ✅ Contraseña actualizada en Supabase.');
-
-      // ⚡ Forzar redirección inmediata al login
+      
+      // --- ✅ CAMBIO PRINCIPAL ---
+      // Se elimina la navegación forzada y el signOut.
+      // Ahora solo mostramos una alerta de éxito. El listener en App.js
+      // se encargará de la redirección automática al detectar el evento 'USER_UPDATED'.
       Alert.alert(
-        '¡Contraseña actualizada!',
-        'Tu contraseña se cambió exitosamente. Por favor inicia sesión de nuevo.',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              // 1️⃣ Cerrar sesión sin esperar confirmación
-              supabase.auth.signOut().catch(() => {});
-              
-              // 2️⃣ Forzar navegación al Login
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'Login' }],
-              });
-            },
-          },
-        ]
+        '¡Éxito!',
+        'Tu contraseña ha sido actualizada. Serás redirigido en un momento.'
       );
 
     } catch (error) {
