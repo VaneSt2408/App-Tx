@@ -1,5 +1,4 @@
 // En: src/pages/ArtPage.js
-
 import React, { useEffect, useState } from 'react'; // Similar a ClientPage.js
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native'; // Similar a ClientPage.js
 import { signOut } from '../services/authService'; // Similar a ClientPage.js

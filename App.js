@@ -1,12 +1,13 @@
 // App.js
-import React, { useState, useEffect, useRef } from 'react';
-import { Alert, View, ActivityIndicator, StyleSheet } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import * as Linking from 'expo-linking';
-import { supabase } from './src/supabase/client';
+import 'react-native-url-polyfill/auto'; // Polyfill necesario para que la librería de Supabase funcione correctamente en React Native.
+import React, { useState, useEffect } from 'react'; // Importa React y los hooks 'useState' y 'useEffect'.
+import { Alert, View, ActivityIndicator, StyleSheet } from 'react-native'; // Importa componentes de UI de React Native.
+import { NavigationContainer } from '@react-navigation/native'; // Contenedor principal para la navegación de la app.
+import { createNativeStackNavigator } from '@react-navigation/native-stack'; // Importa el creador de navegación tipo "stack" (pantallas apiladas).
+import * as Linking from 'expo-linking'; // Importa la librería de Expo para manejar deep links (abrir la app desde un URL).
+import { supabase } from './src/supabase/client'; // Importa el cliente de Supabase.
 
-// Pantallas
+// --- Importación de todas las pantallas de la aplicación ---
 import Login from './src/pages/login';
 import PageAdmin from './src/pages/PageAdmin';
 import RegisterArtesano from './src/pages/RegisterArtesano';
@@ -16,200 +17,136 @@ import NotFoundPage from './src/pages/NotFoundPage';
 import MagicLink from './src/pages/MagicLink';
 import ChangePassword from './src/pages/ChangePassword';
 
-// Componente de carga
+// --- Componente simple para mostrar una pantalla de carga ---
 const LoadingScreen = () => (
   <View style={styles.loadingContainer}>
     <ActivityIndicator size="large" color="#2575fc" />
   </View>
 );
 
+// Inicializa el navegador de tipo Stack.
 const Stack = createNativeStackNavigator();
 
+// --- Componente principal de la aplicación ---
 export default function App() {
-  const [session, setSession] = useState(null);
-  const [role, setRole] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // --- Estados globales de la aplicación ---
+  const [session, setSession] = useState(null); // Almacena la sesión del usuario (si está logueado o no).
+  const [role, setRole] = useState(null); // Almacena el rol del usuario ('admin', 'artesano', etc.).
+  const [loading, setLoading] = useState(true); // Controla la visualización de la pantalla de carga inicial.
 
-  // Flag para bloquear el listener de Supabase mientras se procesa un deep link
-  const handlingDeepLinkRef = useRef(false);
-
+  // --- useEffect para manejar la sesión de autenticación ---
   useEffect(() => {
-    let isMounted = true;
+    // Intenta obtener la sesión activa la primera vez que la app carga.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session); // Establece la sesión encontrada.
+      // Si no hay sesión, significa que el usuario no está logueado, por lo que se deja de cargar.
+      if (!session) {
+        setLoading(false);
+      }
+    });
 
-    // --- Manejo del deep link ---
+    // Crea un "oyente" (listener) que se activa cada vez que hay un cambio en el estado de autenticación.
+    // Ejemplos de eventos: SIGNED_IN, SIGNED_OUT, USER_UPDATED.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log(`📡 Evento de Auth recibido: ${_event}`); // Muestra el evento en consola.
+      setSession(session); // Actualiza el estado de la sesión con la nueva información.
+    });
+
+    // Función de limpieza: se ejecuta cuando el componente se desmonta.
+    // Es crucial para evitar fugas de memoria al eliminar la suscripción.
+    return () => subscription.unsubscribe();
+  }, []); // El array vacío `[]` asegura que este efecto se ejecute solo una vez.
+
+  // --- useEffect para obtener el rol del usuario cuando cambia la sesión ---
+  useEffect(() => {
+    // Si no hay una sesión de usuario, resetea el rol y termina la carga.
+    if (!session?.user) {
+      setRole(null);
+      setLoading(false);
+      return; // Detiene la ejecución del efecto.
+    }
+
+    // Define una función asíncrona para buscar el rol en la base de datos.
+    const fetchRole = async () => {
+      try {
+        console.log("🔍 Buscando perfil para el usuario:", session.user.id);
+        // Realiza una consulta a la tabla 'perfiles' para obtener el 'rol' del usuario actual.
+        const { data: profile, error, status } = await supabase
+          .from('perfiles')
+          .select('rol')
+          .eq('id', session.user.id) // Filtra por el ID del usuario de la sesión.
+          .single(); // Espera un único resultado.
+
+        // Si hay un error y no es el código 406 (que significa 'no se encontró fila'), lanza el error.
+        if (error && status !== 406) {
+          throw error;
+        }
+
+        // Si se encuentra un perfil con un rol, lo establece en el estado.
+        if (profile?.rol) {
+          console.log("✅ Rol detectado exitosamente:", profile.rol);
+          setRole(profile.rol);
+        } else { // Si no se encuentra un perfil o el rol es nulo.
+          console.warn("⚠️ No se encontró un perfil para este usuario.");
+          setRole(null);
+        }
+      } catch (err) { // Captura cualquier error durante la obtención del rol.
+        console.error("❌ Error crítico obteniendo el rol:", err.message);
+        setRole(null); // Resetea el rol en caso de error.
+        Alert.alert("Error de Perfil", "No pudimos verificar tu información.");
+      } finally { // Este bloque se ejecuta siempre, con o sin errores.
+        setLoading(false); // Finaliza el estado de carga para mostrar la app.
+      }
+    };
+
+    fetchRole(); // Llama a la función para que se ejecute.
+  }, [session]); // Este efecto se vuelve a ejecutar cada vez que el estado 'session' cambia.
+
+  // --- useEffect para manejar Deep Links (enlaces mágicos) ---
+  useEffect(() => {
+    // Función que procesa el URL recibido por el deep link.
     const handleDeepLink = async (url) => {
-      if (!url || !isMounted) return;
-      console.log("🔗 Deep link detectado:", url);
+      if (!url) return;
+      console.log('🔗 URL de Deep Link recibida:', url);
+      
+      // Extrae los tokens de autenticación del fragmento (#) de la URL.
+      const params = new URLSearchParams(url.split('#')[1] || '');
+      const access_token = params.get('access_token');
+      const refresh_token = params.get('refresh_token');
 
-      handlingDeepLinkRef.current = true;
-
-      try {
-        const params = new URLSearchParams(url.split('#')[1] || '');
-        const access_token = params.get('access_token');
-        const refresh_token = params.get('refresh_token');
-
-        if (!access_token || !refresh_token) {
-          console.log("⚠️ El enlace no contiene tokens válidos.");
-          if (isMounted) setLoading(false);
-          handlingDeepLinkRef.current = false;
-          return;
-        }
-
-        // Establece sesión en Supabase
-        const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
-        if (error) {
-          console.error("❌ Error al establecer sesión desde deep link:", error);
-          Alert.alert("Error", "No se pudo iniciar sesión desde el enlace. Intenta manualmente.");
-          if (isMounted) {
-            setSession(null);
-            setRole(null);
-            setLoading(false);
-          }
-          handlingDeepLinkRef.current = false;
-          return;
-        }
-
-        // Forzar actualización de estado y pantalla
-        if (data?.session && isMounted) {
-          console.log("✅ Sesión establecida manualmente:", data.session.user.email);
-          setSession(data.session);
-
-          try {
-            const { data: profileData, error: roleError } = await supabase
-              .from('perfiles')
-              .select('rol')
-              .eq('id', data.session.user.id)
-              .single();
-            if (roleError) {
-              console.error("Error obteniendo rol:", roleError);
-              setRole(null);
-            } else {
-              setRole(profileData?.rol || null);
-            }
-          } catch (err) {
-            console.error("Error fetch rol:", err);
-            setRole(null);
-          }
-
-          setLoading(false); // ✅ Aquí forzamos la UI inmediatamente
-        }
-      } catch (err) {
-        console.error("Error procesando deep link:", err);
-        if (isMounted) setLoading(false);
-      } finally {
-        handlingDeepLinkRef.current = false;
+      // Si se encuentran ambos tokens, se usan para establecer la sesión en Supabase.
+      if (access_token && refresh_token) {
+        await supabase.auth.setSession({ access_token, refresh_token });
       }
     };
+    
+    // Revisa si la app fue abierta por un deep link.
+    Linking.getInitialURL().then(url => { if (url) handleDeepLink(url); });
+    // Añade un listener para manejar deep links mientras la app ya está abierta.
+    const linkingListener = Linking.addEventListener('url', (e) => handleDeepLink(e.url));
 
-    // --- Verificar sesión local ---
-    const checkSession = async () => {
-      try {
-        const { data: { session: existingSession } } = await supabase.auth.getSession();
-        if (!isMounted) return;
+    // Función de limpieza para remover el listener.
+    return () => linkingListener.remove();
+  }, []); // Se ejecuta solo una vez.
 
-        if (!existingSession) {
-          setSession(null);
-          setRole(null);
-          setLoading(false);
-          return;
-        }
+  // --- Renderizado Condicional ---
 
-        const isExpired = existingSession.expires_at && existingSession.expires_at * 1000 < Date.now();
-        if (isExpired) {
-          await supabase.auth.signOut();
-          setSession(null);
-          setRole(null);
-          setLoading(false);
-          return;
-        }
+  // Mientras el estado 'loading' sea verdadero, muestra la pantalla de carga.
+  if (loading) {
+    return <LoadingScreen />;
+  }
 
-        setSession(existingSession);
-
-        try {
-          const { data: profile } = await supabase
-            .from('perfiles')
-            .select('rol')
-            .eq('id', existingSession.user.id)
-            .single();
-          setRole(profile?.rol || null);
-        } catch (err) {
-          console.error("Error obteniendo rol en checkSession:", err);
-          setRole(null);
-        }
-      } catch (err) {
-        console.error("Error en checkSession:", err);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-
-    // --- Inicialización ---
-    (async () => {
-      try {
-        const initialUrl = await Linking.getInitialURL();
-        if (initialUrl) {
-          await handleDeepLink(initialUrl);
-        } else {
-          await checkSession();
-        }
-      } catch (err) {
-        console.error("Error init:", err);
-        if (isMounted) setLoading(false);
-      }
-    })();
-
-    // --- Escucha de deep links mientras la app está abierta ---
-    const linkingListener = Linking.addEventListener('url', (e) => {
-      handleDeepLink(e.url);
-    });
-
-    // --- Listener de Supabase ---
-    const { data: subscription } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-      if (handlingDeepLinkRef.current) {
-        console.log("⚠️ Ignorando onAuthStateChange porque se está manejando deep link");
-        return;
-      }
-
-      if (!isMounted) return;
-      console.log("📡 Evento de autenticación:", event);
-
-      if (event === 'SIGNED_OUT') {
-        setSession(null);
-        setRole(null);
-        setLoading(false);
-      } else if (newSession) {
-        setSession(newSession);
-        try {
-          const { data: profile } = await supabase
-            .from('perfiles')
-            .select('rol')
-            .eq('id', newSession.user.id)
-            .single();
-          setRole(profile?.rol || null);
-        } catch (err) {
-          console.error("Error obteniendo rol en listener:", err);
-          setRole(null);
-        }
-        setLoading(false);
-      }
-    });
-
-    return () => {
-      isMounted = false;
-      linkingListener.remove();
-      subscription?.unsubscribe();
-    };
-  }, []);
-
-  // --- Renderizado condicional según estado y rol ---
-  if (loading) return <LoadingScreen />;
-
+  // Función que decide qué pantallas mostrar basado en la sesión y el rol.
   const renderScreens = () => {
-    if (!session || !session.user) return <Stack.Screen name="Login" component={Login} options={{ headerShown: false }} />;
-    if (!role) return <Stack.Screen name="LoadingRole" component={LoadingScreen} options={{ headerShown: false }} />;
-
+    // Si no hay sesión de usuario, solo muestra la pantalla de Login.
+    if (!session?.user) {
+      return <Stack.Screen name="Login" component={Login} options={{ headerShown: false }} />;
+    }
+    
+    // Si hay sesión, decide qué mostrar basado en el rol del usuario.
     switch (role) {
       case 'admin':
+        // Si el rol es 'admin', muestra las pantallas de administración.
         return (
           <>
             <Stack.Screen name="PageAdmin" component={PageAdmin} options={{ title: 'Modo Admin' }} />
@@ -217,37 +154,44 @@ export default function App() {
           </>
         );
       case 'artesano':
-        return <Stack.Screen name="ArtPage" component={ArtPage} options={{ title: 'Página del Artesano' }} />
+        // Si el rol es 'artesano', muestra su página principal.
+        return <Stack.Screen name="ArtPage" component={ArtPage} options={{ title: 'Página del Artesano' }} />;
       case 'cliente':
-        return <Stack.Screen name="ClientPage" component={ClientPage} options={{ title: 'Página del Cliente' }} />
+        // Si el rol es 'cliente', muestra su página principal.
+        return <Stack.Screen name="ClientPage" component={ClientPage} options={{ title: 'Página del Cliente' }} />;
       case 'En proceso':
+        // Si el rol es 'En proceso', significa que es un artesano que debe completar su registro.
         return (
           <>
             <Stack.Screen name="RegisterArtesano" component={RegisterArtesano} options={{ title: 'Completa tu Registro' }} />
-            <Stack.Screen name="ChangePassword" component={ChangePassword} options={{title: 'Establecer una contraseña'}} />
+            <Stack.Screen name="ChangePassword" component={ChangePassword} options={{ title: 'Establecer una contraseña' }} />
           </>
         );
-        
-        
+      case null:
+        // Si hay sesión pero el rol aún es 'null', significa que se está cargando. Muestra la pantalla de carga.
+        return <Stack.Screen name="LoadingRole" component={LoadingScreen} options={{ headerShown: false }} />;
       default:
-        return <Stack.Screen name="NotFound" component={NotFoundPage} options={{ title: 'Error' }} />
+        // Si el rol es cualquier otra cosa inesperada, muestra una página de error.
+        return <Stack.Screen name="NotFound" component={NotFoundPage} options={{ title: 'Error de Rol' }} />;
     }
   };
 
+  // --- Renderizado final del componente ---
   return (
+    // Envuelve toda la aplicación en el contenedor de navegación.
     <NavigationContainer>
-      <Stack.Navigator>
-        {renderScreens()}
-      </Stack.Navigator>
+      {/* Define el navegador de Stack y le pasa las pantallas a renderizar. */}
+      <Stack.Navigator>{renderScreens()}</Stack.Navigator>
     </NavigationContainer>
   );
 }
 
+// --- Hoja de estilos para el componente ---
 const styles = StyleSheet.create({
   loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    flex: 1, // Ocupa todo el espacio disponible.
+    justifyContent: 'center', // Centra verticalmente.
+    alignItems: 'center', // Centra horizontalmente.
+    backgroundColor: '#f5f5f5', // Color de fondo.
   },
 });
