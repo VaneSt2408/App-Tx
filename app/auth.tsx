@@ -14,7 +14,7 @@ const PasswordRequirement = ({ met, text }: { met: boolean; text: string }) => (
     <Feather 
       name={met ? "check-circle" : "x-circle"} 
       size={16} 
-      // Usamos los colores directamente para que coincida con tu diseño
+      // Se usam los colores directamente para que coincida con el diseño
       color={met ? "#4ade80" /* verde */ : "#f87171" /* rojo */} 
     />
     <Text className={`ml-2 text-sm ${met ? 'text-green-400' : 'text-red-400'}`}>{text}</Text>
@@ -439,11 +439,25 @@ export default function AuthScreen() {
             </TouchableOpacity>
           </MotiView>
 
+          {/* --- ENLACE PARA INVITAR ARTESANOS --- */}
+          <MotiView
+            from={{ opacity: 0, translateY: 20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 500, delay: 800 }}
+            className="w-full items-center mb-6"
+          >
+            <Link href="/inviteartisan" asChild>
+              <TouchableOpacity>
+                <Text className="text-white/70 text-center">¿Eres administrador?</Text><Text className="text-white text-center font-bold mb-1 w-10/12">Invita a un artesano</Text>
+                </TouchableOpacity>
+            </Link>
+          </MotiView>
+
           <Link href = "/" asChild>
               <TouchableOpacity className='text-zinc-500 text-lg mb-1 w-10/12 bg-white/20 p-4 rounded-full items-center'>
                 <Text className='text-white text-2xl font-semibold'>Regresar</Text>
               </TouchableOpacity>
-              </Link>
+          </Link>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
