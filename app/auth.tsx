@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Link, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { MotiText, MotiView } from 'moti';
-import React, { useState } from 'react';
+import React, { useState } from 'react'; 
 import { Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 // --- COMPONENTE AUXILIAR PARA MOSTRAR CADA REQUISITO ---
@@ -113,15 +113,23 @@ export default function AuthScreen() {
 
   const handleLogin = () => {
     if (validate()) {
-      console.log('Login attempt with:', { email, password });
-      // router.replace('/(tabs)');
+      // Lógica para el administrador
+      if (email.toLowerCase() === 'artesanoprueba@gmail.com' && password === 'TxApp_2025') {
+        console.log('Inicio de sesión como Administrador.');
+        // Redirige a la página de administrador. Usamos 'replace' para que no pueda volver atrás.
+        router.replace('/admin'); // Redirige al panel de administrador
+      } else {
+        // Lógica para usuarios normales
+        console.log('Inicio de sesión de usuario normal con:', { email });
+        router.replace('/home'); // Redirige a la nueva HomeScreen para usuarios normales
+      }
     }
   };
 
   const handleSignUp = () => {
     if (validate()) {
       console.log('Sign Up attempt with:', { email, username, password, confirmPassword, phoneNumber, profileImage });
-      router.push('/verification');
+      router.replace('/home'); // Después del registro exitoso, redirige a la HomeScreen
     }
   };
 
@@ -145,11 +153,6 @@ export default function AuthScreen() {
       setProfileImage(result.assets[0].uri);
     }
   };
-
-  const handleGoogleSignIn = () => {
-    console.log('Attempting Google Sign In');
-    // Aquí irá tu lógica de Google Sign-In.
-  }
 
   return (
     <LinearGradient
@@ -429,14 +432,6 @@ export default function AuthScreen() {
               </Text>
               <View className="flex-1 h-px bg-white/30" />
             </View>
-            
-            <TouchableOpacity onPress={handleGoogleSignIn} className="w-full bg-white/20 p-3 rounded-2xl flex-row justify-center items-center mb-14">
-              <Image
-                source={{ uri: 'https://img.icons8.com/color/48/google-logo.png' }} 
-                className="w-6 h-6 mr-3"
-              />
-              <Text className="text-white text-lg font-semibold mx-2">Google</Text>
-            </TouchableOpacity>
           </MotiView>
 
           <Link href = "/" asChild>
