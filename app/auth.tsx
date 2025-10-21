@@ -1,6 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import { Link, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { MotiText, MotiView } from 'moti';
@@ -153,12 +154,12 @@ export default function AuthScreen() {
 
   return (
     <LinearGradient
-      colors={['#020202ff', '#923febff']}
+      colors={['#FDFAF1', '#FDFAF1']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={{ flex: 1 }}
     >
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <SafeAreaView className="flex-1">
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -172,7 +173,7 @@ export default function AuthScreen() {
             from={{ opacity: 0, translateY: -50 }}
             animate={{ opacity: 1, translateY: 0 }}
             transition={{ type: 'timing', duration: 900 }}
-            className="text-white text-4xl font-bold mb-9 text-center"
+            className="text-gray-800 text-4xl font-bold mb-9 text-center"
           >
             {authMode === 'login' ? 'Bienvenido de Vuelta' : 'Crea tu cuenta'}
           </MotiText>
@@ -187,14 +188,14 @@ export default function AuthScreen() {
             >
               <TouchableOpacity 
                 onPress={handlePickImage} 
-                className="w-32 h-32 bg-white/20 rounded-full justify-center items-center border-2 border-dashed border-white/50"
+                className="w-32 h-32 bg-gray-500/20 rounded-full justify-center items-center border-2 border-dashed border-gray-500/50"
               >
                 {profileImage ? (
                   <Image source={{ uri: profileImage }} className="w-full h-full rounded-full" />
                 ) : (
                   <View className="items-center">
-                    <Feather name="camera" size={32} color="white" />
-                    <Text className="text-white text-center mt-2 text-xs">Añadir foto</Text>
+                    <Feather name="camera" size={32} color="#4B5563" />
+                    <Text className="text-gray-700 text-center mt-2 text-xs">Añadir foto</Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -209,22 +210,31 @@ export default function AuthScreen() {
             animate={{ opacity: 1, translateY: 0 }}
             transition={{ type: 'timing', duration: 600, delay: 600 }}
             onLayout={(event) => setSelectorWidth(event.nativeEvent.layout.width)}
-            className="w-64 flex-row bg-black/40 p-0 rounded-full mb-7 relative"
+            className="w-64 flex-row bg-black/10 p-0 rounded-full mb-7 relative"
           >
             {selectorWidth > 0 && (
               <MotiView
                 animate={{ translateX: authMode === 'login' ? 0 : selectorWidth / 2 }}
                 transition={{ type: 'timing', duration: 300 }}
-                className="absolute h-full w-1/2 bg-white/30 rounded-full"
+                style={{ backgroundColor: '#9D046D' }}
+                className="absolute h-full w-1/2 rounded-full"
               />
             )}
             
             <TouchableOpacity onPress={() => setAuthMode('login')} className="flex-1 py-2 items-center rounded-full">
-              <Text className="text-white font-bold text-base">Inicia Sesion</Text>
+              <Text 
+                style={{ color: authMode === 'login' ? 'white' : '#EE0359' }}
+                className="font-bold text-base"
+              >
+                Inicia Sesion
+              </Text>
             </TouchableOpacity>
             
             <TouchableOpacity onPress={() => setAuthMode('signup')} className="flex-1 py-2 items-center rounded-full">
-              <Text className="text-white font-bold text-base">Registrate</Text>
+              <Text 
+                style={{ color: authMode === 'signup' ? 'white' : '#EE0359' }}
+                className="font-bold text-base"
+              >Registrate</Text>
             </TouchableOpacity>
           </MotiView>
           
@@ -234,24 +244,29 @@ export default function AuthScreen() {
             transition={{ type: 'timing', duration: 300, delay: 100 }}
             className="w-full"
           > 
-            <View 
-              className="w-full bg-white/20 p-4 rounded-2xl mb-4 border-2 flex-row items-center"
-              style={{ borderColor: focusedInput === 'email' ? '#a855f7' : 'transparent' }}
-            >
-              <Feather name="mail" size={20} color="white" style={{ marginRight: 10 }} />
-              <TextInput
-                key="email-input"
-                onFocus={() => setFocusedInput('email')}
-                onBlur={() => setFocusedInput(null)}
-                className="flex-1 text-white text-lg"
-                placeholder="Correo Electronico"
-                placeholderTextColor="#ccc"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
+            <BlurView intensity={20} tint="light" style={{ borderRadius: 16, overflow: 'hidden' }}>
+              <View 
+                className="w-full p-4 rounded-2xl mb-4 border-2 flex-row items-center"
+                style={{ 
+                  backgroundColor: 'rgba(238, 3, 89, 0.25)', // #EE0359 con transparencia
+                  borderColor: focusedInput === 'email' ? '#EE0359' : 'rgba(0,0,0,0.1)' 
+                }}
+              >
+                <Feather name="mail" size={20} color="#9D046D" style={{ marginRight: 10 }} />
+                <TextInput
+                  key="email-input"
+                  onFocus={() => setFocusedInput('email')}
+                  onBlur={() => setFocusedInput(null)}
+                  className="flex-1 text-gray-800 text-lg font-semibold"
+                  placeholder="Correo Electronico"
+                  placeholderTextColor="#9D046D"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+            </BlurView>
             {authMode === 'signup' && errors.email && (
               <Text style={styles.errorText}>{errors.email}</Text>
             )}
@@ -267,23 +282,28 @@ export default function AuthScreen() {
               transition={{ type: 'timing', duration: 300, delay: 100 }}
               className="w-full"
             >
-              <View 
-                className="w-full bg-white/20 p-4 rounded-2xl mb-4 border-2 flex-row items-center"
-                style={{ borderColor: focusedInput === 'username' ? '#a855f7' : 'transparent' }}
-              >
-                <Feather name="user" size={20} color="white" style={{ marginRight: 10 }} />
-                <TextInput
-                  key="username-input"
-                  onFocus={() => setFocusedInput('username')}
-                  onBlur={() => setFocusedInput(null)}
-                  className="flex-1 text-white text-lg"
-                  placeholder="Nombre de usuario"
-                  placeholderTextColor="#ccc"
-                  value={username}
-                  onChangeText={setUsername}
-                  autoCapitalize="none"
-                />
-              </View>
+              <BlurView intensity={20} tint="light" style={{ borderRadius: 16, overflow: 'hidden' }}>
+                <View 
+                  className="w-full p-4 rounded-2xl mb-4 border-2 flex-row items-center"
+                  style={{ 
+                    backgroundColor: 'rgba(238, 3, 89, 0.25)', // #EE0359 con transparencia
+                    borderColor: focusedInput === 'username' ? '#EE0359' : 'rgba(0,0,0,0.1)' 
+                  }}
+                >
+                  <Feather name="user" size={20} color="#9D046D" style={{ marginRight: 10 }} />
+                  <TextInput
+                    key="username-input"
+                    onFocus={() => setFocusedInput('username')}
+                    onBlur={() => setFocusedInput(null)}
+                    className="flex-1 text-gray-800 text-lg font-semibold"
+                    placeholder="Nombre de usuario"
+                    placeholderTextColor="#9D046D"
+                    value={username}
+                    onChangeText={setUsername}
+                    autoCapitalize="none"
+                  />
+                </View>
+              </BlurView>
               {errors.username && (
                 <Text style={styles.errorText}>{errors.username}</Text>
               )}
@@ -297,23 +317,28 @@ export default function AuthScreen() {
               transition={{ type: 'timing', duration: 300, delay: 100 }}
               className="w-full"
             >
-              <View 
-                className="w-full bg-white/20 p-4 rounded-2xl mb-4 border-2 flex-row items-center"
-                style={{ borderColor: focusedInput === 'phone' ? '#a855f7' : 'transparent' }}
-              >
-                <Feather name="phone" size={20} color="white" style={{ marginRight: 10 }} />
-                <TextInput
-                  key="phone-input"
-                  onFocus={() => setFocusedInput('phone')}
-                  onBlur={() => setFocusedInput(null)}
-                  className="flex-1 text-white text-lg"
-                  placeholder="Número de teléfono"
-                  placeholderTextColor="#ccc"
-                  value={phoneNumber}
-                  onChangeText={setPhoneNumber}
-                  keyboardType="phone-pad"
-                />
-              </View>
+              <BlurView intensity={20} tint="light" style={{ borderRadius: 16, overflow: 'hidden' }}>
+                <View 
+                  className="w-full p-4 rounded-2xl mb-4 border-2 flex-row items-center"
+                  style={{ 
+                    backgroundColor: 'rgba(238, 3, 89, 0.25)', // #EE0359 con transparencia
+                    borderColor: focusedInput === 'phone' ? '#EE0359' : 'rgba(0,0,0,0.1)' 
+                  }}
+                >
+                  <Feather name="phone" size={20} color="#9D046D" style={{ marginRight: 10 }} />
+                  <TextInput
+                    key="phone-input"
+                    onFocus={() => setFocusedInput('phone')}
+                    onBlur={() => setFocusedInput(null)}
+                    className="flex-1 text-gray-800 text-lg font-semibold"
+                    placeholder="Número de teléfono"
+                    placeholderTextColor="#9D046D"
+                    value={phoneNumber}
+                    onChangeText={setPhoneNumber}
+                    keyboardType="phone-pad"
+                  />
+                </View>
+              </BlurView>
               {errors.phoneNumber && (
                 <Text style={styles.errorText}>{errors.phoneNumber}</Text>
               )}
@@ -326,26 +351,31 @@ export default function AuthScreen() {
             transition={{ type: 'timing', duration: 500, delay: 500 }}
             className="w-full"
           >
-            <View 
-              className="w-full bg-white/20 p-4 rounded-2xl mb-4 border-2 flex-row items-center"
-              style={{ borderColor: focusedInput === 'password' ? '#a855f7' : 'transparent' }}
-            >
-              <Feather name="lock" size={20} color="white" style={{ marginRight: 10 }} />
-              <TextInput
-                key="password-input"
-                onFocus={() => setFocusedInput('password')}
-                onBlur={() => setFocusedInput(null)}
-                className="flex-1 text-white text-lg"
-                placeholder="Contraseña"
-                placeholderTextColor="#ccc"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!isPasswordVisible}
-              />
-              <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)}>
-                <Feather name={isPasswordVisible ? "eye-off" : "eye"} size={20} color="white" />
-              </TouchableOpacity>
-            </View>
+            <BlurView intensity={20} tint="light" style={{ borderRadius: 16, overflow: 'hidden' }}>
+              <View 
+                className="w-full p-4 rounded-2xl mb-4 border-2 flex-row items-center"
+                style={{ 
+                  backgroundColor: 'rgba(238, 3, 89, 0.25)', // #EE0359 con transparencia
+                  borderColor: focusedInput === 'password' ? '#EE0359' : 'rgba(0,0,0,0.1)' 
+                }}
+              >
+                <Feather name="lock" size={20} color="#9D046D" style={{ marginRight: 10 }} />
+                <TextInput
+                  key="password-input"
+                  onFocus={() => setFocusedInput('password')}
+                  onBlur={() => setFocusedInput(null)}
+                  className="flex-1 text-gray-800 text-lg font-semibold"
+                  placeholder="Contraseña"
+                  placeholderTextColor="#9D046D"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!isPasswordVisible}
+                />
+                <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)}>
+                  <Feather name={isPasswordVisible ? "eye-off" : "eye"} size={20} color="#9D046D" />
+                </TouchableOpacity>
+              </View>
+            </BlurView>
             {authMode === 'login' && errors.password && (
               <Text style={styles.errorText}>{errors.password}</Text>
             )}
@@ -354,7 +384,7 @@ export default function AuthScreen() {
           {/* --- NUEVA SECCIÓN DE REQUISITOS DE CONTRASEÑA --- */}
           {authMode === 'signup' && (
             <MotiView 
-              className="w-full bg-black/20 p-3 rounded-2xl mb-4"
+              className="w-full bg-black/5 p-3 rounded-2xl mb-4"
               from={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ type: 'timing', delay: 300 }}
@@ -362,11 +392,11 @@ export default function AuthScreen() {
               {errors.password && authMode === 'signup' && (
                 <Text style={[styles.errorText, { marginBottom: 4 }]}>{errors.password}</Text>
               )}
-              <PasswordRequirement met={password.length >= 8} text="Al menos 8 caracteres" />
-              <PasswordRequirement met={/[A-Z]/.test(password)} text="Al menos una mayúscula" />
-              <PasswordRequirement met={/[a-z]/.test(password)} text="Al menos una minúscula" />
-              <PasswordRequirement met={/[0-9]/.test(password)} text="Al menos un número" />
-              <PasswordRequirement met={/[^A-Za-z0-9]/.test(password)} text="Al menos un caracter especial" />
+              <PasswordRequirement met={password.length >= 8} text="Al menos 8 caracteres"  />
+              <PasswordRequirement met={/[A-Z]/.test(password)} text="Al menos una mayúscula"  />
+              <PasswordRequirement met={/[a-z]/.test(password)} text="Al menos una minúscula"  />
+              <PasswordRequirement met={/[0-9]/.test(password)} text="Al menos un número"  />
+              <PasswordRequirement met={/[^A-Za-z0-9]/.test(password)} text="Al menos un caracter especial"  />
             </MotiView>
           )}
 
@@ -377,26 +407,31 @@ export default function AuthScreen() {
                transition={{ type: 'timing', duration: 300, delay: 200 }}
                className="w-full"
              >
-               <View 
-                 className="w-full bg-white/20 p-4 rounded-2xl mb-6 border-2 flex-row items-center"
-                 style={{ borderColor: focusedInput === 'confirmPassword' ? '#a855f7' : 'transparent' }}
-               >
-                 <Feather name="lock" size={20} color="white" style={{ marginRight: 10 }} />
-                 <TextInput
-                   key="confirm-password-input"
-                   onFocus={() => setFocusedInput('confirmPassword')}
-                   onBlur={() => setFocusedInput(null)}
-                   className="flex-1 text-white text-lg"
-                   placeholder="Confirmar contraseña"
-                   placeholderTextColor="#ccc"
-                   value={confirmPassword}
-                   onChangeText={setConfirmPassword}
-                   secureTextEntry={!isPasswordVisible}
-                 />
-                 <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)}>
-                   <Feather name={isPasswordVisible ? "eye-off" : "eye"} size={20} color="white" />
-                 </TouchableOpacity>
-               </View>
+              <BlurView intensity={20} tint="light" style={{ borderRadius: 16, overflow: 'hidden' }}>
+                <View 
+                  className="w-full p-4 rounded-2xl mb-6 border-2 flex-row items-center"
+                  style={{ 
+                    backgroundColor: 'rgba(238, 3, 89, 0.25)', // #EE0359 con transparencia
+                    borderColor: focusedInput === 'confirmPassword' ? '#EE0359' : 'rgba(0,0,0,0.1)' 
+                  }}
+                >
+                  <Feather name="lock" size={20} color="#9D046D" style={{ marginRight: 10 }} />
+                  <TextInput
+                    key="confirm-password-input"
+                    onFocus={() => setFocusedInput('confirmPassword')}
+                    onBlur={() => setFocusedInput(null)}
+                    className="flex-1 text-gray-800 text-lg font-semibold"
+                    placeholder="Confirmar contraseña"
+                    placeholderTextColor="#9D046D"
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry={!isPasswordVisible}
+                  />
+                  <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)}>
+                    <Feather name={isPasswordVisible ? "eye-off" : "eye"} size={20} color="#9D046D" />
+                  </TouchableOpacity>
+                </View>
+              </BlurView>
                 {errors.confirmPassword && (
                   <Text style={styles.errorText}>{errors.confirmPassword}</Text>
                 )}
@@ -409,8 +444,8 @@ export default function AuthScreen() {
             transition={{ type: 'timing', duration: 400, delay: 600 }}
             className="w-full"
           >
-            <TouchableOpacity onPress={authMode === 'login' ? handleLogin : handleSignUp} className="w-full bg-white p-4 rounded-2xl items-center mb-6">
-              <Text className="text-black text-xl font-bold">
+            <TouchableOpacity onPress={authMode === 'login' ? handleLogin : handleSignUp} style={{backgroundColor: '#9D046D'}} className="w-full p-4 top-2 rounded-2xl items-center mb-6 shadow-lg shadow-black/20">
+              <Text className="text-white text-xl font-bold">
                 {authMode === 'login' ? 'Inicia Sesion' : 'Registrate'}
               </Text>
             </TouchableOpacity>
@@ -422,20 +457,20 @@ export default function AuthScreen() {
             transition={{ type: 'timing', duration: 500, delay: 700 }}
             className="w-full items-center"
           >
-            <View className="flex-row items-center w-full mb-6">
-              <View className="flex-1 h-px bg-white/30" />
-              <Text className="text-white/60 mx-4">
+            <View className="flex-row items-center w-full mb-6 top-2">
+              <View className="flex-1 h-px bg-gray-400/50" />
+              <Text className="text-gray-600 mx-4">
                 {authMode === 'login' ? 'o inicia sesión con' : 'o regístrate con'} 
               </Text>
-              <View className="flex-1 h-px bg-white/30" />
+              <View className="flex-1 h-px bg-gray-400/50" />
             </View>
             
-            <TouchableOpacity onPress={handleGoogleSignIn} className="w-full bg-white/20 p-3 rounded-2xl flex-row justify-center items-center mb-14">
+            <TouchableOpacity onPress={handleGoogleSignIn} style={{backgroundColor: '#9D046D'}} className="w-full p-3 rounded-2xl  flex-row top-2 justify-center items-center mb-14 border border-gray-300/50">
               <Image
-                source={{ uri: 'https://img.icons8.com/color/48/google-logo.png' }} 
+                source={{ uri: 'https://img.icons8.com/color/48/google-logo.png' }}
                 className="w-6 h-6 mr-3"
               />
-              <Text className="text-white text-lg font-semibold mx-2">Google</Text>
+              <Text className="text-white/90 text-lg font-semibold">Google</Text>
             </TouchableOpacity>
           </MotiView>
 
@@ -448,14 +483,14 @@ export default function AuthScreen() {
           >
             <Link href="/inviteartisan" asChild>
               <TouchableOpacity>
-                <Text className="text-white/70 text-center">¿Eres administrador?</Text><Text className="text-white text-center font-bold mb-1 w-10/12">Invita a un artesano</Text>
+                <Text className="text-gray-600 text-center">¿Eres administrador? <Text className="font-bold text-gray-800">Invita a un artesano</Text></Text>
                 </TouchableOpacity>
             </Link>
           </MotiView>
 
           <Link href = "/" asChild>
-              <TouchableOpacity className='text-zinc-500 text-lg mb-1 w-10/12 bg-white/20 p-4 rounded-full items-center'>
-                <Text className='text-white text-2xl font-semibold'>Regresar</Text>
+              <TouchableOpacity style={{backgroundColor: '#9D046D'}} className='text-zinc-500 text-lg mb-1 w-10/12 p-4 rounded-full top-9 items-center border border-gray-400/30'>
+                <Text className='text-white/90 text-xl font-semibold'>Regresar</Text>
               </TouchableOpacity>
           </Link>
           </ScrollView>

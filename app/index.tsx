@@ -1,13 +1,20 @@
-import { View, Text, SafeAreaView, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, SafeAreaView, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { Link } from 'expo-router';
-import { MotiView, MotiText } from 'moti';
+import { Link, router } from 'expo-router';
+import { MotiView, MotiText, MotiImage } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { useSharedValue, useAnimatedProps, withRepeat, withTiming, Easing, interpolateColor } from 'react-native-reanimated';
 import React from 'react';
 
 // Creamos un componente Animated a partir de LinearGradient para poder animar sus props
 const AnimatedGradient = Animated.createAnimatedComponent(LinearGradient);
+
+// Definimos un tipo explícito para las propiedades que vamos a animar
+type AnimatedGradientProps = {
+  start?: { x: number; y: number };
+  end?: { x: number; y: number };
+  colors?: readonly string[];
+};
 
 // Define diferentes conjuntos de colores para la animación
 const COLOR_SETS = [
@@ -17,7 +24,7 @@ const COLOR_SETS = [
   ['#4CAF50', '#8BC34A', '#CDDC39'], // Verde esmeralda, verde lima, amarillo verdoso
 ];
 
-// --- Tu pantalla principal (CORREGIDA) ---
+// --- La pantalla principal (CORREGIDA) ---
 export default function Index() {
   const rotation = useSharedValue(0);
   const colorProgress = useSharedValue(0); // Valor para controlar la transición de colores
@@ -37,7 +44,7 @@ export default function Index() {
     );
   }, []);
   
-  const animatedProps = useAnimatedProps(() => {
+  const animatedProps = useAnimatedProps((): AnimatedGradientProps => {
     const angleRad = (rotation.value * Math.PI) / 180; // Convertir grados a radianes
 
     // Centro del gradiente (coordenadas normalizadas de 0 a 1)
@@ -54,25 +61,20 @@ export default function Index() {
 
     // Lógica de interpolación de colores
     const lowerIndex = Math.floor(colorProgress.value);
-    const upperIndex = Math.min(Math.ceil(colorProgress.value), COLOR_SETS.length - 1);
-    const progress = colorProgress.value - lowerIndex;
+    const upperIndex = (lowerIndex + 1) % COLOR_SETS.length; // Lógica circular para el índice
+    const progress = colorProgress.value % 1; // Progreso siempre entre 0 y 1
 
     const currentColors = COLOR_SETS[lowerIndex];
     const nextColors = COLOR_SETS[upperIndex];
 
-    const interpolatedColors = currentColors.map((_, i) =>
-      interpolateColor(progress, [0, 1], [currentColors[i], nextColors[i]])
+    const interpolatedColors: string[] = currentColors.map((_, i) =>
+      interpolateColor(progress, [0, 1], [currentColors[i], nextColors[i]]) as string
     );
-
-    // Asegúrese de que haya al menos dos colores en la matriz
-    if (interpolatedColors.length < 2) {
-      interpolatedColors.push(interpolatedColors[0] || '#FFFFFF'); // Regresa a el color blanco si no hay colores
-    }
 
     return {
       start: { x: startX, y: startY },
       end: { x: endX, y: endY },
-      colors: interpolatedColors as [string, string, ...string[]],
+      colors: interpolatedColors,
     };
   });
 
@@ -80,10 +82,9 @@ export default function Index() {
     <View style={styles.container}>
       <View className="flex-1 w-full h-full absolute inset-0">
         <AnimatedGradient
-          locations={[0.1, 0.5, 0.9]}
-          {...{colors: ['#FFFFFF', '#FFFFFF']}}
-          animatedProps={animatedProps}
-          style={StyleSheet.absoluteFill}
+          locations={[0.1, 0.5, 0.9]} // Puntos de parada para los colores del gradiente
+          animatedProps={animatedProps} // Propiedades animadas (colores y ángulo)
+          style={StyleSheet.absoluteFill} // Estilo para que ocupe todo el fondo
         />
       </View>
       <StatusBar style="light" />
@@ -102,9 +103,12 @@ export default function Index() {
           animate={{ opacity: 1, translateY: 0 }}
           transition={{ type: 'timing', duration: 800 }}
         >
-          <MotiText className="text-white text-7xl mb-4 shadow-lg shadow-black/50">
-            TxTour
-          </MotiText>
+          <MotiImage
+            source={require('../assets/images/Logotemp.png')}
+            className="w-64 h-32 mb-4" // Ajusta el tamaño según necesites
+            style={{ resizeMode: 'contain' }}
+          />
+
           <MotiText
             className="text-white text-4xl font-extralight tracking-wide shadow-md shadow-black/50"
             from={{ opacity: 0, translateY: 40 }}
@@ -121,7 +125,7 @@ export default function Index() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ type: 'timing', duration: 500, delay: 900 }}
         >
-          <Link href="/auth" asChild>
+          <Link href="/auth" asChild replace>
             <TouchableOpacity className="w-11/12 bg-white/20 p-5 rounded-3xl items-center mb-8 border border-white/30">
               <Text className="text-white text-2xl font-semibold">
                 Empieza aquí →
