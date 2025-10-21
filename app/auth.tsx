@@ -351,6 +351,16 @@ export default function AuthScreen() {
             )}
           </MotiView>
           
+          {/* --- ENLACE OLVIDASTE CONTRASEÑA (SOLO LOGIN) --- */}
+          {authMode === 'login' && (
+            <View className="w-full items-end mb-4">
+              <Link href="/forgot-password">
+                <Text className="text-white/80 text-sm">
+                  ¿Olvidaste tu contraseña?
+                </Text>
+              </Link>
+            </View>
+          )}
           {/* --- NUEVA SECCIÓN DE REQUISITOS DE CONTRASEÑA --- */}
           {authMode === 'signup' && (
             <MotiView 
