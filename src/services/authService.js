@@ -15,7 +15,6 @@ export const signInWithPassword = async (email, password) => {
 };
 
 // --- Inicio de sesión con Google (OAuth) ---
-
 // Esta línea ayuda a cerrar la sesión de autenticación del navegador si la app se cerró inesperadamente. Es importante para iOS.
 WebBrowser.maybeCompleteAuthSession(); 
 
@@ -127,4 +126,69 @@ export const onAuthStateChange = (callback) => { // Recibe una función de callb
         callback(event, session); // Llama al callback con el evento y la sesión actual
     });
     return authListener; // Retorna el listener para poder desuscribirse si es necesario
+}
+
+// La ruta de la pantalla a la que Supabase redirigirá la app 
+const PATH = "resetPassword"; 
+
+// Se añade { useProxy: true }. Esto genera una URL de Expo más estable (auth.expo.io/...)
+// que debe estar registrada en el Dashboard de Supabase.
+const redirectUri = makeRedirectUri({
+    path: PATH,
+    useProxy: true,
+});
+    console.log("🔗 Redirect URI generada:", redirectUri);
+
+/**
+ * Solicita a Supabase un correo de recuperación de contraseña para el email dado.
+ * @param {string} email El correo electrónico del usuario.
+ * @returns {Promise<{error: string | null}>} Un objeto con error (si lo hay) o null si es exitoso.
+ */
+export const resetPasswordForEmail = async (email) => {
+    try {
+        console.log(`Usando Redirect URI: ${redirectUri}`);
+        
+        // CORRECCIÓN CLAVE: Usamos la sintaxis de 'options' y 'emailRedirectTo'
+        // para forzar a Supabase a usar la URL de Expo, similar al Magic Link.
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                emailRedirectTo: redirectUri, // <-- Usamos la propiedad estricta
+            },
+        );
+
+        if (error) {
+            return { error: error.message };
+        }
+        
+        return { error: null };
+        
+    } catch (e) {
+        console.error("Error en authService.resetPasswordForEmail:", e);
+        return { error: e.message || "Ocurrió un error del sistema inesperado." };
+    }
+}
+
+/**
+ * Actualiza la contraseña del usuario actualmente autenticado.
+ * Esta función es llamada desde la pantalla /resetPassword.
+ * @param {string} newPassword La nueva contraseña a establecer.
+ * @returns {Promise<{error: string | null}>} Un objeto con error (si lo hay) o null si es exitoso.
+ */
+export const updatePassword = async (newPassword) => {
+    try {
+        // Llama a Supabase para actualizar la contraseña.
+        // Supabase usa la sesión temporal activa (creada por el enlace de recuperación) 
+        // para identificar al usuario que está solicitando el cambio.
+        const { error } = await supabase.auth.updateUser({
+            password: newPassword,
+        });
+
+        if (error) {
+            return { error: error.message };
+        }
+
+        return { error: null };
+    } catch (e) {
+        console.error("Error en authService.updatePassword:", e);
+        return { error: e.message || "Ocurrió un error al actualizar la contraseña." };
+    }
 }

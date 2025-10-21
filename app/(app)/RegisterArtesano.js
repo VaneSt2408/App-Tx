@@ -6,8 +6,8 @@ import {
 } from 'react-native'; // Importa varios componentes de UI de React Native.
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Importa una librería de íconos.
 import { useNavigation } from '@react-navigation/native'; // Importa el hook para manejar la navegación entre pantallas.
-import { supabase } from '../supabase/client'; // Importa el cliente de Supabase.
-import { completeArtesanoRegistration } from '../services/userService'; // Importa la función de servicio para el registro.
+import { supabase } from '../../src/supabase/client'; // Importa el cliente de Supabase.
+import { completeArtesanoRegistration } from '../../src/services/userService'; // Importa la función de servicio para el registro.
 
 export default function RegisterArtesano() { // Define y exporta el componente de la pantalla de registro.
   const navigation = useNavigation(); // Obtiene el objeto de navegación para poder cambiar de pantalla.

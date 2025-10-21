@@ -1,7 +1,7 @@
 // En: src/pages/ChangePassword.js
 import React, { useState } from 'react'; // Importa la librería React y el hook 'useState' para manejar el estado del componente.
 import { View, TextInput, Button, Alert, StyleSheet, Text } from 'react-native'; // Importa componentes de UI básicos de React Native.
-import { supabase } from '../supabase/client'; // Importa el cliente de Supabase para interactuar con la base de datos y la autenticación.
+import { supabase } from '../../src/supabase/client'; // Importa el cliente de Supabase para interactuar con la base de datos y la autenticación.
 
 export default function ChangePassword() { // Define y exporta el componente funcional 'ChangePassword'.
   const [newPassword, setNewPassword] = useState(''); // Crea un estado para guardar la nueva contraseña que escribe el usuario.

@@ -1,8 +1,7 @@
 // En: src/pages/NotFoundPage.js
-
 import React from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
-import { supabase } from '../supabase/client';
+import { supabase } from '../../src/supabase/client';
 
 export default function NotFoundPage() {
   return (

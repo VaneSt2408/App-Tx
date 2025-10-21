@@ -59,7 +59,7 @@ export default function VerificationScreen() {
             className="w-full"
           >
             <View style={styles.inputContainer}>
-              <Feather name="shield-check" size={24} color="#ccc" style={styles.icon} />
+              <Feather name="shield" size={24} color="#ccc" style={styles.icon} />
               <TextInput
                 key="verification-code-input"
                 style={styles.input}

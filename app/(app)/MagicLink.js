@@ -1,7 +1,7 @@
 // En: src/pages/InviteArtesano.js
 import React, { useState } from 'react'; // Importa React y el hook 'useState' para manejar el estado del componente.
 import { View, TextInput, Button, Alert, StyleSheet, Text } from 'react-native'; // Importa componentes visuales básicos de React Native.
-import { sendArtesanoInvite } from '../services/userService'; // Importa la función específica para enviar invitaciones desde un archivo de servicios.
+import { sendArtesanoInvite } from '../../src/services/userService'; // Importa la función específica para enviar invitaciones desde un archivo de servicios.
 
 export default function InviteArtesano() { // Define y exporta el componente de la pantalla para invitar artesanos.
   const [email, setEmail] = useState(''); // Crea un estado para almacenar el correo electrónico que el usuario escribe en el campo de texto.

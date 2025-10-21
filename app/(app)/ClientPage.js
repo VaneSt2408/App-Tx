@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from 'react'; // Similar a ArtPage.js
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native'; // Similar a ArtPage.js
-import { signOut } from '../services/authService'; // Similar a ArtPage.js
-import { supabase } from '../supabase/client'; // Similar a ArtPage.js
+import { signOut } from '../../src/services/authService'; // Similar a ClientPage.js
+import { supabase } from '../../src/supabase/client'; // Similar a ClientPage.js
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Similar a ArtPage.js
 
 function ClientPage() { // Asegúrate de que el nombre del componente coincida con el del archivo

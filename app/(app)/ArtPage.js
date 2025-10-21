@@ -1,8 +1,8 @@
 // En: src/pages/ArtPage.js
 import React, { useEffect, useState } from 'react'; // Similar a ClientPage.js
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native'; // Similar a ClientPage.js
-import { signOut } from '../services/authService'; // Similar a ClientPage.js
-import { supabase } from '../supabase/client'; // Similar a ClientPage.js
+import { signOut } from '../../src/services/authService'; // Similar a ClientPage.js
+import { supabase } from '../../src/supabase/client'; // Similar a ClientPage.js
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Similar a ClientPage.js
 
 function ArtPage() {

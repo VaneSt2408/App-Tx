@@ -6,6 +6,8 @@ import { StatusBar } from 'expo-status-bar';
 import { MotiText, MotiView } from 'moti';
 import React, { useState } from 'react';
 import { Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { signInWithPassword, signInWithGoogle } from '../../src/services/authService'; // Importa funciones de autenticación desde el servicio 
+import {Alert} from 'react-native';
 
 // --- COMPONENTE AUXILIAR PARA MOSTRAR CADA REQUISITO ---
 // Este componente muestra un ícono de check o 'x' y el texto del requisito.
@@ -111,13 +113,6 @@ export default function AuthScreen() {
     return isValid;
   };
 
-  const handleLogin = () => {
-    if (validate()) {
-      console.log('Login attempt with:', { email, password });
-      // router.replace('/(tabs)');
-    }
-  };
-
   const handleSignUp = () => {
     if (validate()) {
       console.log('Sign Up attempt with:', { email, username, password, confirmPassword, phoneNumber, profileImage });
@@ -146,10 +141,19 @@ export default function AuthScreen() {
     }
   };
 
-  const handleGoogleSignIn = () => {
-    console.log('Attempting Google Sign In');
-    // Aquí irá tu lógica de Google Sign-In.
-  }
+  // Funcion para manejar el inicio de sesión con Google
+  const handleGoogleLogin = async () => {
+    await signInWithGoogle(); // Llama al servicio de autenticación
+    //La redirección se maneja en App.js 
+  };
+
+    //Inicio de sesión con correo y contraseña
+  const handleLogin = async () => {
+    const { error } = await signInWithPassword(email, password); // Llama al servicio de autencación
+    if (error) {
+      Alert.alert('Error', 'Credenciales incorrectas'); // Muestra una alerta si hay un error (Credenciales incorrectas o campos incompletos)
+    }
+  };
 
   return (
     <LinearGradient
@@ -430,13 +434,26 @@ export default function AuthScreen() {
               <View className="flex-1 h-px bg-white/30" />
             </View>
             
-            <TouchableOpacity onPress={handleGoogleSignIn} className="w-full bg-white/20 p-3 rounded-2xl flex-row justify-center items-center mb-14">
+            <TouchableOpacity onPress={handleGoogleLogin} className="w-full bg-white/20 p-3 rounded-2xl flex-row justify-center items-center mb-14">
               <Image
                 source={{ uri: 'https://img.icons8.com/color/48/google-logo.png' }} 
                 className="w-6 h-6 mr-3"
               />
               <Text className="text-white text-lg font-semibold mx-2">Google</Text>
             </TouchableOpacity>
+
+                  {authMode === 'login' && (
+                      <Link href="/recuperacioncontrasena" asChild>
+                          <TouchableOpacity className="mb-3"> 
+                              <Text 
+                                  className="text-base font-semibold underline" 
+                                  style={{ color: '#a855f7' }} 
+                              >
+                                  ¿Olvidaste tu contraseña?
+                              </Text>
+                          </TouchableOpacity>
+                      </Link>
+                  )}
           </MotiView>
 
           <Link href = "/" asChild>

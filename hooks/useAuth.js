@@ -1,46 +1,23 @@
 // App.js
 import 'react-native-url-polyfill/auto'; // Polyfill necesario para que la librería de Supabase funcione correctamente en React Native.
 import React, { useState, useEffect } from 'react'; // Importa React y los hooks 'useState' y 'useEffect'.
-import { Alert, View, ActivityIndicator, StyleSheet } from 'react-native'; // Importa componentes de UI de React Native.
-import { NavigationContainer } from '@react-navigation/native'; // Contenedor principal para la navegación de la app.
-import { createNativeStackNavigator } from '@react-navigation/native-stack'; // Importa el creador de navegación tipo "stack" (pantallas apiladas).
+import { Alert } from 'react-native'; // Importa componentes de UI de React Native.
 import * as Linking from 'expo-linking'; // Importa la librería de Expo para manejar deep links (abrir la app desde un URL).
-import { supabase } from './src/supabase/client'; // Importa el cliente de Supabase.
+import { supabase } from '../src/supabase/client'; // Importa el cliente de Supabase.
+import { Session } from '@supabase/supabase-js';
 
-// --- Importación de todas las pantallas de la aplicación ---
-import Login from './src/pages/login';
-import auth from './app/auth.tsx';
-import PageAdmin from './src/pages/PageAdmin';
-import RegisterArtesano from './app/(tabs)/RegisterArtesano.js';
-import ArtPage from './src/pages/ArtPage';
-import ClientPage from './src/pages/ClientPage';
-import NotFoundPage from './src/pages/NotFoundPage';
-import MagicLink from './src/pages/MagicLink';
-import ChangePassword from './src/pages/ChangePassword';
-
-// --- Componente simple para mostrar una pantalla de carga ---
-const LoadingScreen = () => (
-  <View style={styles.loadingContainer}>
-    <ActivityIndicator size="large" color="#2575fc" />
-  </View>
-);
-
-// Inicializa el navegador de tipo Stack.
-const Stack = createNativeStackNavigator();
-
-// --- Componente principal de la aplicación ---
-export default function App() {
-  // --- Estados globales de la aplicación ---
-  const [session, setSession] = useState(null); // Almacena la sesión del usuario (si está logueado o no).
+export function useAuth() {
+  const [session, setSession] = useState<Session | null>(null); // Almacena la sesión del usuario (si está logueado o no).
   const [role, setRole] = useState(null); // Almacena el rol del usuario ('admin', 'artesano', etc.).
   const [loading, setLoading] = useState(true); // Controla la visualización de la pantalla de carga inicial.
+  //hooks/useAuth.js
 
   // --- useEffect para manejar la sesión de autenticación ---
   useEffect(() => {
-    // Intenta obtener la sesión activa la primera vez que la app carga.
+    //Intenta obtener la sesión activa la primera vez que la app carga.
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session); // Establece la sesión encontrada.
-      // Si no hay sesión, significa que el usuario no está logueado, por lo que se deja de cargar.
+      //Si no hay sesión, significa que el usuario no está logueado, por lo que se deja de cargar.
       if (!session) {
         setLoading(false);
       }
@@ -105,7 +82,7 @@ export default function App() {
 
   // --- useEffect para manejar Deep Links (enlaces mágicos) ---
   useEffect(() => {
-    // Función que procesa el URL recibido por el deep link.
+    //Función que procesa el URL recibido por el deep link.
     const handleDeepLink = async (url) => {
       if (!url) return;
       console.log('🔗 URL de Deep Link recibida:', url);
@@ -129,70 +106,6 @@ export default function App() {
     // Función de limpieza para remover el listener.
     return () => linkingListener.remove();
   }, []); // Se ejecuta solo una vez.
-
-  // --- Renderizado Condicional ---
-
-  // Mientras el estado 'loading' sea verdadero, muestra la pantalla de carga.
-  if (loading) {
-    return <LoadingScreen />;
-  }
-
-  // Función que decide qué pantallas mostrar basado en la sesión y el rol.
-  const renderScreens = () => {
-    // Si no hay sesión de usuario, solo muestra la pantalla de Login.
-    if (!session?.user) {
-      return <Stack.Screen name="auth" component={auth} options={{ headerShown: false }} />;
-    }
-    
-    // Si hay sesión, decide qué mostrar basado en el rol del usuario.
-    switch (role) {
-      case 'admin':
-        // Si el rol es 'admin', muestra las pantallas de administración.
-        return (
-          <>
-            <Stack.Screen name="PageAdmin" component={PageAdmin} options={{ title: 'Modo Admin' }} />
-            <Stack.Screen name="MagicLink" component={MagicLink} options={{ title: 'Invitar Artesano' }} />
-          </>
-        );
-      case 'artesano':
-        // Si el rol es 'artesano', muestra su página principal.
-        return <Stack.Screen name="ArtPage" component={ArtPage} options={{ title: 'Página del Artesano' }} />;
-      case 'cliente':
-        // Si el rol es 'cliente', muestra su página principal.
-        return <Stack.Screen name="ClientPage" component={ClientPage} options={{ title: 'Página del Cliente' }} />;
-      case 'En proceso':
-        // Si el rol es 'En proceso', significa que es un artesano que debe completar su registro.
-        return (
-          <>
-            <Stack.Screen name="RegisterArtesano" component={RegisterArtesano} options={{ title: 'Completa tu Registro' }} />
-            <Stack.Screen name="ChangePassword" component={ChangePassword} options={{ title: 'Establecer una contraseña' }} />
-          </>
-        );
-      case null:
-        // Si hay sesión pero el rol aún es 'null', significa que se está cargando. Muestra la pantalla de carga.
-        return <Stack.Screen name="LoadingRole" component={LoadingScreen} options={{ headerShown: false }} />;
-      default:
-        // Si el rol es cualquier otra cosa inesperada, muestra una página de error.
-        return <Stack.Screen name="NotFound" component={NotFoundPage} options={{ title: 'Error de Rol' }} />;
-    }
-  };
-
-  // --- Renderizado final del componente ---
-  return (
-    // Envuelve toda la aplicación en el contenedor de navegación.
-    <NavigationContainer>
-      {/* Define el navegador de Stack y le pasa las pantallas a renderizar. */}
-      <Stack.Navigator>{renderScreens()}</Stack.Navigator>
-    </NavigationContainer>
-  );
+  return { session, role, loading };
 }
 
-// --- Hoja de estilos para el componente ---
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1, // Ocupa todo el espacio disponible.
-    justifyContent: 'center', // Centra verticalmente.
-    alignItems: 'center', // Centra horizontalmente.
-    backgroundColor: '#f5f5f5', // Color de fondo.
-  },
-});

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'; // En: src/pages/PageAdmin.js
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native'; // Asegúrate de importar TouchableOpacity
 import { useNavigation } from '@react-navigation/native'; // Importa useNavigation para la navegación
-import { signOut } from '../services/authService'; // Importa la función signOut desde tu servicio de autenticación
-import { supabase } from '../supabase/client'; // Importa el cliente de SupaBase
+import { signOut } from '../../src/services/authService'; // Similar a ClientPage.js
+import { supabase } from '../../src/supabase/client'; // Similar a ClientPage.js
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Importa los íconos de MaterialCommunityIcons
 
 function PageAdmin() { // Asegúrate de que el nombre del componente coincida con el del archivo
