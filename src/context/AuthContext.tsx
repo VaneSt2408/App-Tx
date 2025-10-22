@@ -6,10 +6,18 @@ import { Alert } from 'react-native'; // Importa componentes de UI de React Nati
 
 
 // Creamos el contexto
-const AuthContext = createContext<{ session: Session | null; role: string | null; loading: boolean }>({
+const AuthContext = createContext<{ 
+  session: Session | null; 
+  role: string | null; 
+  loading: boolean;
+  isPasswordRecovery: boolean;
+  resetPasswordRecoveryMode: () => void;
+}>({
   session: null,
   role: null,
   loading: true,
+  isPasswordRecovery: false,
+  resetPasswordRecoveryMode: () => {},
 });
 
 // Hook para usar el contexto fácilmente en otros componentes
@@ -22,6 +30,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null); // Almacena la sesión del usuario (si está logueado o no).
     const [role, setRole] = useState(null); // Almacena el rol del usuario ('admin', 'artesano', etc.).
     const [loading, setLoading] = useState(true); // Controla la visualización de la pantalla de carga inicial.
+    const [isPasswordRecovery, setIsPasswordRecovery] = useState(false); // Controla si estamos en modo de recuperación de contraseña.
     //hooks/useAuth.js
   
     // --- useEffect para manejar la sesión de autenticación ---
@@ -101,14 +110,85 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (!url) return;
         console.log('🔗 URL de Deep Link recibida:', url);
         
-        // Extrae los tokens de autenticación del fragmento (#) de la URL.
-        const params = new URLSearchParams(url.split('#')[1] || '');
-        const access_token = params.get('access_token');
-        const refresh_token = params.get('refresh_token');
-  
-        // Si se encuentran ambos tokens, se usan para establecer la sesión en Supabase.
-        if (access_token && refresh_token) {
-          await supabase.auth.setSession({ access_token, refresh_token });
+        // Verificamos si es un deep link para recuperación de contraseña
+        if (url.includes('resetPassword')) {
+          console.log('🔑 Deep link de recuperación de contraseña detectado');
+          // Establecemos el modo de recuperación de contraseña
+          setIsPasswordRecovery(true);
+          
+          // Los tokens están en el fragmento (#) de la URL
+          const fragment = url.split('#')[1];
+          if (fragment) {
+            const params = new URLSearchParams(fragment);
+            const access_token = params.get('access_token');
+            const refresh_token = params.get('refresh_token');
+
+            // Si se encuentran ambos tokens, se usan para establecer la sesión temporal en Supabase
+            if (access_token && refresh_token) {
+              console.log('🔐 Estableciendo sesión temporal para recuperación de contraseña');
+              console.log('🔑 Access token recibido:', access_token.substring(0, 50) + '...');
+              console.log('🔄 Refresh token recibido:', refresh_token.substring(0, 20) + '...');
+              
+              try {
+                const { error } = await supabase.auth.setSession({ 
+                  access_token, 
+                  refresh_token 
+                });
+                
+                if (error) {
+                  console.error('❌ Error estableciendo sesión temporal:', error);
+                  console.error('❌ Tipo de error:', error.name);
+                  console.error('❌ Mensaje de error:', error.message);
+                  
+                  // Intentar verificar si el token es válido
+                  if (error.message.includes('Invalid JWT structure')) {
+                    console.log('🔄 Intentando verificar la sesión actual...');
+                    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+                    if (sessionError) {
+                      console.error('❌ Error verificando sesión:', sessionError);
+                    } else {
+                      console.log('✅ Sesión verificada correctamente:', sessionData);
+                    }
+                  }
+                } else {
+                  console.log('✅ Sesión temporal establecida correctamente');
+                  
+                  // Verificar que la sesión se estableció correctamente
+                  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+                  if (sessionError) {
+                    console.error('❌ Error verificando sesión establecida:', sessionError);
+                  } else {
+                    console.log('✅ Sesión verificada:', sessionData.session?.user?.email);
+                  }
+                }
+              } catch (sessionError) {
+                console.error('❌ Error inesperado estableciendo sesión:', sessionError);
+              }
+            } else {
+              console.warn('⚠️ No se encontraron tokens válidos en el deep link');
+            }
+          } else {
+            console.warn('⚠️ No se encontró fragmento en la URL del deep link');
+          }
+        } else {
+          // Para otros tipos de deep links (como magic links de login)
+          const fragment = url.split('#')[1];
+          if (fragment) {
+            const params = new URLSearchParams(fragment);
+            const access_token = params.get('access_token');
+            const refresh_token = params.get('refresh_token');
+      
+            // Si se encuentran ambos tokens, se usan para establecer la sesión en Supabase.
+            if (access_token && refresh_token) {
+              console.log('🔐 Estableciendo sesión para magic link/login');
+              try {
+                await supabase.auth.setSession({ access_token, refresh_token });
+                console.log('✅ Sesión establecida correctamente');
+              } catch (error) {
+                console.error('❌ Error estableciendo sesión:', error);
+              }
+            }
+          }
         }
       };
       
@@ -120,11 +200,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Función de limpieza para remover el listener.
       return () => linkingListener.remove();
     }, []); // Se ejecuta solo una vez.
+    
+    // Función para resetear el modo de recuperación de contraseña
+    const resetPasswordRecoveryMode = () => {
+      setIsPasswordRecovery(false);
+    };
+    
     // 4. Crea el objeto 'value'
   const value = {
     session,
     role,
     loading,
+    isPasswordRecovery,
+    resetPasswordRecoveryMode,
   };
 
   // 5. Devuelve el Provider con el 'value' y los 'children'

@@ -8,9 +8,11 @@ import { Alert, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleS
 // Importamos la función de nuestro servicio
 import { updatePassword } from '../../src/services/authService'; 
 import { supabase } from '../../src/supabase/client';
+import { useAuth } from '../../src/context/AuthContext';
 
 export default function ResetPasswordScreen() {
     const router = useRouter();
+    const { resetPasswordRecoveryMode } = useAuth();
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -40,6 +42,8 @@ export default function ResetPasswordScreen() {
         if (result.error) {
             // Si hay un error (ej: token expirado o no autenticado), la sesión es inválida.
             Alert.alert('Error al Actualizar', `No pudimos cambiar tu contraseña. Por favor, solicita un nuevo enlace. Detalles: ${result.error}`);
+            // Reseteamos el modo de recuperación de contraseña
+            resetPasswordRecoveryMode();
             // Fuerza la salida al login
             router.replace('/auth');
         } else {
@@ -47,6 +51,8 @@ export default function ResetPasswordScreen() {
                 'Éxito',
                 'Tu contraseña ha sido actualizada correctamente. ¡Ya puedes iniciar sesión con tu nueva clave!',
             );
+            // Reseteamos el modo de recuperación de contraseña
+            resetPasswordRecoveryMode();
             // La actualización fue exitosa, navegamos al login para que inicie sesión
             router.replace('/auth'); 
         }

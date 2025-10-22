@@ -14,6 +14,33 @@ export const signInWithPassword = async (email, password) => {
   return { data, error }; 
 };
 
+// --- Función utilitaria para generar URIs de redirección ---
+/**
+ * Genera la URI de redirección apropiada según el entorno
+ * En desarrollo usa el proxy de Expo, en producción usa el scheme personalizado
+ * @param {string} path - Ruta específica (opcional)
+ * @returns {string} URI de redirección
+ */
+const getRedirectUri = (path = null) => {
+    // Verificamos si estamos en desarrollo (Expo Go) o en producción
+    const isDevelopment = __DEV__ || process.env.NODE_ENV === 'development';
+    
+    if (isDevelopment) {
+        // En desarrollo, usar el formato exp:// que funciona con tunnel
+        // Forzamos el uso del formato exp:// en lugar de https://auth.expo.io
+        return makeRedirectUri({
+            path: path || '', // No agregar --/ aquí, makeRedirectUri lo maneja automáticamente
+            useProxy: false, // Importante: false para usar formato exp://
+        });
+    } else {
+        // En producción, usar el scheme personalizado de la app
+        return makeRedirectUri({
+            path: path || '',
+            scheme: 'txapp', // Scheme configurado en app.json
+        });
+    }
+};
+
 // --- Inicio de sesión con Google (OAuth) ---
 // Esta línea ayuda a cerrar la sesión de autenticación del navegador si la app se cerró inesperadamente. Es importante para iOS.
 WebBrowser.maybeCompleteAuthSession(); 
@@ -25,8 +52,9 @@ export const signInWithGoogle = async () => {
     console.log("🚀 --- INICIO DE LOGIN CON GOOGLE ---"); // Log para depuración.
 
     // Crea la URL a la que Google debe redirigir al usuario después de la autenticación.
-    const redirectTo = makeRedirectUri({ useProxy: true }); // 'useProxy: true' es clave para que funcione en Expo Go.
-    console.log("🧭 Redirect URI generada con makeRedirectUri:", redirectTo); // Log para depuración.
+    const redirectTo = getRedirectUri(); // Usa la función utilitaria
+    console.log("🧭 Redirect URI generada:", redirectTo); // Log para depuración.
+    console.log(`📱 Entorno: ${__DEV__ ? 'Desarrollo' : 'Producción'}`); // Log para depuración.
 
     // Llama a Supabase para iniciar el flujo OAuth con el proveedor 'google'.
     const { data, error } = await supabase.auth.signInWithOAuth({
@@ -128,41 +156,37 @@ export const onAuthStateChange = (callback) => { // Recibe una función de callb
     return authListener; // Retorna el listener para poder desuscribirse si es necesario
 }
 
-// La ruta de la pantalla a la que Supabase redirigirá la app 
-const PATH = "resetPassword"; 
-
-// Se añade { useProxy: true }. Esto genera una URL de Expo más estable (auth.expo.io/...)
-// que debe estar registrada en el Dashboard de Supabase.
-const redirectUri = makeRedirectUri({
-    path: PATH,
-    useProxy: true,
-});
-    console.log("🔗 Redirect URI generada:", redirectUri);
 
 /**
  * Solicita a Supabase un correo de recuperación de contraseña para el email dado.
+ * Esta función funciona tanto en desarrollo como en producción.
  * @param {string} email El correo electrónico del usuario.
  * @returns {Promise<{error: string | null}>} Un objeto con error (si lo hay) o null si es exitoso.
  */
 export const resetPasswordForEmail = async (email) => {
     try {
-        console.log(`Usando Redirect URI: ${redirectUri}`);
+        const redirectUri = getRedirectUri("resetPassword"); // Usa la función utilitaria con ruta específica
+        console.log(`🔗 Redirect URI generada: ${redirectUri}`);
+        console.log(`📱 Entorno: ${__DEV__ ? 'Desarrollo' : 'Producción'}`);
+        console.log(`📧 Email: ${email}`);
         
-        // CORRECCIÓN CLAVE: Usamos la sintaxis de 'options' y 'emailRedirectTo'
-        // para forzar a Supabase a usar la URL de Expo, similar al Magic Link.
+        // Usamos la sintaxis correcta para resetPasswordForEmail
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                emailRedirectTo: redirectUri, // <-- Usamos la propiedad estricta
-            },
-        );
+            emailRedirectTo: redirectUri,
+        });
 
         if (error) {
+            console.error("❌ Error en resetPasswordForEmail:", error);
+            console.error("❌ Detalles del error:", JSON.stringify(error, null, 2));
             return { error: error.message };
         }
         
+        console.log("✅ Email de recuperación enviado exitosamente");
+        console.log(`✅ URL enviada a Supabase: ${redirectUri}`);
         return { error: null };
         
     } catch (e) {
-        console.error("Error en authService.resetPasswordForEmail:", e);
+        console.error("❌ Error en authService.resetPasswordForEmail:", e);
         return { error: e.message || "Ocurrió un error del sistema inesperado." };
     }
 }

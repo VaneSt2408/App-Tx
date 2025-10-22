@@ -3,32 +3,73 @@ import { supabase } from '../supabase/client'; // Importa la instancia del clien
 import { Alert } from 'react-native'; // Importa el componente Alert de React Native.
 import { makeRedirectUri } from 'expo-auth-session'; // Importa la función de Expo para crear URIs de redirección.
 
+// --- Función utilitaria para generar URIs de redirección ---
+/**
+ * Genera la URI de redirección apropiada según el entorno
+ * En desarrollo usa el proxy de Expo, en producción usa el scheme personalizado
+ * @param {string} path - Ruta específica (opcional)
+ * @returns {string} URI de redirección
+ */
+const getRedirectUri = (path = null) => {
+    // Verificamos si estamos en desarrollo (Expo Go) o en producción
+    const isDevelopment = __DEV__ || process.env.NODE_ENV === 'development';
+    
+    if (isDevelopment) {
+        // En desarrollo, usar el formato exp:// que funciona con tunnel
+        // Forzamos el uso del formato exp:// en lugar de https://auth.expo.io
+        return makeRedirectUri({
+            path: path || '', // No agregar --/ aquí, makeRedirectUri lo maneja automáticamente
+            useProxy: false, // Importante: false para usar formato exp://
+        });
+    } else {
+        // En producción, usar el scheme personalizado de la app
+        return makeRedirectUri({
+            path: path || '',
+            scheme: 'txapp', // Scheme configurado en app.json
+        });
+    }
+};
+
 // --- Función para enviar la invitación al artesano (enlace mágico) ---
 export const sendArtesanoInvite = async (email) => { 
-  // Llama al método de Supabase para iniciar sesión con un enlace de un solo uso (OTP/Magic Link).
-  const { data, error } = await supabase.auth.signInWithOtp({
-    email, // El correo electrónico al que se enviará el enlace.
-    options: {
-      // 'data' permite pasar metadatos que se asocian al usuario al momento del registro.
-      data: { role: 'En proceso' }, // Se asigna un rol temporal al usuario invitado.
-      // 'emailRedirectTo' es la URL a la que el usuario será redirigido después de hacer clic en el enlace.
-      emailRedirectTo: makeRedirectUri(), // Genera la URL de redirección adecuada para la app de Expo.
-    },
-  });
+  try {
+    console.log("🚀 --- ENVIANDO INVITACIÓN A ARTESANO ---");
+    
+    // Usa la función utilitaria para generar la URI de redirección apropiada
+    const redirectUri = getRedirectUri();
+    console.log(`🔗 Redirect URI generada: ${redirectUri}`);
+    console.log(`📱 Entorno: ${__DEV__ ? 'Desarrollo' : 'Producción'}`);
+    
+    // Llama al método de Supabase para iniciar sesión con un enlace de un solo uso (OTP/Magic Link).
+    const { data, error } = await supabase.auth.signInWithOtp({
+      email, // El correo electrónico al que se enviará el enlace.
+      options: {
+        // 'data' permite pasar metadatos que se asocian al usuario al momento del registro.
+        data: { role: 'En proceso' }, // Se asigna un rol temporal al usuario invitado.
+        // 'emailRedirectTo' es la URL a la que el usuario será redirigido después de hacer clic en el enlace.
+        emailRedirectTo: redirectUri, // Usa la función utilitaria
+      },
+    });
 
-  // Si Supabase devuelve un error durante el envío del enlace...
-  if (error) {
-    // ...se comprueba si el error es porque el usuario ya existe.
-    if (error.message.includes("User already registered")) {
-      // Si es así, se lanza un error personalizado y más claro para el usuario.
-      throw new Error("Este correo ya está registrado en el sistema.");
+    // Si Supabase devuelve un error durante el envío del enlace...
+    if (error) {
+      console.error("❌ Error al enviar invitación:", error);
+      // ...se comprueba si el error es porque el usuario ya existe.
+      if (error.message.includes("User already registered")) {
+        // Si es así, se lanza un error personalizado y más claro para el usuario.
+        throw new Error("Este correo ya está registrado en el sistema.");
+      }
+      // Para cualquier otro tipo de error, se lanza un error genérico.
+      throw new Error(`Error al enviar el enlace: ${error.message}`);
     }
-    // Para cualquier otro tipo de error, se lanza un error genérico.
-    throw new Error(`Error al enviar el enlace: ${error.message}`);
-  }
 
-  // Si no hay errores, se devuelve la información de la operación.
-  return data;
+    console.log("✅ Invitación enviada exitosamente");
+    // Si no hay errores, se devuelve la información de la operación.
+    return data;
+  } catch (e) {
+    console.error("❌ Error en sendArtesanoInvite:", e);
+    throw e; // Re-lanza el error para que sea manejado por el componente que llama
+  }
 };
 
 // --- Función para completar el registro del artesano una vez que ha iniciado sesión ---

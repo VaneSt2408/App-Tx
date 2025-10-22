@@ -14,7 +14,7 @@ const LoadingScreen = () => (
 // Este es el componente que contiene toda la lógica de navegación.
 // Necesita estar separado para poder usar el hook 'useAuth'.
 function RootLayoutNav() {
-  const { session, loading: authLoading } = useAuth();
+  const { session, loading: authLoading, isPasswordRecovery } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
@@ -23,7 +23,8 @@ function RootLayoutNav() {
     console.log('Auth Check:', { 
       authLoading, 
       hasSession: !!session?.user, 
-      segments 
+      segments,
+      isPasswordRecovery
     });
 
     // Si el estado de autenticación aún está cargando, no hacemos nada.
@@ -32,6 +33,12 @@ function RootLayoutNav() {
     }
 
     const inAuthGroup = segments[0] === '(auth)';
+
+    // Si estamos en modo de recuperación de contraseña, no redirigir automáticamente
+    if (isPasswordRecovery) {
+      console.log('🔑 Modo de recuperación de contraseña activo - no redirigiendo');
+      return;
+    }
 
     // Si NO hay sesión de usuario...
     if (!session?.user) {
@@ -50,7 +57,7 @@ function RootLayoutNav() {
         router.replace('/(app)' as Href); 
       }
     }
-  }, [session, authLoading, segments]); // Dependemos solo de los estados clave.
+  }, [session, authLoading, segments, isPasswordRecovery]); // Dependemos solo de los estados clave.
 
   // Mientras carga la sesión, mostramos el indicador.
   if (authLoading) {
