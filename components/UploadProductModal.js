@@ -15,7 +15,7 @@ import {
   Platform,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { selectAndCompressImage, uploadProduct } from '../src/services/productService';
+import { selectAndCompressImage, createProduct } from '../src/services/productService';
 
 const UploadProductModal = ({ visible, onClose, onProductUploaded }) => {
   const [formData, setFormData] = useState({
@@ -36,9 +36,9 @@ const UploadProductModal = ({ visible, onClose, onProductUploaded }) => {
 
   const handleSelectImage = async () => {
     try {
-      const imageUri = await selectAndCompressImage();
-      if (imageUri) {
-        setSelectedImage(imageUri);
+      const imageAsset = await selectAndCompressImage();
+      if (imageAsset) {
+        setSelectedImage(imageAsset);
       }
     } catch (error) {
       Alert.alert('Error', 'No se pudo seleccionar la imagen');
@@ -69,27 +69,29 @@ const UploadProductModal = ({ visible, onClose, onProductUploaded }) => {
 
     setLoading(true);
     try {
-      const result = await uploadProduct(formData, selectedImage);
+      // Preparar datos del producto incluyendo la imagen
+      const productData = {
+        ...formData,
+        imageAsset: selectedImage, // Pasar el asset completo con base64
+      };
+
+      const result = await createProduct(productData);
       
-      if (result.success) {
-        Alert.alert('Éxito', 'Producto subido correctamente');
-        // Limpiar formulario
-        setFormData({
-          nombre: '',
-          descripcion: '',
-          precio: '',
-          categoria: 'general',
-        });
-        setSelectedImage(null);
-        onClose();
-        if (onProductUploaded) {
-          onProductUploaded();
-        }
-      } else {
-        Alert.alert('Error', result.error || 'No se pudo subir el producto');
+      Alert.alert('Éxito', 'Producto subido correctamente');
+      // Limpiar formulario
+      setFormData({
+        nombre: '',
+        descripcion: '',
+        precio: '',
+        categoria: 'general',
+      });
+      setSelectedImage(null);
+      onClose();
+      if (onProductUploaded) {
+        onProductUploaded();
       }
     } catch (error) {
-      Alert.alert('Error', 'Ocurrió un error inesperado');
+      Alert.alert('Error', error.message || 'Ocurrió un error inesperado');
     } finally {
       setLoading(false);
     }
@@ -137,7 +139,7 @@ const UploadProductModal = ({ visible, onClose, onProductUploaded }) => {
               disabled={loading}
             >
               {selectedImage ? (
-                <Image source={{ uri: selectedImage }} style={styles.selectedImage} />
+                <Image source={{ uri: selectedImage.uri }} style={styles.selectedImage} />
               ) : (
                 <View style={styles.imagePlaceholder}>
                   <MaterialCommunityIcons name="camera-plus" size={40} color="#999" />

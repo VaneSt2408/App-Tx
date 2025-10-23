@@ -4,7 +4,7 @@ import { Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 
-// --- Función para seleccionar y comprimir imagen ---
+// --- Función para seleccionar y comprimir imagen (siguiendo la lógica de completeProfile) ---
 export const selectAndCompressImage = async () => {
   try {
     // Solicitar permisos para acceder a la galería
@@ -14,19 +14,19 @@ export const selectAndCompressImage = async () => {
       return null;
     }
 
-    // Configurar opciones del selector de imágenes
+    // Configurar opciones del selector de imágenes (igual que en completeProfile)
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.7, // Comprimir a 70% de calidad
-      base64: false,
+      aspect: [4, 3], // Mantenemos aspect ratio para productos
+      quality: 0.5, // Misma compresión que completeProfile
+      base64: true, // ¡Crucial! Pedimos la imagen en formato base64 para poder subirla
     });
 
     if (!result.canceled && result.assets[0]) {
       const asset = result.assets[0];
       console.log('Imagen seleccionada:', asset.uri);
-      return asset.uri;
+      return asset; // Retornamos el objeto completo con base64
     }
     
     return null;
@@ -37,55 +37,44 @@ export const selectAndCompressImage = async () => {
   }
 };
 
-// --- Función para subir imagen a Supabase Storage ---
-export const uploadImageToSupabase = async (imageUri, productId) => {
+// --- Función para subir imagen a Supabase Storage (siguiendo la lógica de completeProfile) ---
+export const uploadImageToSupabase = async (imageAsset, productId) => {
   try {
     console.log('Subiendo imagen a Supabase...');
     
-    // Leer el archivo como base64
-    const base64 = await FileSystem.readAsStringAsync(imageUri, {
-      encoding: 'base64',
-    });
-    
-    if (!base64) {
-      throw new Error('No se pudo leer el archivo');
+    if (!imageAsset || !imageAsset.base64) {
+      throw new Error('No se encontró la imagen o los datos base64');
     }
     
-    // Generar nombre único para el archivo
-    const timestamp = Date.now();
-    const fileName = `producto_${productId}_${timestamp}.jpg`;
-    const filePath = `productos/${fileName}`;
+    // Obtener el usuario actual para crear la estructura de carpetas
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('No se encontró la sesión del usuario');
+    }
     
-    // Función para convertir base64 a Uint8Array (compatible con React Native)
-    const base64ToUint8Array = (base64) => {
-      const binaryString = base64;
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      return bytes;
-    };
+    // Generar nombre único para el archivo (igual que en completeProfile)
+    const fileExt = imageAsset.uri.split('.').pop();
+    const fileName = `${Date.now()}.${fileExt}`;
+    const filePath = `${user.id}/${fileName}`; // Guardamos la imagen en una carpeta con el ID del usuario
     
-    const bytes = base64ToUint8Array(base64);
+    // Importar decode desde base64-arraybuffer (igual que en completeProfile)
+    const { decode } = require('base64-arraybuffer');
     
-    // Subir a Supabase Storage
-    const { data, error } = await supabase.storage
+    // Subimos la imagen decodificada al bucket 'productos' (igual que en completeProfile)
+    const { error: uploadError } = await supabase.storage
       .from('productos')
-      .upload(filePath, bytes, {
-        contentType: 'image/jpeg',
-        upsert: false
+      .upload(filePath, decode(imageAsset.base64), {
+        contentType: imageAsset.mimeType ?? 'image/jpeg',
       });
 
-    if (error) {
-      console.error('Error al subir imagen:', error);
-      throw new Error(`Error al subir imagen: ${error.message}`);
+    if (uploadError) {
+      console.error('Error al subir imagen:', uploadError);
+      throw new Error(`Error al subir imagen: ${uploadError.message}`);
     }
 
-    // Obtener URL pública de la imagen
-    const { data: urlData } = supabase.storage
-      .from('productos')
-      .getPublicUrl(filePath);
-
+    // Si la subida fue exitosa, obtenemos la URL pública de la imagen
+    const { data: urlData } = supabase.storage.from('productos').getPublicUrl(filePath);
+    
     console.log('Imagen subida exitosamente:', urlData.publicUrl);
     return urlData.publicUrl;
   } catch (error) {
@@ -94,7 +83,7 @@ export const uploadImageToSupabase = async (imageUri, productId) => {
   }
 };
 
-// --- Función para crear un nuevo producto ---
+// --- Función para crear un nuevo producto (siguiendo la lógica de completeProfile) ---
 export const createProduct = async (productData) => {
   try {
     console.log('Creando producto...', productData);
@@ -105,7 +94,15 @@ export const createProduct = async (productData) => {
       throw new Error('No hay sesión activa');
     }
 
-    // Insertar producto en la base de datos
+    let imagenUrl = null;
+
+    // --- Subida de la imagen (si se proporcionó) ---
+    if (productData.imageAsset) {
+      console.log('Subiendo imagen del producto...');
+      imagenUrl = await uploadImageToSupabase(productData.imageAsset, null);
+    }
+
+    // Insertar producto en la base de datos con la URL de la imagen
     const { data, error } = await supabase
       .from('productos')
       .insert({
@@ -114,6 +111,7 @@ export const createProduct = async (productData) => {
         descripcion: productData.descripcion,
         precio: productData.precio,
         categoria: productData.categoria || 'general',
+        imagen_url: imagenUrl,
         estado: 'activo'
       })
       .select()

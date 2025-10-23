@@ -53,6 +53,11 @@ function ArtPage() {
                 <MaterialCommunityIcons name="plus" size={24} color="#fff" />
                 <Text style={styles.uploadButtonText}>Subir producto</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity style={styles.uploadButton} onPress={handleUploadProduct}>
+                <MaterialCommunityIcons name="plus" size={24} color="#fff" />
+                <Text style={styles.uploadButtonText}>Crear publicación</Text>
+            </TouchableOpacity>
             
             {/* Aquí puedes agregar el contenido específico para el artesano */}
             
