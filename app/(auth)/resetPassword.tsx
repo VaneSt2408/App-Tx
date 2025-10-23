@@ -17,9 +17,80 @@ export default function ResetPasswordScreen() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [isCurrentPasswordVisible, setIsCurrentPasswordVisible] = useState(false);
 
     // NOTA: Esta pantalla se carga cuando el Deep Link trae al usuario.
     // En este punto, Supabase ya autenticó al usuario temporalmente.
+
+    // Función para obtener la contraseña actual del usuario
+    const getCurrentPassword = async () => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                // En un escenario real, no podemos obtener la contraseña actual por seguridad
+                // Pero podemos usar el email para verificar si es un cambio de contraseña válido
+                console.log('Usuario autenticado:', user.email);
+                return user.email; // Usamos el email como referencia
+            }
+        } catch (error) {
+            console.error('Error obteniendo usuario actual:', error);
+        }
+        return null;
+    };
+
+    // Función para calcular similitud entre contraseñas
+    const calculateSimilarity = (password1: string, password2: string): number => {
+        if (!password1 || !password2) return 0;
+        
+        const longer = password1.length > password2.length ? password1 : password2;
+        const shorter = password1.length > password2.length ? password2 : password1;
+        
+        if (longer.length === 0) return 1.0;
+        
+        const editDistance = levenshteinDistance(longer, shorter);
+        return (longer.length - editDistance) / longer.length;
+    };
+
+    // Función para calcular distancia de Levenshtein
+    const levenshteinDistance = (str1: string, str2: string): number => {
+        const matrix = [];
+        
+        for (let i = 0; i <= str2.length; i++) {
+            matrix[i] = [i];
+        }
+        
+        for (let j = 0; j <= str1.length; j++) {
+            matrix[0][j] = j;
+        }
+        
+        for (let i = 1; i <= str2.length; i++) {
+            for (let j = 1; j <= str1.length; j++) {
+                if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                    matrix[i][j] = matrix[i - 1][j - 1];
+                } else {
+                    matrix[i][j] = Math.min(
+                        matrix[i - 1][j - 1] + 1,
+                        matrix[i][j - 1] + 1,
+                        matrix[i - 1][j] + 1
+                    );
+                }
+            }
+        }
+        
+        return matrix[str2.length][str1.length];
+    };
+
+    // Función para validar que la contraseña nueva sea suficientemente diferente
+    const validatePasswordDifference = (newPassword: string, currentPassword: string): boolean => {
+        // Si no hay contraseña actual, permitir cualquier cambio
+        if (!currentPassword) return true;
+        
+        const similarity = calculateSimilarity(newPassword, currentPassword);
+        const minDifference = 0.3; // 30% de diferencia mínima
+        
+        return similarity < (1 - minDifference);
+    };
 
     const handlePasswordUpdate = async () => {
         if (password.length < 6) { // Validación simple, ajusta según tus reglas
@@ -29,6 +100,22 @@ export default function ResetPasswordScreen() {
         if (password !== confirmPassword) {
             Alert.alert('Error', 'Las contraseñas no coinciden.');
             return;
+        }
+
+        // Validación de similitud con contraseña anterior
+        if (currentPassword.trim()) {
+            const isDifferentEnough = validatePasswordDifference(password, currentPassword);
+            
+            if (!isDifferentEnough) {
+                Alert.alert(
+                    'Contraseña muy similar',
+                    'La nueva contraseña es muy similar a la anterior. Por seguridad, debes elegir una contraseña completamente diferente.',
+                    [
+                        { text: 'Entendido', style: 'default' }
+                    ]
+                );
+                return; // No permite continuar
+            }
         }
 
         setIsLoading(true);
@@ -90,8 +177,31 @@ export default function ResetPasswordScreen() {
                             transition={{ type: 'timing', duration: 900, delay: 200 }}
                             className="text-white/80 text-lg mb-8 text-center"
                         >
-                            Has regresado exitosamente. Introduce tu nueva contraseña.
+                            Has regresado exitosamente. Introduce tu contraseña actual y tu nueva contraseña.
                         </MotiText>
+
+                        {/* INPUT: Contraseña Actual */}
+                        <MotiView
+                            from={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ type: 'timing', duration: 300, delay: 50 }}
+                            className="w-full mb-4"
+                        > 
+                            <View className="w-full bg-white/20 p-4 rounded-2xl border-2 flex-row items-center">
+                                <Feather name="lock" size={20} color="white" style={{ marginRight: 10 }} />
+                                <TextInput
+                                    className="flex-1 text-white text-lg"
+                                    placeholder="Contraseña Actual (opcional)"
+                                    placeholderTextColor="#ccc"
+                                    value={currentPassword}
+                                    onChangeText={setCurrentPassword}
+                                    secureTextEntry={!isCurrentPasswordVisible}
+                                />
+                                <TouchableOpacity onPress={() => setIsCurrentPasswordVisible(!isCurrentPasswordVisible)}>
+                                    <Feather name={isCurrentPasswordVisible ? "eye-off" : "eye"} size={20} color="white" />
+                                </TouchableOpacity>
+                            </View>
+                        </MotiView>
 
                         {/* INPUT: Nueva Contraseña */}
                         <MotiView

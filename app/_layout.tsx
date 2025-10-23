@@ -14,7 +14,7 @@ const LoadingScreen = () => (
 // Este es el componente que contiene toda la lógica de navegación.
 // Necesita estar separado para poder usar el hook 'useAuth'.
 function RootLayoutNav() {
-  const { session, loading: authLoading, isPasswordRecovery } = useAuth();
+  const { session, role, profile, loading: authLoading, isPasswordRecovery } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
@@ -23,6 +23,8 @@ function RootLayoutNav() {
     console.log('Auth Check:', { 
       authLoading, 
       hasSession: !!session?.user, 
+      role,
+      profile,
       segments,
       isPasswordRecovery
     });
@@ -33,6 +35,7 @@ function RootLayoutNav() {
     }
 
     const inAuthGroup = segments[0] === '(auth)';
+    const inCompleteProfile = segments[0] === 'completeProfile';
 
     // Si estamos en modo de recuperación de contraseña, no redirigir automáticamente
     if (isPasswordRecovery) {
@@ -49,7 +52,23 @@ function RootLayoutNav() {
     } 
     // Si SÍ hay sesión de usuario...
     else {
-      // y estamos en el grupo de autenticación (ej. en la pantalla de login),
+      // Verificar si es un cliente que necesita completar su perfil
+      if (role === 'cliente' && profile && !profile.nombre_completo) {
+        console.log('👤 Cliente necesita completar perfil - redirigiendo a completeProfile');
+        if (!inCompleteProfile) {
+          router.replace('/completeProfile' as Href);
+        }
+        return;
+      }
+
+      // Si estamos en completeProfile pero ya no necesitamos completar el perfil
+      if (inCompleteProfile && role === 'cliente' && profile?.nombre_completo) {
+        console.log('✅ Perfil completo - redirigiendo a app principal');
+        router.replace('/(app)' as Href);
+        return;
+      }
+
+      // Si estamos en el grupo de autenticación (ej. en la pantalla de login),
       // redirigimos al grupo principal de la app.
       if (inAuthGroup) {
         // Asegúrate que esta ruta es correcta. 
@@ -57,7 +76,7 @@ function RootLayoutNav() {
         router.replace('/(app)' as Href); 
       }
     }
-  }, [session, authLoading, segments, isPasswordRecovery]); // Dependemos solo de los estados clave.
+  }, [session, role, profile, authLoading, segments, isPasswordRecovery]); // Dependemos de los estados clave incluyendo profile.
 
   // Mientras carga la sesión, mostramos el indicador.
   if (authLoading) {

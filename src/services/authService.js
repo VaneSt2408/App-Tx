@@ -41,6 +41,75 @@ const getRedirectUri = (path = null) => {
     }
 };
 
+// --- Registro de nuevos usuarios (Clientes) ---
+// Esta función crea la cuenta en Supabase Auth.
+export const signUpWithEmail = async (email, password) => {
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    return { data, error };
+};
+
+// --- Creación del perfil en la tabla 'clientes' ---
+// Ahora acepta y guarda la URL del avatar en la tabla 'clientes'.
+export const createClientProfile = async (userId, fullName, phone, avatarUrl) => {
+    const { data, error } = await supabase
+        .from('clientes')
+        .insert({
+            id: userId,
+            nombre_completo: fullName,
+            telefono: phone,
+            avatar_url: avatarUrl // <-- Aquí guardamos la URL de la foto
+        });
+    if (error) console.error("Error creando el perfil del cliente:", error);
+    return { data, error };
+};
+
+// --- Función para verificar el rol y perfil del usuario ---
+export const checkUserRole = async (userId) => {
+    if (!userId) return null;
+
+    try {
+        // Paso 1: Buscamos el perfil en la tabla 'clientes'.
+        const { data: clientData, error: clientError } = await supabase
+            .from('clientes')
+            .select('id, nombre_completo, avatar_url')
+            .eq('id', userId)
+            .single();
+
+        // Si hay un error que no sea "no se encontró la fila", lo registramos.
+        if (clientError && clientError.code !== 'PGRST116') {
+            console.error("Error buscando en la tabla clientes:", clientError);
+            return null; // Devolvemos null para evitar que la app se rompa.
+        }
+
+        // Paso 2: Buscamos el perfil en la tabla 'perfiles' para obtener el rol.
+        const { data: profileData, error: profileError } = await supabase
+            .from('perfiles')
+            .select('rol')
+            .eq('id', userId)
+            .single();
+
+        if (profileError && profileError.code !== 'PGRST116') {
+            console.error("Error buscando en la tabla perfiles:", profileError);
+        }
+
+        // Paso 3: Combinamos la información.
+        // Si encontramos un perfil de cliente, usamos esa información.
+        if (clientData) {
+            return {
+                ...clientData, // Incluye id, nombre_completo, avatar_url
+                rol: profileData?.rol || 'cliente' // Añade el rol desde 'perfiles'
+            };
+        }
+
+        // Si no es un cliente, devolvemos lo que encontramos en 'perfiles' (para admin/artesano).
+        return profileData;
+
+    } catch (error) {
+        console.error("Error general en checkUserRole:", error);
+        return null;
+    }
+};
+
 // --- Inicio de sesión con Google (OAuth) ---
 // Esta línea ayuda a cerrar la sesión de autenticación del navegador si la app se cerró inesperadamente. Es importante para iOS.
 WebBrowser.maybeCompleteAuthSession(); 
@@ -216,3 +285,4 @@ export const updatePassword = async (newPassword) => {
         return { error: e.message || "Ocurrió un error al actualizar la contraseña." };
     }
 }
+

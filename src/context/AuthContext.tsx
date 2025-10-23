@@ -9,15 +9,19 @@ import { Alert } from 'react-native'; // Importa componentes de UI de React Nati
 const AuthContext = createContext<{ 
   session: Session | null; 
   role: string | null; 
+  profile: any | null;
   loading: boolean;
   isPasswordRecovery: boolean;
   resetPasswordRecoveryMode: () => void;
+  refreshProfile: () => Promise<void>;
 }>({
   session: null,
   role: null,
+  profile: null,
   loading: true,
   isPasswordRecovery: false,
   resetPasswordRecoveryMode: () => {},
+  refreshProfile: async () => {},
 });
 
 // Hook para usar el contexto fácilmente en otros componentes
@@ -29,9 +33,76 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null); // Almacena la sesión del usuario (si está logueado o no).
     const [role, setRole] = useState(null); // Almacena el rol del usuario ('admin', 'artesano', etc.).
+    const [profile, setProfile] = useState(null); // Almacena el perfil completo del usuario.
     const [loading, setLoading] = useState(true); // Controla la visualización de la pantalla de carga inicial.
     const [isPasswordRecovery, setIsPasswordRecovery] = useState(false); // Controla si estamos en modo de recuperación de contraseña.
     //hooks/useAuth.js
+
+    // --- Función para verificar el rol y perfil del usuario ---
+    const checkUserRole = async (userId: string) => {
+        if (!userId) return null;
+
+        try {
+            // Paso 1: Buscamos el perfil en la tabla 'clientes'.
+            const { data: clientData, error: clientError } = await supabase
+                .from('clientes')
+                .select('id, nombre_completo, avatar_url')
+                .eq('id', userId)
+                .single();
+
+            // Si hay un error que no sea "no se encontró la fila", lo registramos.
+            if (clientError && clientError.code !== 'PGRST116') {
+                console.error("Error buscando en la tabla clientes:", clientError);
+                return null; // Devolvemos null para evitar que la app se rompa.
+            }
+
+            // Paso 2: Buscamos el perfil en la tabla 'perfiles' para obtener el rol.
+            const { data: profileData, error: profileError } = await supabase
+                .from('perfiles')
+                .select('rol')
+                .eq('id', userId)
+                .single();
+
+            if (profileError && profileError.code !== 'PGRST116') {
+                console.error("Error buscando en la tabla perfiles:", profileError);
+            }
+
+            // Paso 3: Combinamos la información.
+            // Si encontramos un perfil de cliente, usamos esa información.
+            if (clientData) {
+                return {
+                    ...clientData, // Incluye id, nombre_completo, avatar_url
+                    rol: profileData?.rol || 'cliente' // Añade el rol desde 'perfiles'
+                };
+            }
+
+            // Si no es un cliente, devolvemos lo que encontramos en 'perfiles' (para admin/artesano).
+            return profileData;
+
+        } catch (error) {
+            console.error("Error general en checkUserRole:", error);
+            return null;
+        }
+    };
+
+    // --- Función para refrescar el perfil ---
+    const refreshProfile = async () => {
+        if (!session?.user) return;
+        
+        setLoading(true);
+        try {
+            const userProfile = await checkUserRole(session.user.id);
+            setProfile(userProfile);
+            
+            if (userProfile?.rol) {
+                setRole(userProfile.rol);
+            }
+        } catch (error) {
+            console.error("Error refrescando perfil:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
   
     // --- useEffect para manejar la sesión de autenticación ---
     useEffect(() => {
@@ -56,51 +127,46 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return () => subscription.unsubscribe();
     }, []); // El array vacío `[]` asegura que este efecto se ejecute solo una vez.
   
-    // --- useEffect para obtener el rol del usuario cuando cambia la sesión ---
+    // --- useEffect para obtener el rol y perfil del usuario cuando cambia la sesión ---
     useEffect(() => {
-      // Si no hay una sesión de usuario, resetea el rol y termina la carga.
+      // Si no hay una sesión de usuario, resetea el rol y perfil, y termina la carga.
       if (!session?.user) {
         setRole(null);
+        setProfile(null);
         setLoading(false);
         return; // Detiene la ejecución del efecto.
       }
-  
-      // Define una función asíncrona para buscar el rol en la base de datos.
-      const fetchRole = async () => {
+
+      // Define una función asíncrona para buscar el perfil completo en la base de datos.
+      const fetchProfile = async () => {
         try {
-          console.log("🔍 Buscando perfil para el usuario:", session.user.id);
-          // Realiza una consulta a la tabla 'perfiles' para obtener el 'rol' del usuario actual.
-          const { data: profile, error, status } = await supabase
-            .from('perfiles')
-            .select('rol')
-            .eq('id', session.user.id) // Filtra por el ID del usuario de la sesión.
-            .single(); // Espera un único resultado.
-  
-          // Si hay un error y no es el código 406 (que significa 'no se encontró fila'), lanza el error.
-          if (error && status !== 406) {
-            throw error;
-          }
-  
-          // Si se encuentra un perfil con un rol, lo establece en el estado.
-          if (profile?.rol) {
-            console.log("✅ Rol detectado exitosamente:", profile.rol);
-            setRole(profile.rol);
-          } else { // Si no se encuentra un perfil o el rol es nulo.
+          console.log("🔍 Buscando perfil completo para el usuario:", session.user.id);
+          
+          // Usamos la función checkUserRole que obtiene tanto el rol como los datos del cliente
+          const userProfile = await checkUserRole(session.user.id);
+          
+          if (userProfile) {
+            console.log("✅ Perfil detectado exitosamente:", userProfile);
+            setProfile(userProfile);
+            setRole(userProfile.rol);
+          } else {
             console.warn("⚠️ No se encontró un perfil para este usuario.");
+            setProfile(null);
             setRole(null);
           }
-        } catch (err) { // Captura cualquier error durante la obtención del rol.
+        } catch (err) { // Captura cualquier error durante la obtención del perfil.
           if (err instanceof Error) {
-            console.error("❌ Error crítico obteniendo el rol:", err.message);
+            console.error("❌ Error crítico obteniendo el perfil:", err.message);
           }
-          setRole(null); // Resetea el rol en caso de error.
+          setProfile(null);
+          setRole(null); // Resetea el perfil y rol en caso de error.
           Alert.alert("Error de Perfil", "No pudimos verificar tu información.");
         } finally { // Este bloque se ejecuta siempre, con o sin errores.
           setLoading(false); // Finaliza el estado de carga para mostrar la app.
         }
       };
-  
-      fetchRole(); // Llama a la función para que se ejecute.
+
+      fetchProfile(); // Llama a la función para que se ejecute.
     }, [session]); // Este efecto se vuelve a ejecutar cada vez que el estado 'session' cambia.
   
     // --- useEffect para manejar Deep Links (enlaces mágicos) ---
@@ -210,9 +276,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const value = {
     session,
     role,
+    profile,
     loading,
     isPasswordRecovery,
     resetPasswordRecoveryMode,
+    refreshProfile,
   };
 
   // 5. Devuelve el Provider con el 'value' y los 'children'

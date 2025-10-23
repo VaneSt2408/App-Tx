@@ -6,7 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import { MotiText, MotiView } from 'moti';
 import React, { useState } from 'react';
 import { Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { signInWithPassword, signInWithGoogle } from '../../src/services/authService'; // Importa funciones de autenticación desde el servicio 
+import { signInWithPassword, signInWithGoogle, signUpWithEmail } from '../../src/services/authService'; // Importa funciones de autenticación desde el servicio 
 import {Alert} from 'react-native';
 
 // --- COMPONENTE AUXILIAR PARA MOSTRAR CADA REQUISITO ---
@@ -80,28 +80,7 @@ export default function AuthScreen() {
         isValid = false;
       }
 
-      // Validación de Nombre de Usuario
-      if (!username.trim()) {
-        newErrors.username = 'El nombre de usuario es obligatorio.';
-        isValid = false;
-      } else if (username.length < 3) {
-        newErrors.username = 'Debe tener al menos 3 caracteres.';
-        isValid = false;
-      } else if (username.length > 20) {
-        newErrors.username = 'No puede exceder los 20 caracteres.';
-        isValid = false;
-      } else if (!/^[a-zA-Z0-9_.]+$/.test(username)) {
-        newErrors.username = 'Solo se permiten letras, números, puntos y guiones bajos.';
-        isValid = false;
-      }
-      // Validación de Teléfono
-      if (!phoneNumber.trim()) {
-        newErrors.phoneNumber = 'El número de teléfono es obligatorio.';
-        isValid = false;
-      } else if (!/^\d{7,15}$/.test(phoneNumber)) {
-        newErrors.phoneNumber = 'Introduce un número de teléfono válido.';
-        isValid = false;
-      }
+      // Validaciones de username y phoneNumber eliminadas - ya no son campos requeridos
       // Validación de Confirmar Contraseña
       if (password !== confirmPassword) {
         newErrors.confirmPassword = 'Las contraseñas no coinciden.';
@@ -113,10 +92,44 @@ export default function AuthScreen() {
     return isValid;
   };
 
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
+    console.log('🔍 Iniciando proceso de registro...');
+    console.log('📧 Email:', email);
+    console.log('🔑 Password:', password ? '***' : 'vacío');
+    console.log('✅ Validación:', validate());
+    
     if (validate()) {
+      console.log('✅ Validación exitosa, procediendo con el registro...');
       console.log('Sign Up attempt with:', { email, username, password, confirmPassword, phoneNumber, profileImage });
-      router.push('/verification');
+      
+      try {
+        // Llamada al método de registro del backend
+        console.log('🚀 Llamando a signUpWithEmail...');
+        const { data, error } = await signUpWithEmail(email, password);
+        console.log('📊 Respuesta del backend:', { data, error });
+        
+        if (error) {
+          console.error('❌ Error en el registro:', error);
+          Alert.alert('Error en el registro', error.message);
+        } else if (data.user && !data.session) {
+          console.log('✅ Registro exitoso, usuario creado pero sin sesión activa');
+          // Este es el mensaje clave para el usuario.
+          Alert.alert(
+            'Registro Exitoso',
+            'Te hemos enviado un correo. Por favor, haz clic en el enlace de confirmación para activar tu cuenta y luego inicia sesión.',
+            [{ text: 'OK', onPress: () => setAuthMode('login') }]
+          );
+        } else {
+          console.log('⚠️ Respuesta inesperada:', { data, error });
+          Alert.alert('Registro', 'Registro completado, pero con respuesta inesperada');
+        }
+      } catch (catchError) {
+        console.error('💥 Error inesperado en handleSignUp:', catchError);
+        Alert.alert('Error', 'Ocurrió un error inesperado durante el registro');
+      }
+    } else {
+      console.log('❌ Validación falló, no se procede con el registro');
+      Alert.alert('Error de validación', 'Por favor, revisa los campos marcados en rojo');
     }
   };
 
@@ -173,7 +186,7 @@ export default function AuthScreen() {
             showsVerticalScrollIndicator={false}
           >
           <MotiText
-            from={{ opacity: 0, translateY: -50 }}
+            from={{ opacity: 0, translateY: -50 }} 
             animate={{ opacity: 1, translateY: 0 }}
             transition={{ type: 'timing', duration: 900 }}
             className="text-white text-4xl font-bold mb-9 text-center"
@@ -182,7 +195,7 @@ export default function AuthScreen() {
           </MotiText>
 
           {/* --- SELECTOR DE IMAGEN DE PERFIL (SOLO EN REGISTRO) --- */}
-          {authMode === 'signup' && (
+          {authMode === 'signup' && ( 
             <MotiView
               from={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -201,14 +214,14 @@ export default function AuthScreen() {
                     <Text className="text-white text-center mt-2 text-xs">Añadir foto</Text>
                   </View>
                 )}
-              </TouchableOpacity>
+              </TouchableOpacity> 
               {errors.profileImage && (
                 <Text style={[styles.errorText, { alignSelf: 'center', marginTop: 4 }]}>{errors.profileImage}</Text>
               )}
             </MotiView>
           )}
 
-          <MotiView
+          <MotiView 
             from={{ opacity: 0, translateY: -20 }}
             animate={{ opacity: 1, translateY: 0 }}
             transition={{ type: 'timing', duration: 600, delay: 600 }}
@@ -229,8 +242,8 @@ export default function AuthScreen() {
             
             <TouchableOpacity onPress={() => setAuthMode('signup')} className="flex-1 py-2 items-center rounded-full">
               <Text className="text-white font-bold text-base">Registrate</Text>
-            </TouchableOpacity>
-          </MotiView>
+            </TouchableOpacity> 
+          </MotiView> 
           
           <MotiView
             from={{ opacity: 0, scale: 0.8 }}
@@ -238,7 +251,7 @@ export default function AuthScreen() {
             transition={{ type: 'timing', duration: 300, delay: 100 }}
             className="w-full"
           > 
-            <View 
+            <View  
               className="w-full bg-white/20 p-4 rounded-2xl mb-4 border-2 flex-row items-center"
               style={{ borderColor: focusedInput === 'email' ? '#a855f7' : 'transparent' }}
             >
@@ -262,67 +275,7 @@ export default function AuthScreen() {
             {authMode === 'login' && errors.email && (
               <Text style={styles.errorText}>{errors.email}</Text>
             )}
-          </MotiView>
-
-          {authMode === 'signup' && (
-            <MotiView
-              from={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ type: 'timing', duration: 300, delay: 100 }}
-              className="w-full"
-            >
-              <View 
-                className="w-full bg-white/20 p-4 rounded-2xl mb-4 border-2 flex-row items-center"
-                style={{ borderColor: focusedInput === 'username' ? '#a855f7' : 'transparent' }}
-              >
-                <Feather name="user" size={20} color="white" style={{ marginRight: 10 }} />
-                <TextInput
-                  key="username-input"
-                  onFocus={() => setFocusedInput('username')}
-                  onBlur={() => setFocusedInput(null)}
-                  className="flex-1 text-white text-lg"
-                  placeholder="Nombre de usuario"
-                  placeholderTextColor="#ccc"
-                  value={username}
-                  onChangeText={setUsername}
-                  autoCapitalize="none"
-                />
-              </View>
-              {errors.username && (
-                <Text style={styles.errorText}>{errors.username}</Text>
-              )}
-            </MotiView>
-          )}
-
-          {authMode === 'signup' && (
-            <MotiView
-              from={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ type: 'timing', duration: 300, delay: 100 }}
-              className="w-full"
-            >
-              <View 
-                className="w-full bg-white/20 p-4 rounded-2xl mb-4 border-2 flex-row items-center"
-                style={{ borderColor: focusedInput === 'phone' ? '#a855f7' : 'transparent' }}
-              >
-                <Feather name="phone" size={20} color="white" style={{ marginRight: 10 }} />
-                <TextInput
-                  key="phone-input"
-                  onFocus={() => setFocusedInput('phone')}
-                  onBlur={() => setFocusedInput(null)}
-                  className="flex-1 text-white text-lg"
-                  placeholder="Número de teléfono"
-                  placeholderTextColor="#ccc"
-                  value={phoneNumber}
-                  onChangeText={setPhoneNumber}
-                  keyboardType="phone-pad"
-                />
-              </View>
-              {errors.phoneNumber && (
-                <Text style={styles.errorText}>{errors.phoneNumber}</Text>
-              )}
-            </MotiView>
-          )}
+          </MotiView> 
 
           <MotiView
             from={{ opacity: 0, translateX: 50 }}
