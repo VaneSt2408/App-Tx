@@ -1,16 +1,20 @@
 // En: src/pages/login.js
 import React, { useState } from 'react'; // Importa UseState desde React para manejar el estado
-import { View, TextInput, Button, Text, Alert, StyleSheet } from 'react-native'; // Importa componentes necesarios de React Native
+import { View, TextInput, Button, Text, Alert, StyleSheet, TouchableOpacity } from 'react-native'; // Importa componentes necesarios de React Native
 import { LinearGradient } from 'expo-linear-gradient'; // Importa LinearGradient para el fondo degradado
 import { signInWithPassword, signInWithGoogle } from '../services/authService'; // Importa funciones de autenticación desde el servicio 
+import { useNavigation } from '@react-navigation/native';
 
-export default function Login() { 
+export default function Login() {
+  const navigation = useNavigation(); // Inicializa la navegación
   const [email, setEmail] = useState(''); // Estado para el correo electronico
   const [password, setPassword] = useState(''); // Estado para la contraseña
+  const [loading, setLoading] = useState(false);
 
   // Funcion para manejar el inicio de sesión con Google
   const handleGoogleLogin = async () => {
     await signInWithGoogle(); // Llama al servicio de autenticación
+    setLoading(false);
     //La redirección se maneja en App.js 
   };
 
@@ -34,6 +38,10 @@ export default function Login() {
         <View style={[styles.buttonContainer, { marginTop: 12 }] }>
           <Button title="Ingresar con Google" color="#db4437" onPress={handleGoogleLogin} />
         </View>
+        {/* --- NUEVO BOTÓN PARA NAVEGAR AL REGISTRO --- */}
+        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+            <Text style={styles.registerText}>¿No tienes una cuenta? Regístrate</Text>
+        </TouchableOpacity>
       </View>
     </LinearGradient>
   );
@@ -45,4 +53,5 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: 'bold', marginBottom: 24, color: '#2575fc', textAlign: 'center' },
   input: { width: '100%', borderWidth: 1, borderColor: '#2575fc', padding: 12, marginBottom: 16, borderRadius: 8, fontSize: 16, backgroundColor: '#f5f6fa', color: '#333' },
   buttonContainer: { width: '100%', marginTop: 8, borderRadius: 8, overflow: 'hidden' },
-}); 
+  registerText: { color: '#6a11cb', marginTop: 20, fontWeight: 'bold' }
+});
