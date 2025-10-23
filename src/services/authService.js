@@ -220,12 +220,11 @@ export const getSession = async () => { // No recibe parámetros
     return { session: data.session, error }; // Retorna la sesión y el error (si existe)
 }
 
-<<<<<<< HEAD
 export const onAuthStateChange = (callback) => { // Recibe una función de callback como parámetro
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => { // Escucha los cambios en el estado de autenticación
-        callback(event, session); // Llama al callback con el evento y la sesión actual
-    });
-    return authListener; // Retorna el listener para poder desuscribirse si es necesario
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => { // Escucha los cambios en el estado de autenticación
+        callback(event, session); // Llama al callback con el evento y la sesión actual
+    });
+    return authListener; // Retorna el listener para poder desuscribirse si es necesario
 }
 
 
@@ -288,11 +287,3 @@ export const updatePassword = async (newPassword) => {
         return { error: e.message || "Ocurrió un error al actualizar la contraseña." };
     }
 }
-=======
-export const onAuthStateChange = (callback) => {
-    // Simplemente llamamos a la función de Supabase y retornamos el resultado DIRECTAMENTE.
-    return supabase.auth.onAuthStateChange((event, session) => {
-        callback(event, session);
-    });
-}
->>>>>>> origin/registroUsuarios
