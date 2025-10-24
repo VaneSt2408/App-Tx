@@ -231,25 +231,38 @@ export const validateCurrentPassword = async (currentPassword) => {
       return { data: false, error: 'Contraseña muy corta' };
     }
     
-    // Para evitar problemas de navegación, vamos a usar una validación temporal
-    // que simule la verificación sin hacer login real
-    // En un entorno de producción, esto debería usar un endpoint específico
-    
-    // Validaciones básicas de seguridad
-    if (currentPassword === '123456' || 
-        currentPassword === 'password' || 
-        currentPassword === '12345678' ||
-        currentPassword === 'admin' ||
-        currentPassword === 'user') {
-      return { data: false, error: 'Contraseña demasiado simple' };
+    // Validar la contraseña actual intentando hacer login con el email y contraseña
+    // Esto es la forma correcta de validar la contraseña sin afectar la sesión actual
+    try {
+      // Guardamos la sesión original antes de hacer el login de prueba
+      const { data: { session: originalSession } } = await supabase.auth.getSession();
+      
+      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword
+      });
+      
+      if (loginError) {
+        console.log('Contraseña incorrecta:', loginError.message);
+        return { data: false, error: 'Contraseña actual incorrecta' };
+      }
+      
+      // Si el login fue exitoso, la contraseña es correcta
+      // Ahora necesitamos restaurar la sesión original
+      if (originalSession) {
+        await supabase.auth.setSession({
+          access_token: originalSession.access_token,
+          refresh_token: originalSession.refresh_token
+        });
+      }
+      
+      console.log('Contraseña actual validada correctamente');
+      return { data: true, error: null };
+      
+    } catch (loginError) {
+      console.error('Error en validación de contraseña:', loginError);
+      return { data: false, error: 'Error validando contraseña actual' };
     }
-    
-    // Por ahora, vamos a asumir que la contraseña es correcta si pasa las validaciones básicas
-    // En producción, esto debería conectarse con un servicio de validación de contraseñas
-    // que no afecte la sesión actual
-    
-    console.log('Contraseña actual validada correctamente (validación temporal)');
-    return { data: true, error: null };
     
   } catch (error) {
     console.error('Error en validateCurrentPassword:', error);
