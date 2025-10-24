@@ -14,6 +14,7 @@ const AuthContext = createContext<{
   isPasswordRecovery: boolean;
   resetPasswordRecoveryMode: () => void;
   refreshProfile: () => Promise<void>;
+  signOut: () => Promise<void>;
 }>({
   session: null,
   role: null,
@@ -22,6 +23,7 @@ const AuthContext = createContext<{
   isPasswordRecovery: false,
   resetPasswordRecoveryMode: () => {},
   refreshProfile: async () => {},
+  signOut: async () => {},
 });
 
 // Hook para usar el contexto fácilmente en otros componentes
@@ -36,6 +38,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [profile, setProfile] = useState(null); // Almacena el perfil completo del usuario.
     const [loading, setLoading] = useState(true); // Controla la visualización de la pantalla de carga inicial.
     const [isPasswordRecovery, setIsPasswordRecovery] = useState(false); // Controla si estamos en modo de recuperación de contraseña.
+    const [noProfileTimer, setNoProfileTimer] = useState<NodeJS.Timeout | null>(null); // Timer para usuarios sin perfil.
     //hooks/useAuth.js
 
     // --- Función para verificar el rol y perfil del usuario ---
@@ -96,6 +99,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             
             if (userProfile?.rol) {
                 setRole(userProfile.rol);
+                // Limpiar timer si se encuentra perfil
+                if (noProfileTimer) {
+                    clearTimeout(noProfileTimer);
+                    setNoProfileTimer(null);
+                }
+            } else {
+                // Si no hay perfil, iniciar timer de 10 segundos
+                handleNoProfile();
             }
         } catch (error) {
             console.error("Error refrescando perfil:", error);
@@ -103,7 +114,63 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setLoading(false);
         }
     };
+
+    // --- Función para manejar usuarios sin perfil ---
+    const handleNoProfile = () => {
+        // Limpiar timer anterior si existe
+        if (noProfileTimer) {
+            clearTimeout(noProfileTimer);
+        }
+
+        // Crear nuevo timer de 10 segundos
+        const timer = setTimeout(() => {
+            Alert.alert(
+                'Perfil no encontrado',
+                'No tienes un perfil definido. Regístrate de nuevo.',
+                [
+                    {
+                        text: 'OK',
+                        onPress: async () => {
+                            // Cerrar sesión y redirigir al login
+                            try {
+                                await supabase.auth.signOut();
+                            } catch (error) {
+                                console.error('Error cerrando sesión:', error);
+                            }
+                        }
+                    }
+                ]
+            );
+        }, 5000); // 5 segundos
+
+        setNoProfileTimer(timer);
+    };
+
+    // --- Función para cerrar sesión ---
+    const signOut = async () => {
+        try {
+            console.log('Cerrando sesión...');
+            const { error } = await supabase.auth.signOut();
+            if (error) {
+                console.error('Error al cerrar sesión:', error);
+                throw error;
+            }
+            console.log('Sesión cerrada correctamente');
+        } catch (error) {
+            console.error('Error en signOut:', error);
+            throw error;
+        }
+    };
   
+    // --- useEffect para limpiar timer al desmontar ---
+    useEffect(() => {
+        return () => {
+            if (noProfileTimer) {
+                clearTimeout(noProfileTimer);
+            }
+        };
+    }, [noProfileTimer]);
+
     // --- useEffect para manejar la sesión de autenticación ---
     useEffect(() => {
       //Intenta obtener la sesión activa la primera vez que la app carga.
@@ -149,10 +216,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             console.log("✅ Perfil detectado exitosamente:", userProfile);
             setProfile(userProfile);
             setRole(userProfile.rol);
+            // Limpiar timer si se encuentra perfil
+            if (noProfileTimer) {
+              clearTimeout(noProfileTimer);
+              setNoProfileTimer(null);
+            }
           } else {
             console.warn("⚠️ No se encontró un perfil para este usuario.");
             setProfile(null);
             setRole(null);
+            // Iniciar timer de 10 segundos para usuarios sin perfil
+            handleNoProfile();
           }
         } catch (err) { // Captura cualquier error durante la obtención del perfil.
           if (err instanceof Error) {
@@ -281,6 +355,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isPasswordRecovery,
     resetPasswordRecoveryMode,
     refreshProfile,
+    signOut,
   };
 
   // 5. Devuelve el Provider con el 'value' y los 'children'

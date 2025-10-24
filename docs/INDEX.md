@@ -10,9 +10,15 @@
 - **[API.md](API.md)** - Documentación completa de la API
 - **[DATABASE.md](DATABASE.md)** - Esquema y configuración de base de datos
 - **[DEPLOYMENT.md](DEPLOYMENT.md)** - Guía de deployment y producción
+- **[FUNCIONALIDADES_IMPLEMENTADAS.md](FUNCIONALIDADES_IMPLEMENTADAS.md)** - Funcionalidades completas de la rama Vannev1
+- **[DEPENDENCIAS_COMPLETAS.md](DEPENDENCIAS_COMPLETAS.md)** - Dependencias y paquetes del proyecto
 
 ### ⚙️ Configuración
 - **[CONFIGURACION_SUPABASE_PRODUCTOS.md](../CONFIGURACION_SUPABASE_PRODUCTOS.md)** - Configuración específica de Supabase para productos
+- **[SUPABASE_UPDATE_CLIENTES_TABLE.md](SUPABASE_UPDATE_CLIENTES_TABLE.md)** - Scripts para actualizar tabla clientes
+- **[SUPABASE_RLS_CLIENTES_UPDATE.md](SUPABASE_RLS_CLIENTES_UPDATE.md)** - Políticas RLS para tabla clientes
+- **[FIX_RLS_CLIENTES_UPDATE.sql](FIX_RLS_CLIENTES_UPDATE.sql)** - Script SQL para arreglar RLS
+- **[ALTERNATIVE_UPDATE_CLIENTES.md](ALTERNATIVE_UPDATE_CLIENTES.md)** - Alternativas para actualización de perfil
 
 ## 🚀 Inicio Rápido
 
@@ -35,12 +41,16 @@
 ## 📋 Resumen de Funcionalidades
 
 ### ✅ Implementado en Rama Vannev1
-- **Sistema de autenticación completo**
-- **Gestión de perfiles de usuario**
-- **Subida de productos con imágenes**
-- **Validaciones de seguridad**
-- **Navegación condicional**
-- **Integración completa con Supabase**
+- **Sistema de autenticación completo** con registro, login y recuperación
+- **Gestión de perfiles de usuario** con edición completa
+- **Subida de productos con imágenes** y compresión automática
+- **Validaciones de seguridad** con algoritmo de Levenshtein
+- **Navegación condicional** basada en roles y estado de perfil
+- **Integración completa con Supabase** (BD, Auth, Storage)
+- **Sistema de edición de perfil** con modo de edición
+- **Timestamp de última actualización** automático
+- **Políticas RLS completas** para seguridad de datos
+- **Documentación exhaustiva** de todas las funcionalidades
 
 ### 🔧 Arquitectura
 - **Frontend**: React Native + Expo Router

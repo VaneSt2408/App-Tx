@@ -2,13 +2,15 @@
 
 import React, { useEffect, useState } from 'react'; // Similar a ArtPage.js
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native'; // Similar a ArtPage.js
-import { signOut } from '../../src/services/authService'; // Similar a ClientPage.js
-import { supabase } from '../../src/supabase/client'; // Similar a ClientPage.js
-import { MaterialCommunityIcons } from '@expo/vector-icons'; // Similar a ArtPage.js
+import { signOut } from '../../src/services/authService'; // Similar to ClientPage.js
+import { supabase } from '../../src/supabase/client'; // Similar to ClientPage.js
+import { MaterialCommunityIcons } from '@expo/vector-icons'; // Similar to ArtPage.js
+import { useRouter } from 'expo-router'; // Importar useRouter para navegación
 
 function ClientPage() { // Asegúrate de que el nombre del componente coincida con el del archivo
     const [user, setUser] = useState(null); // Estado para almacenar los datos del usuario
     const [loading, setLoading] = useState(true); // Estado para manejar la carga
+    const router = useRouter(); // Hook para navegación en Expo Router
 
     useEffect(() => {
         const fetchUser = async () => { // Función para obtener los datos del usuario
@@ -37,7 +39,12 @@ function ClientPage() { // Asegúrate de que el nombre del componente coincida c
                 </TouchableOpacity>
             </View>
             <Text style={styles.title}>Modo: Cliente</Text>
-            {/* El componente Home con la lista de tareas podría ir aquí si es para clientes */}
+            
+            <TouchableOpacity style={styles.uploadButton} onPress={() => router.push('/clientProfile')}>
+                <MaterialCommunityIcons name="plus" size={24} color="#fff" />
+                <Text style={styles.uploadButtonText}>Ver perfil</Text>
+            </TouchableOpacity>
+
         </View>
     );
 }
@@ -50,6 +57,27 @@ const styles = StyleSheet.create({
     userInfo: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#ddd', marginBottom: 20 },
     emailText: { fontSize: 16, color: '#555' },
     logoutButton: { padding: 8 },
+    uploadButton: {
+        backgroundColor: '#2575fc',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 15,
+        paddingHorizontal: 20,
+        borderRadius: 10,
+        marginBottom: 20,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+    },
+    uploadButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginLeft: 8,
+    },
 });
 
 export default ClientPage;

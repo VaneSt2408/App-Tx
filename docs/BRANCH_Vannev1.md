@@ -23,6 +23,10 @@
 - [x] **Subida de avatar** con compresión automática
 - [x] **Validación de campos** obligatorios y opcionales
 - [x] **Integración con Supabase Storage** para imágenes
+- [x] **Edición de perfil** con modo de edición completo
+- [x] **Cambio de avatar** en tiempo real
+- [x] **Actualización de datos** (nombre, teléfono)
+- [x] **Timestamp de última actualización** automático
 
 #### 3. Sistema de Productos
 - [x] **Subida de productos** para artesanos
@@ -36,6 +40,15 @@
 - [x] **Algoritmo de Levenshtein** para comparación
 - [x] **Bloqueo de contraseñas similares** por seguridad
 - [x] **Mensajes de error** descriptivos
+
+#### 5. Sistema de Edición de Perfil
+- [x] **Modo de edición** con campos editables
+- [x] **Validación de datos** en tiempo real
+- [x] **Subida de nueva imagen** con preview
+- [x] **Botones de acción** (Guardar/Cancelar)
+- [x] **Estados de carga** durante actualización
+- [x] **Feedback visual** de confirmación
+- [x] **Manejo de errores** robusto
 
 ### 🔧 Mejoras Técnicas
 
@@ -184,14 +197,84 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ```
 
 ### Dependencias Específicas
+
+#### Dependencias Principales
 ```json
 {
-  "expo-image-picker": "^15.0.0",
-  "expo-linear-gradient": "^13.0.0",
-  "expo-router": "^4.0.0",
-  "base64-arraybuffer": "^1.0.0",
-  "react-native-get-random-values": "^1.11.0"
+  "expo": "~50.0.0",
+  "react": "18.2.0",
+  "react-native": "0.73.0",
+  "@expo/vector-icons": "^14.0.0",
+  "expo-router": "~3.4.0",
+  "expo-status-bar": "~1.11.0"
 }
+```
+
+#### Dependencias de Autenticación
+```json
+{
+  "@supabase/supabase-js": "^2.38.0",
+  "expo-auth-session": "~5.4.0",
+  "expo-crypto": "~12.8.0",
+  "expo-linking": "~6.2.0"
+}
+```
+
+#### Dependencias de UI/UX
+```json
+{
+  "expo-linear-gradient": "~12.7.0",
+  "moti": "^0.25.0",
+  "react-native-reanimated": "~3.6.0",
+  "react-native-safe-area-context": "4.8.0",
+  "react-native-screens": "~3.29.0"
+}
+```
+
+#### Dependencias de Imágenes
+```json
+{
+  "expo-image-picker": "~14.7.0",
+  "expo-file-system": "~16.0.0",
+  "base64-arraybuffer": "^1.0.0"
+}
+```
+
+#### Dependencias de Utilidades
+```json
+{
+  "react-native-get-random-values": "~1.9.0",
+  "react-native-url-polyfill": "^2.0.0"
+}
+```
+
+### Instalación de Dependencias
+
+#### Instalación Completa
+```bash
+# Instalar todas las dependencias
+npm install
+
+# O con yarn
+yarn install
+```
+
+#### Instalación Individual (si es necesario)
+```bash
+# Dependencias principales
+npm install expo@~50.0.0 react@18.2.0 react-native@0.73.0
+
+# Autenticación
+npm install @supabase/supabase-js@^2.38.0 expo-auth-session@~5.4.0
+
+# UI/UX
+npm install expo-linear-gradient@~12.7.0 moti@^0.25.0
+
+# Imágenes
+npm install expo-image-picker@~14.7.0 expo-file-system@~16.0.0
+
+# Utilidades
+npm install react-native-get-random-values@~1.9.0 base64-arraybuffer@^1.0.0
 ```
 
 ### Scripts de Configuración
