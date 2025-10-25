@@ -13,7 +13,7 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { supabase } from '../../src/supabase/client';
-import { getClientProfile, editClientProfile, uploadAvatar, changeClientPassword, validateCurrentPassword, validateNewPassword, deleteClientProfile } from '../../src/services/profileInfo';
+import { getClientProfile, editClientProfile, uploadAvatar, changeClientPassword, validateCurrentPassword, validateNewPassword, deleteClientProfile, deleteGoogleClientProfile } from '../../src/services/profileInfo';
 import { useAuth } from '../../src/context/AuthContext';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -65,10 +65,16 @@ export default function ClientProfile() {
   const [deleteBlockTimeRemaining, setDeleteBlockTimeRemaining] = useState(0);
   const [totalDeleteAttempts, setTotalDeleteAttempts] = useState(0);
   
+  // Estados para eliminación de perfil Google
+  const [showDeleteGoogleProfile, setShowDeleteGoogleProfile] = useState(false);
+  const [deleteGoogleLoading, setDeleteGoogleLoading] = useState(false);
+  const [isGoogleUser, setIsGoogleUser] = useState(false);
+  
   const router = useRouter();
 
   useEffect(() => {
     fetchProfile();
+    checkUserProvider();
   }, []);
 
   // useEffect para manejar el contador de bloqueo
@@ -132,6 +138,17 @@ export default function ClientProfile() {
       console.error('Error fetching profile:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkUserProvider = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && user.app_metadata && user.app_metadata.provider) {
+        setIsGoogleUser(user.app_metadata.provider === 'google');
+      }
+    } catch (error) {
+      console.error('Error checking user provider:', error);
     }
   };
 
@@ -661,6 +678,79 @@ export default function ClientProfile() {
     );
   };
 
+  // Funciones para eliminación de perfil Google
+  const handleDeleteGoogleProfile = () => {
+    Alert.alert(
+      'Eliminar Perfil (Google)',
+      '¿Estás seguro de que quieres eliminar tu perfil? Esta acción es IRREVERSIBLE y eliminará todos tus datos.\n\nComo usuario de Google, no necesitas validar contraseña.',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel'
+        },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: () => {
+            setShowDeleteGoogleProfile(true);
+          }
+        }
+      ]
+    );
+  };
+
+  const handleCancelDeleteGoogleProfile = () => {
+    setShowDeleteGoogleProfile(false);
+  };
+
+  const handleConfirmDeleteGoogleProfile = async () => {
+    Alert.alert(
+      'Confirmar Eliminación (Google)',
+      'Esta acción es IRREVERSIBLE. Se eliminarán TODOS tus datos incluyendo:\n\n• Perfil de cliente\n• Avatar e imágenes\n• Productos (si eres artesano)\n• Sesión actual (serás deslogueado)\n\nNota: La cuenta de autenticación permanecerá pero sin datos asociados.\n\n¿Estás completamente seguro?',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel'
+        },
+        {
+          text: 'ELIMINAR DEFINITIVAMENTE',
+          style: 'destructive',
+          onPress: async () => {
+            setDeleteGoogleLoading(true);
+            try {
+              // Llamar a la función de eliminación sin validación de contraseña
+              const { data, error } = await deleteGoogleClientProfile();
+              
+              if (error) {
+                Alert.alert('Error', error);
+                return;
+              }
+              
+              Alert.alert(
+                'Perfil Eliminado',
+                'Tu perfil ha sido eliminado completamente. Serás redirigido al login.',
+                [
+                  {
+                    text: 'OK',
+                    onPress: () => {
+                      // Redirigir al login después de eliminar perfil
+                      router.replace('/(auth)');
+                    }
+                  }
+                ]
+              );
+            } catch (error) {
+              Alert.alert('Error', 'Ocurrió un error inesperado');
+              console.error('Error deleting Google profile:', error);
+            } finally {
+              setDeleteGoogleLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -822,50 +912,68 @@ export default function ClientProfile() {
               <MaterialCommunityIcons name="pencil" size={20} color="#fff" />
               <Text style={styles.editButtonText}>Editar perfil</Text>
             </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.changePasswordButton, passwordBlocked && styles.changePasswordButtonDisabled]} 
-          onPress={handleChangePassword}
-          disabled={passwordBlocked}
-        >
-          <MaterialCommunityIcons name="lock-reset" size={20} color="#fff" />
-          <Text style={styles.changePasswordButtonText}>
-            {passwordBlocked ? `Bloqueado (${Math.ceil(blockTimeRemaining / 60)} min)` : 'Cambiar contraseña'}
-          </Text>
-        </TouchableOpacity>
+        {/* Botón de cambio de contraseña - Solo visible para usuarios con contraseña (no Google) */}
+        {!isGoogleUser && (
+          <TouchableOpacity 
+            style={[styles.changePasswordButton, passwordBlocked && styles.changePasswordButtonDisabled]} 
+            onPress={handleChangePassword}
+            disabled={passwordBlocked}
+          >
+            <MaterialCommunityIcons name="lock-reset" size={20} color="#fff" />
+            <Text style={styles.changePasswordButtonText}>
+              {passwordBlocked ? `Bloqueado (${Math.ceil(blockTimeRemaining / 60)} min)` : 'Cambiar contraseña'}
+            </Text>
+          </TouchableOpacity>
+        )}
         
-        {/* Indicador de intentos fallidos */}
-        {totalFailedAttempts > 0 && totalFailedAttempts < 6 && (
+        {/* Indicador de intentos fallidos - Solo para usuarios con contraseña */}
+        {!isGoogleUser && totalFailedAttempts > 0 && totalFailedAttempts < 6 && (
           <Text style={styles.attemptsWarning}>
             ⚠️ Intentos fallidos: {totalFailedAttempts}/6
           </Text>
         )}
         
-        {totalFailedAttempts >= 6 && (
+        {!isGoogleUser && totalFailedAttempts >= 6 && (
           <Text style={styles.attemptsDanger}>
             🚫 Sesión será cerrada después de 6 intentos fallidos
           </Text>
         )}
         
-        {/* Botón de eliminar perfil */}
-        <TouchableOpacity 
-          style={[styles.deleteProfileButton, deletePasswordBlocked && styles.deleteProfileButtonDisabled]} 
-          onPress={handleDeleteProfile}
-          disabled={deletePasswordBlocked}
-        >
-          <MaterialCommunityIcons name="delete-forever" size={20} color="#fff" />
-          <Text style={styles.deleteProfileButtonText}>
-            {deletePasswordBlocked ? `Bloqueado (${Math.ceil(deleteBlockTimeRemaining / 60)} min)` : 'Eliminar perfil'}
-          </Text>
-        </TouchableOpacity>
+        {/* Botón de eliminar perfil - Solo visible para usuarios con contraseña (no Google) */}
+        {!isGoogleUser && (
+          <TouchableOpacity 
+            style={[styles.deleteProfileButton, deletePasswordBlocked && styles.deleteProfileButtonDisabled]} 
+            onPress={handleDeleteProfile}
+            disabled={deletePasswordBlocked}
+          >
+            <MaterialCommunityIcons name="delete-forever" size={20} color="#fff" />
+            <Text style={styles.deleteProfileButtonText}>
+              {deletePasswordBlocked ? `Bloqueado (${Math.ceil(deleteBlockTimeRemaining / 60)} min)` : 'Eliminar perfil'}
+            </Text>
+          </TouchableOpacity>
+        )}
         
-        {/* Indicador de intentos fallidos para eliminación */}
-        {totalDeleteAttempts > 0 && totalDeleteAttempts < 6 && (
+        {/* Botón de eliminar perfil (Google) - Solo visible para usuarios de Google */}
+        {isGoogleUser && (
+          <TouchableOpacity 
+            style={styles.deleteGoogleProfileButton} 
+            onPress={handleDeleteGoogleProfile}
+          >
+            <MaterialCommunityIcons name="google" size={20} color="#fff" />
+            <Text style={styles.deleteGoogleProfileButtonText}>
+              Eliminar perfil (Google)
+            </Text>
+          </TouchableOpacity>
+        )}
+        
+        {/* Indicador de intentos fallidos para eliminación - Solo para usuarios con contraseña */}
+        {!isGoogleUser && totalDeleteAttempts > 0 && totalDeleteAttempts < 6 && (
           <Text style={styles.attemptsWarning}>
             ⚠️ Intentos fallidos eliminación: {totalDeleteAttempts}/6
           </Text>
         )}
         
-        {totalDeleteAttempts >= 6 && (
+        {!isGoogleUser && totalDeleteAttempts >= 6 && (
           <Text style={styles.attemptsDanger}>
             🚫 Sesión será cerrada después de 6 intentos fallidos
           </Text>
@@ -1146,6 +1254,68 @@ export default function ClientProfile() {
                   <>
                     <MaterialCommunityIcons name="delete-forever" size={20} color="#fff" />
                     <Text style={styles.deleteConfirmButtonText}>ELIMINAR DEFINITIVAMENTE</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {/* Modal de eliminación de perfil Google */}
+      {showDeleteGoogleProfile && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Eliminar Perfil (Google)</Text>
+              <TouchableOpacity 
+                onPress={handleCancelDeleteGoogleProfile}
+                style={styles.closeButton}
+              >
+                <MaterialCommunityIcons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.deleteForm}>
+              <Text style={styles.deleteWarning}>
+                ⚠️ Esta acción es IRREVERSIBLE
+              </Text>
+              <Text style={styles.deleteDescription}>
+                Se eliminarán TODOS tus datos incluyendo:
+              </Text>
+              <Text style={styles.deleteList}>
+                • Perfil de cliente{'\n'}
+                • Avatar e imágenes{'\n'}
+                • Productos (si eres artesano){'\n'}
+                • Sesión actual (serás deslogueado){'\n'}
+                {'\n'}Nota: La cuenta de autenticación permanecerá pero sin datos asociados.
+              </Text>
+              
+              <Text style={styles.googleWarning}>
+                🔐 Como usuario de Google, no necesitas validar contraseña.
+              </Text>
+            </View>
+            
+            <View style={styles.modalActions}>
+              <TouchableOpacity 
+                style={styles.cancelButton}
+                onPress={handleCancelDeleteGoogleProfile}
+                disabled={deleteGoogleLoading}
+              >
+                <Text style={styles.cancelButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.deleteConfirmButton, deleteGoogleLoading && styles.deleteConfirmButtonDisabled]}
+                onPress={handleConfirmDeleteGoogleProfile}
+                disabled={deleteGoogleLoading}
+              >
+                {deleteGoogleLoading ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <>
+                    <MaterialCommunityIcons name="google" size={20} color="#fff" />
+                    <Text style={styles.deleteConfirmButtonText}>ELIMINAR (GOOGLE)</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -1643,5 +1813,40 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     marginLeft: 8,
+  },
+  // Estilos para botón de eliminar perfil Google
+  deleteGoogleProfileButton: {
+    backgroundColor: '#4285f4',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginTop: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  deleteGoogleProfileButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  // Estilos para advertencia de Google
+  googleWarning: {
+    color: '#4285f4',
+    fontSize: 14,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 16,
+    backgroundColor: '#e3f2fd',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#bbdefb',
   },
 });

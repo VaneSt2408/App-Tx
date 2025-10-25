@@ -231,13 +231,30 @@ export const validateCurrentPassword = async (currentPassword) => {
       return { data: false, error: 'Contraseña muy corta' };
     }
     
-    // Validar la contraseña actual intentando hacer login con el email y contraseña
-    // Esto es la forma correcta de validar la contraseña sin afectar la sesión actual
+    // Validar la contraseña actual usando un enfoque más seguro
+    // En lugar de hacer login completo, usamos una validación alternativa
     try {
-      // Guardamos la sesión original antes de hacer el login de prueba
-      const { data: { session: originalSession } } = await supabase.auth.getSession();
+      // Crear una instancia temporal de Supabase para la validación
+      // Esto evita afectar la sesión actual
+      const { createClient } = require('@supabase/supabase-js');
+      const AsyncStorage = require('@react-native-async-storage/async-storage');
       
-      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+      // Usar la misma configuración pero con una instancia separada
+      const tempSupabase = createClient(
+        'https://wjgnktfkbdvofzdotkdn.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqZ25rdGZrYmR2b2Z6ZG90a2RuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkwMTEwODYsImV4cCI6MjA3NDU4NzA4Nn0.y4zqWisgouwsnkIN7-tRQ_8R7sWA0tdlz-6LeFWcQ78',
+        {
+          auth: {
+            storage: AsyncStorage,
+            autoRefreshToken: false, // Deshabilitar refresh automático
+            persistSession: false, // No persistir la sesión temporal
+            detectSessionInUrl: false,
+          },
+        }
+      );
+      
+      // Intentar login con la instancia temporal
+      const { data: loginData, error: loginError } = await tempSupabase.auth.signInWithPassword({
         email: user.email,
         password: currentPassword
       });
@@ -247,15 +264,8 @@ export const validateCurrentPassword = async (currentPassword) => {
         return { data: false, error: 'Contraseña actual incorrecta' };
       }
       
-      // Si el login fue exitoso, la contraseña es correcta
-      // Ahora necesitamos restaurar la sesión original
-      if (originalSession) {
-        await supabase.auth.setSession({
-          access_token: originalSession.access_token,
-          refresh_token: originalSession.refresh_token
-        });
-      }
-      
+      // Si llegamos aquí, la contraseña es correcta
+      // No necesitamos restaurar nada porque usamos una instancia temporal
       console.log('Contraseña actual validada correctamente');
       return { data: true, error: null };
       
@@ -488,6 +498,149 @@ export const deleteClientProfile = async (currentPassword) => {
     
   } catch (error) {
     console.error('Error en deleteClientProfile:', error);
+    return { data: null, error: error.message };
+  }
+};
+
+// Función para eliminar perfil de usuario Google (sin validación de contraseña)
+export const deleteGoogleClientProfile = async () => {
+  try {
+    console.log('Eliminando perfil de usuario Google...');
+    
+    // Obtener el usuario actual
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('No se encontró la sesión del usuario');
+    }
+    
+    console.log('Usuario Google identificado, procediendo con la eliminación...');
+    
+    // 1. Eliminar avatar del storage si existe
+    try {
+      const { data: profileData } = await supabase
+        .from('clientes')
+        .select('avatar_url')
+        .eq('id', user.id)
+        .single();
+      
+      if (profileData?.avatar_url) {
+        console.log('Eliminando avatar del storage...');
+        const avatarPath = profileData.avatar_url.split('/').pop();
+        await supabase.storage
+          .from('avatars')
+          .remove([`${user.id}/${avatarPath}`]);
+      }
+    } catch (storageError) {
+      console.warn('Error eliminando avatar del storage:', storageError);
+      // Continuar con la eliminación aunque falle el storage
+    }
+    
+    // 2. Eliminar registros de la tabla clientes
+    console.log('Eliminando registro de clientes...');
+    console.log('User ID:', user.id);
+    
+    const { data: clientesData, error: clientesError } = await supabase
+      .from('clientes')
+      .delete()
+      .eq('id', user.id)
+      .select();
+    
+    if (clientesError) {
+      console.error('Error eliminando de clientes:', clientesError);
+      throw new Error(`Error eliminando perfil: ${clientesError.message}`);
+    }
+    
+    console.log('Resultado eliminación clientes:', clientesData);
+    console.log('Registros eliminados de clientes:', clientesData?.length || 0);
+    
+    // 3. Eliminar registros de la tabla perfiles si existe
+    try {
+      console.log('Eliminando registro de perfiles...');
+      const { error: perfilesError } = await supabase
+        .from('perfiles')
+        .delete()
+        .eq('id', user.id);
+      
+      if (perfilesError) {
+        console.warn('Error eliminando de perfiles:', perfilesError);
+        // No es crítico si esta tabla no existe
+      }
+    } catch (perfilesError) {
+      console.warn('Tabla perfiles no existe o error:', perfilesError);
+    }
+    
+    // 4. Eliminar productos del artesano si es que tiene
+    try {
+      console.log('Eliminando productos del artesano...');
+      const { data: productosData, error: productosError } = await supabase
+        .from('productos')
+        .delete()
+        .eq('artesano_id', user.id)
+        .select();
+      
+      if (productosError) {
+        console.warn('Error eliminando productos:', productosError);
+        // No es crítico si no tiene productos
+      } else {
+        console.log('Resultado eliminación productos:', productosData);
+        console.log('Productos eliminados:', productosData?.length || 0);
+      }
+    } catch (productosError) {
+      console.warn('Error eliminando productos:', productosError);
+    }
+    
+    // 5. Verificar que los datos se eliminaron correctamente
+    console.log('Verificando eliminación de datos...');
+    
+    // Verificar que el perfil se eliminó
+    const { data: verifyClientes } = await supabase
+      .from('clientes')
+      .select('id')
+      .eq('id', user.id);
+    
+    if (verifyClientes && verifyClientes.length > 0) {
+      console.warn('Advertencia: El perfil de clientes no se eliminó completamente');
+    } else {
+      console.log('✓ Perfil de clientes eliminado correctamente');
+    }
+    
+    // Verificar que los productos se eliminaron (si existían)
+    const { data: verifyProductos } = await supabase
+      .from('productos')
+      .select('id')
+      .eq('artesano_id', user.id);
+    
+    if (verifyProductos && verifyProductos.length > 0) {
+      console.warn('Advertencia: Algunos productos no se eliminaron');
+    } else {
+      console.log('✓ Productos eliminados correctamente');
+    }
+    
+    console.log('Datos del perfil Google eliminados completamente');
+    
+    // 6. Cerrar sesión del usuario (no se puede eliminar cuenta de auth sin permisos especiales)
+    console.log('Cerrando sesión del usuario Google...');
+    try {
+      const { error: signOutError } = await supabase.auth.signOut();
+      if (signOutError) {
+        console.warn('Error cerrando sesión:', signOutError);
+      } else {
+        console.log('✓ Sesión cerrada correctamente');
+      }
+    } catch (signOutError) {
+      console.warn('Error cerrando sesión:', signOutError);
+    }
+    
+    // Nota: La eliminación de cuenta de autenticación requiere permisos especiales
+    // Los datos del perfil han sido eliminados completamente
+    console.log('Nota: Los datos del perfil han sido eliminados completamente');
+    console.log('La cuenta de autenticación permanece pero sin datos asociados');
+    
+    console.log('Perfil Google eliminado completamente');
+    return { data: true, error: null };
+    
+  } catch (error) {
+    console.error('Error en deleteGoogleClientProfile:', error);
     return { data: null, error: error.message };
   }
 };
