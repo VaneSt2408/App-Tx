@@ -6,7 +6,6 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as Linking from 'expo-linking'; // Tu equipo lo usa para deep links
 import { supabase } from './src/supabase/client'; // Importas supabase aquí
-
 import { onAuthStateChange, checkUserRole } from './src/services/authService';
 
 // --- Importación de todas las pantallas ---
@@ -20,6 +19,7 @@ import NotFoundPage from './src/pages/NotFoundPage';
 import MagicLink from './src/pages/MagicLink';
 import ChangePassword from './src/pages/ChangePassword';
 import CompleteProfilePage from './src/pages/CompleteProfilePage';
+import CreatePostPage from './src/pages/CreatePostPage'; 
 
 // --- Componente simple para mostrar una pantalla de carga ---
 const LoadingScreen = () => (
@@ -127,7 +127,17 @@ export default function App() {
                     </>
                 );
             case 'artesano':
-                return <Stack.Screen name="ArtPage" component={ArtPage} options={{ title: 'Página del Artesano' }} />;
+                return (
+                <>
+                <Stack.Screen name="ArtPage" component={ArtPage} options={{ title: 'Página del Artesano' }} />
+                <Stack.Screen
+                            name="CreatePost"
+                            component={CreatePostPage}
+                            options={{ headerShown: false }} // Ya tiene header personalizado
+                            />
+                            </>
+                );
+
             case 'cliente':
                 return <Stack.Screen name="ClientPage" component={ClientPage} options={{ title: 'Página del Cliente' }} />;
             case 'En proceso':
@@ -151,6 +161,7 @@ export default function App() {
         </NavigationContainer>
     );
 }
+
 
 const styles = StyleSheet.create({
     loadingContainer: {
