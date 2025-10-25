@@ -26,6 +26,11 @@ function ClientPage() { // Asegúrate de que el nombre del componente coincida c
         // App.js se encarga de la redirección
     };
 
+    // Función para navegar a la lista de artesanos
+    const handleNavigateToArtesanos = () => {
+        router.push('./ArtesanoList');
+    };
+
     if (loading || !user) { // Muestra un indicador de carga mientras se obtienen los datos del usuario
         return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#2575fc" /></View>;
     }
@@ -43,6 +48,11 @@ function ClientPage() { // Asegúrate de que el nombre del componente coincida c
             <TouchableOpacity style={styles.uploadButton} onPress={() => router.push('/clientProfile')}>
                 <MaterialCommunityIcons name="plus" size={24} color="#fff" />
                 <Text style={styles.uploadButtonText}>Ver perfil</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.artesanosButton} onPress={handleNavigateToArtesanos}>
+                <MaterialCommunityIcons name="account-group" size={24} color="#fff" />
+                <Text style={styles.artesanosButtonText}>Lista de Artesanos</Text>
             </TouchableOpacity>
 
         </View>
@@ -73,6 +83,27 @@ const styles = StyleSheet.create({
         shadowRadius: 3.84,
     },
     uploadButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginLeft: 8,
+    },
+    artesanosButton: {
+        backgroundColor: '#8a17aaff',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 15,
+        paddingHorizontal: 20,
+        borderRadius: 10,
+        marginBottom: 20,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+    },
+    artesanosButtonText: {
         color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',

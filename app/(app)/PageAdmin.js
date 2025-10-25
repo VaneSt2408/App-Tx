@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react'; // En: src/pages/PageAdmin.js
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native'; // Asegúrate de importar TouchableOpacity
-import { useNavigation } from '@react-navigation/native'; // Importa useNavigation para la navegación
+import { useRouter } from 'expo-router'; // Importa useRouter para la navegación con Expo Router
 import { signOut } from '../../src/services/authService'; // Similar a ClientPage.js
 import { supabase } from '../../src/supabase/client'; // Similar a ClientPage.js
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Importa los íconos de MaterialCommunityIcons
 
 function PageAdmin() { // Asegúrate de que el nombre del componente coincida con el del archivo
-    const navigation = useNavigation(); // Hook para la navegación
+    const router = useRouter(); // Hook para la navegación con Expo Router
     const [user, setUser] = useState(null); // Estado para almacenar los datos del usuario
     const [loading, setLoading] = useState(true); // Estado para manejar la carga
 
@@ -38,23 +38,23 @@ function PageAdmin() { // Asegúrate de que el nombre del componente coincida co
                 </TouchableOpacity>
             </View>
             <Text style={styles.title}>Modo: Administrador</Text>
-            <TouchableOpacity style={styles.botonPersonalizado} onPress={() => navigation.navigate('MagicLink')}>
+            <TouchableOpacity style={styles.botonPersonalizado} onPress={() => router.push('./MagicLink')}>
                 <Text style={styles.textoDelBoton}>Registrar Nuevo Artesano</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.botonPersonalizado2} onPress={() => navigation.navigate('RegisterArtesano')}>
+            <TouchableOpacity style={styles.botonPersonalizado2} onPress={() => router.push('./ArtesanoList')}>
             <Text style={styles.textoDelBoton}>Lista de artesanos</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.botonPersonalizado3} onPress={() => navigation.navigate('RegisterArtesano')}>
+            <TouchableOpacity style={styles.botonPersonalizado3} onPress={() => router.push('./RegisterArtesano')}>
             <Text style={styles.textoDelBoton}>Estadisticas</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.botonPersonalizado4} onPress={() => navigation.navigate('RegisterArtesano')}>
+            <TouchableOpacity style={styles.botonPersonalizado4} onPress={() => router.push('./RegisterArtesano')}>
             <Text style={styles.textoDelBoton}>Modificar/Eliminar</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.botonPersonalizado5} onPress={() => navigation.navigate('RegisterArtesano')}>
+            <TouchableOpacity style={styles.botonPersonalizado5} onPress={() => router.push('./RegisterArtesano')}>
             <Text style={styles.textoDelBoton}>Configuracion general</Text>
             </TouchableOpacity>
 

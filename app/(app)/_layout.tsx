@@ -69,6 +69,7 @@ export default function AppLayout() {
       <Stack.Screen name="ChangePassword" options={{ title: "Confirmar contraseña" }} />
       <Stack.Screen name="NotFoundPage" options={{ title: "Error de permisos" }} />
       <Stack.Screen name="clientProfile" options={{ title: "" }} />
+      <Stack.Screen name="ArtesanoList" options={{ title: "Lista de artesanos" }} />
     </Stack>
   );
 }

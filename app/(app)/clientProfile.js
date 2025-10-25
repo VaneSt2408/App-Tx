@@ -156,6 +156,7 @@ export default function ClientProfile() {
     router.back();
   };
 
+
   const handleEdit = () => {
     setEditData({
       nombre_completo: profile.nombre_completo,
