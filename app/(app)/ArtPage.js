@@ -44,7 +44,7 @@ function ArtPage() {
             <View style={styles.userInfo}>
                 <Text style={styles.emailText}>Email: {user.email}</Text>
                 <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-                    <MaterialCommunityIcons name="logout" size={28} color="#db4437" />
+                    <MaterialCommunityIcons name="logout" size={28} color="#9D046D" />
                 </TouchableOpacity>
             </View>
             <Text style={styles.title}>Modo: Artesano</Text>
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     emailText: { fontSize: 16, color: '#555' },
     logoutButton: { padding: 8 },
     uploadButton: {
-        backgroundColor: '#2575fc',
+        backgroundColor: '#9D046D',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',

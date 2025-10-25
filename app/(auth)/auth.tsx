@@ -2,13 +2,13 @@ import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link, useRouter } from 'expo-router';
+import { BlurView } from 'expo-blur';
 import { StatusBar } from 'expo-status-bar';
 import { MotiText, MotiView } from 'moti';
 import React, { useState } from 'react';
 import { Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { signInWithPassword, signInWithGoogle, signUpWithEmail } from '../../src/services/authService'; // Importa funciones de autenticación desde el servicio 
 import {Alert} from 'react-native';
-
+import { signInWithPassword, signInWithGoogle, signUpWithEmail } from '../../src/services/authService';
 // --- COMPONENTE AUXILIAR PARA MOSTRAR CADA REQUISITO ---
 // Este componente muestra un ícono de check o 'x' y el texto del requisito.
 const PasswordRequirement = ({ met, text }: { met: boolean; text: string }) => (
@@ -26,14 +26,12 @@ const PasswordRequirement = ({ met, text }: { met: boolean; text: string }) => (
 
 export default function AuthScreen() {
   const router = useRouter();
-  // --- ESTADOS DEL COMPONENTE ---
+  // --- ESTADOS DEL COMPONENTE (UI y validación local) ---
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [selectorWidth, setSelectorWidth] = useState(0);
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [username, setUsername] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState(''); // Estado para el número de teléfono
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   
   const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -69,7 +67,8 @@ export default function AuthScreen() {
         isValid = false;
       }
 
-      // Validación de Complejidad de Contraseña (movida aquí para centralizar)
+
+      // Validación de Complejidad de Contraseña
       if (password.length < 8) newErrors.password = 'La contraseña debe tener al menos 8 caracteres.';
       else if (!/[A-Z]/.test(password)) newErrors.password = 'Debe contener al menos una mayúscula.';
       else if (!/[a-z]/.test(password)) newErrors.password = 'Debe contener al menos una minúscula.';
@@ -80,7 +79,7 @@ export default function AuthScreen() {
         isValid = false;
       }
 
-      // Validaciones de username y phoneNumber eliminadas - ya no son campos requeridos
+      
       // Validación de Confirmar Contraseña
       if (password !== confirmPassword) {
         newErrors.confirmPassword = 'Las contraseñas no coinciden.';
@@ -92,15 +91,16 @@ export default function AuthScreen() {
     return isValid;
   };
 
+  // Función de registro 
   const handleSignUp = async () => {
     console.log('🔍 Iniciando proceso de registro...');
     console.log('📧 Email:', email);
-    console.log('🔑 Password:', password ? '***' : 'vacío');
+    console.log('🔑 Password:', password ? '*' : 'vacío');
     console.log('✅ Validación:', validate());
     
     if (validate()) {
       console.log('✅ Validación exitosa, procediendo con el registro...');
-      console.log('Sign Up attempt with:', { email, username, password, confirmPassword, phoneNumber, profileImage });
+      console.log('Sign Up attempt with:', { email, password, confirmPassword, profileImage });
       
       try {
         // Llamada al método de registro del backend
@@ -133,6 +133,20 @@ export default function AuthScreen() {
     }
   };
 
+  // Función de inicio de sesión (solo UI/navegación)
+  const handleLogin = async () => {
+    const { error } = await signInWithPassword(email, password); // Llama al servicio de autencación
+    if (error) {
+      Alert.alert('Error', 'Credenciales incorrectas'); // Muestra una alerta si hay un error (Credenciales incorrectas o campos incompletos)
+    }
+  };
+
+  // Función para manejar el inicio de sesión con Google (solo UI/navegación)
+  const handleGoogleSignIn = () => {
+    console.log('Attempting Google Sign In');
+    // Aquí irá tu lógica de Google Sign-In.
+  }
+
   const handlePickImage = async () => {
     // Pedir permiso para acceder a la galería
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -154,28 +168,14 @@ export default function AuthScreen() {
     }
   };
 
-  // Funcion para manejar el inicio de sesión con Google
-  const handleGoogleLogin = async () => {
-    await signInWithGoogle(); // Llama al servicio de autenticación
-    //La redirección se maneja en App.js 
-  };
-
-    //Inicio de sesión con correo y contraseña
-  const handleLogin = async () => {
-    const { error } = await signInWithPassword(email, password); // Llama al servicio de autencación
-    if (error) {
-      Alert.alert('Error', 'Credenciales incorrectas'); // Muestra una alerta si hay un error (Credenciales incorrectas o campos incompletos)
-    }
-  };
-
   return (
     <LinearGradient
-      colors={['#020202ff', '#923febff']}
+      colors={['#FDFAF1', '#FDFAF1']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={{ flex: 1 }}
     >
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <SafeAreaView className="flex-1">
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -189,7 +189,7 @@ export default function AuthScreen() {
             from={{ opacity: 0, translateY: -50 }} 
             animate={{ opacity: 1, translateY: 0 }}
             transition={{ type: 'timing', duration: 900 }}
-            className="text-white text-4xl font-bold mb-9 text-center"
+            className="text-gray-800 text-4xl font-bold mb-9 text-center"
           >
             {authMode === 'login' ? 'Bienvenido de Vuelta' : 'Crea tu cuenta'}
           </MotiText>
@@ -204,14 +204,14 @@ export default function AuthScreen() {
             >
               <TouchableOpacity 
                 onPress={handlePickImage} 
-                className="w-32 h-32 bg-white/20 rounded-full justify-center items-center border-2 border-dashed border-white/50"
+                className="w-32 h-32 bg-gray-500/20 rounded-full justify-center items-center border-2 border-dashed border-gray-500/50"
               >
                 {profileImage ? (
                   <Image source={{ uri: profileImage }} className="w-full h-full rounded-full" />
                 ) : (
                   <View className="items-center">
-                    <Feather name="camera" size={32} color="white" />
-                    <Text className="text-white text-center mt-2 text-xs">Añadir foto</Text>
+                    <Feather name="camera" size={32} color="#4B5563" />
+                    <Text className="text-gray-700 text-center mt-2 text-xs">Añadir foto</Text>
                   </View>
                 )}
               </TouchableOpacity> 
@@ -226,22 +226,31 @@ export default function AuthScreen() {
             animate={{ opacity: 1, translateY: 0 }}
             transition={{ type: 'timing', duration: 600, delay: 600 }}
             onLayout={(event) => setSelectorWidth(event.nativeEvent.layout.width)}
-            className="w-64 flex-row bg-black/40 p-0 rounded-full mb-7 relative"
+            className="w-64 flex-row bg-black/10 p-0 rounded-full mb-7 relative"
           >
             {selectorWidth > 0 && (
               <MotiView
                 animate={{ translateX: authMode === 'login' ? 0 : selectorWidth / 2 }}
                 transition={{ type: 'timing', duration: 300 }}
-                className="absolute h-full w-1/2 bg-white/30 rounded-full"
+                style={{ backgroundColor: '#9D046D' }}
+                className="absolute h-full w-1/2 rounded-full"
               />
             )}
             
             <TouchableOpacity onPress={() => setAuthMode('login')} className="flex-1 py-2 items-center rounded-full">
-              <Text className="text-white font-bold text-base">Inicia Sesion</Text>
+              <Text 
+                style={{ color: authMode === 'login' ? 'white' : '#EE0359' }}
+                className="font-bold text-base"
+              >
+                Inicia Sesion
+              </Text>
             </TouchableOpacity>
             
             <TouchableOpacity onPress={() => setAuthMode('signup')} className="flex-1 py-2 items-center rounded-full">
-              <Text className="text-white font-bold text-base">Registrate</Text>
+              <Text 
+                style={{ color: authMode === 'signup' ? 'white' : '#EE0359' }}
+                className="font-bold text-base "
+              >Registrate</Text>
             </TouchableOpacity> 
           </MotiView> 
           
@@ -250,32 +259,37 @@ export default function AuthScreen() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ type: 'timing', duration: 300, delay: 100 }}
             className="w-full"
-          > 
-            <View  
-              className="w-full bg-white/20 p-4 rounded-2xl mb-4 border-2 flex-row items-center"
-              style={{ borderColor: focusedInput === 'email' ? '#a855f7' : 'transparent' }}
-            >
-              <Feather name="mail" size={20} color="white" style={{ marginRight: 10 }} />
-              <TextInput
-                key="email-input"
-                onFocus={() => setFocusedInput('email')}
-                onBlur={() => setFocusedInput(null)}
-                className="flex-1 text-white text-lg"
-                placeholder="Correo Electronico"
-                placeholderTextColor="#ccc"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
+          >
+            <BlurView intensity={20} tint="light" style={{ borderRadius: 16, overflow: 'hidden' }}>
+              <View 
+                className="w-full p-4 rounded-2xl mb-4 border-2 flex-row items-center"
+                style={{ 
+                  backgroundColor: 'rgba(238, 3, 89, 0.25)', // #EE0359 con transparencia
+                  borderColor: focusedInput === 'email' ? '#EE0359' : 'rgba(0,0,0,0.1)' 
+                }}
+              >
+                <Feather name="mail" size={20} color="#9D046D" style={{ marginRight: 10 }} />
+                <TextInput
+                  key="email-input"
+                  onFocus={() => setFocusedInput('email')}
+                  onBlur={() => setFocusedInput(null)}
+                  className="flex-1 text-black text-lg font-semibold"
+                  placeholder="Correo Electronico"
+                  placeholderTextColor="#9D046D"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+            </BlurView>
             {authMode === 'signup' && errors.email && (
               <Text style={styles.errorText}>{errors.email}</Text>
             )}
             {authMode === 'login' && errors.email && (
               <Text style={styles.errorText}>{errors.email}</Text>
             )}
-          </MotiView> 
+          </MotiView>
 
           <MotiView
             from={{ opacity: 0, translateX: 50 }}
@@ -283,26 +297,31 @@ export default function AuthScreen() {
             transition={{ type: 'timing', duration: 500, delay: 500 }}
             className="w-full"
           >
-            <View 
-              className="w-full bg-white/20 p-4 rounded-2xl mb-4 border-2 flex-row items-center"
-              style={{ borderColor: focusedInput === 'password' ? '#a855f7' : 'transparent' }}
-            >
-              <Feather name="lock" size={20} color="white" style={{ marginRight: 10 }} />
+            <BlurView intensity={20} tint="light" style={{ borderRadius: 16, overflow: 'hidden' }}>
+              <View 
+                className="w-full p-4 rounded-2xl mb-4 border-2 flex-row items-center"
+                style={{ 
+                  backgroundColor: 'rgba(238, 3, 89, 0.25)', // #EE0359 con transparencia
+                  borderColor: focusedInput === 'password' ? '#EE0359' : 'rgba(0,0,0,0.1)' 
+                }}
+              >
+                <Feather name="lock" size={20} color="#9D046D" style={{ marginRight: 10 }} />
               <TextInput
-                key="password-input"
+                key="email-input"
                 onFocus={() => setFocusedInput('password')}
                 onBlur={() => setFocusedInput(null)}
-                className="flex-1 text-white text-lg"
+                className="flex-1 text-black text-lg font-semibold"
                 placeholder="Contraseña"
-                placeholderTextColor="#ccc"
+                placeholderTextColor="#9D046D"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!isPasswordVisible}
               />
               <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)}>
-                <Feather name={isPasswordVisible ? "eye-off" : "eye"} size={20} color="white" />
+                <Feather name={isPasswordVisible ? "eye-off" : "eye"} size={20} color="#9D046D" />
               </TouchableOpacity>
             </View>
+            </BlurView>
             {authMode === 'login' && errors.password && (
               <Text style={styles.errorText}>{errors.password}</Text>
             )}
@@ -311,7 +330,7 @@ export default function AuthScreen() {
           {/* --- NUEVA SECCIÓN DE REQUISITOS DE CONTRASEÑA --- */}
           {authMode === 'signup' && (
             <MotiView 
-              className="w-full bg-black/20 p-3 rounded-2xl mb-4"
+              className="w-full bg-black/5 p-3 rounded-2xl mb-4"
               from={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ type: 'timing', delay: 300 }}
@@ -335,23 +354,23 @@ export default function AuthScreen() {
                className="w-full"
              >
                <View 
-                 className="w-full bg-white/20 p-4 rounded-2xl mb-6 border-2 flex-row items-center"
-                 style={{ borderColor: focusedInput === 'confirmPassword' ? '#a855f7' : 'transparent' }}
+                  className="w-full p-4 rounded-2xl mb-6 border-2 flex-row items-center" 
+                 style={{ borderColor: focusedInput === 'confirmPassword' ? '#9D046D' : 'transparent', backgroundColor: 'rgba(238, 3, 89, 0.25)'}}
                >
-                 <Feather name="lock" size={20} color="white" style={{ marginRight: 10 }} />
+                 <Feather name="lock" size={20} color="#9D046D" style={{ marginRight: 10 }} />
                  <TextInput
                    key="confirm-password-input"
                    onFocus={() => setFocusedInput('confirmPassword')}
                    onBlur={() => setFocusedInput(null)}
-                   className="flex-1 text-white text-lg"
+                   className="flex-1 text-black text-lg font-semibold"
                    placeholder="Confirmar contraseña"
-                   placeholderTextColor="#ccc"
+                   placeholderTextColor="#9D046D"
                    value={confirmPassword}
                    onChangeText={setConfirmPassword}
                    secureTextEntry={!isPasswordVisible}
                  />
                  <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)}>
-                   <Feather name={isPasswordVisible ? "eye-off" : "eye"} size={20} color="white" />
+                   <Feather name={isPasswordVisible ? "eye-off" : "eye"} size={20} color="#9D046D" />
                  </TouchableOpacity>
                </View>
                 {errors.confirmPassword && (
@@ -364,10 +383,10 @@ export default function AuthScreen() {
             from={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ type: 'timing', duration: 400, delay: 600 }}
-            className="w-full"
+            className="w-full top-2"
           >
-            <TouchableOpacity onPress={authMode === 'login' ? handleLogin : handleSignUp} className="w-full bg-white p-4 rounded-2xl items-center mb-6">
-              <Text className="text-black text-xl font-bold">
+            <TouchableOpacity onPress={authMode === 'login' ? handleLogin : handleSignUp} style={{backgroundColor: '#9D046D'}} className="w-full p-4 rounded-2xl items-center mb-6 shadow-lg shadow-black/20">
+              <Text className="text-white text-xl font-bold">
                 {authMode === 'login' ? 'Inicia Sesion' : 'Registrate'}
               </Text>
             </TouchableOpacity>
@@ -381,13 +400,13 @@ export default function AuthScreen() {
           >
             <View className="flex-row items-center w-full mb-6">
               <View className="flex-1 h-px bg-white/30" />
-              <Text className="text-white/60 mx-4">
+              <Text className="text-black mx-4">
                 {authMode === 'login' ? 'o inicia sesión con' : 'o regístrate con'} 
               </Text>
-              <View className="flex-1 h-px bg-white/30" />
+              <View className="flex-1 h-px bg-white" />
             </View>
             
-            <TouchableOpacity onPress={handleGoogleLogin} className="w-full bg-white/20 p-3 rounded-2xl flex-row justify-center items-center mb-14">
+            <TouchableOpacity onPress={handleGoogleSignIn} style={{backgroundColor: '#9D046D'}} className="w-full p-3 rounded-2xl flex-row justify-center items-center mb-14">
               <Image
                 source={{ uri: 'https://img.icons8.com/color/48/google-logo.png' }} 
                 className="w-6 h-6 mr-3"
@@ -397,10 +416,10 @@ export default function AuthScreen() {
 
                   {authMode === 'login' && (
                       <Link href="/recuperacioncontrasena" asChild>
-                          <TouchableOpacity className="mb-3"> 
+                          <TouchableOpacity className="mb-4 p-2"> 
                               <Text 
                                   className="text-base font-semibold underline" 
-                                  style={{ color: '#a855f7' }} 
+                                  style={{ color: '#9D046D' }} 
                               >
                                   ¿Olvidaste tu contraseña?
                               </Text>
@@ -410,7 +429,7 @@ export default function AuthScreen() {
           </MotiView>
 
           <Link href = "/" asChild>
-              <TouchableOpacity className='text-zinc-500 text-lg mb-1 w-10/12 bg-white/20 p-4 rounded-full items-center'>
+              <TouchableOpacity style={{backgroundColor: '#9D046D'}} className='text-zinc-500 text-lg mb-1 w-10/12 p-4 rounded-full items-center'>
                 <Text className='text-white text-2xl font-semibold'>Regresar</Text>
               </TouchableOpacity>
               </Link>

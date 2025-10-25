@@ -26,7 +26,7 @@ function PageAdmin() { // Asegúrate de que el nombre del componente coincida co
     };
 
     if (loading || !user) { // Muestra un indicador de carga mientras se obtienen los datos del usuario
-        return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#2575fc" /></View>;
+        return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#9D046D" /></View>;
     }
 
     return (
@@ -134,12 +134,12 @@ const styles = StyleSheet.create({
   },
   
     botonPersonalizado2: {
-    backgroundColor: '#8a17aaff', // Color de fondo
+    backgroundColor: '#9D046D', // Color de fondo
     paddingVertical: 10,       // Relleno vertical
     paddingHorizontal: 20,   // Relleno horizontal
     borderRadius: 8,           // Bordes redondeados
     borderWidth: 2,            // Ancho del borde
-    borderColor: '#8a17aaff',    // Color del borde
+    borderColor: '#9D046D',    // Color del borde
     top: 20,
 
     // Para centrar el texto (opcional)
@@ -154,12 +154,12 @@ const styles = StyleSheet.create({
   },
 
     botonPersonalizado3: {
-    backgroundColor: '#8a17aaff', // Color de fondo
+    backgroundColor: '#9D046D', // Color de fondo
     paddingVertical: 10,       // Relleno vertical
     paddingHorizontal: 20,   // Relleno horizontal
     borderRadius: 8,           // Bordes redondeados
     borderWidth: 2,            // Ancho del borde
-    borderColor: '#8a17aaff',    // Color del borde
+    borderColor: '#9D046D',    // Color del borde
     top: 30,
 
     // Para centrar el texto (opcional)
@@ -174,12 +174,12 @@ const styles = StyleSheet.create({
   },
     
     botonPersonalizado4: {
-    backgroundColor: '#8a17aaff', // Color de fondo
+    backgroundColor: '#9D046D', // Color de fondo
     paddingVertical: 10,       // Relleno vertical
     paddingHorizontal: 20,   // Relleno horizontal
     borderRadius: 8,           // Bordes redondeados
     borderWidth: 2,            // Ancho del borde
-    borderColor: '#8a17aaff',    // Color del borde
+    borderColor: '#9D046D',    // Color del borde
     top: 40,
 
     // Para centrar el texto (opcional)
@@ -194,12 +194,12 @@ const styles = StyleSheet.create({
   },
 
     botonPersonalizado5: {
-    backgroundColor: '#8a17aaff', // Color de fondo
+    backgroundColor: '#9D046D', // Color de fondo
     paddingVertical: 10,       // Relleno vertical
     paddingHorizontal: 20,   // Relleno horizontal
     borderRadius: 8,           // Bordes redondeados
     borderWidth: 2,            // Ancho del borde
-    borderColor: '#8a17aaff',    // Color del borde
+    borderColor: '#9D046D',    // Color del borde
     top: 50,
 
     // Para centrar el texto (opcional)

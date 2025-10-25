@@ -12,6 +12,7 @@ export default function recuperacioncontrasena() {
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [isFocused, setIsFocused] = useState(false);
     
     // Función que llama a la lógica de backend
     const handlePasswordReset = async () => {
@@ -44,12 +45,12 @@ export default function recuperacioncontrasena() {
 
     return (
         <LinearGradient
-            colors={['#020202ff', '#923febff']}
+            colors={['#FDFAF1', '#FDFAF1']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{ flex: 1 }}
         >
-            <StatusBar style="light" />
+            <StatusBar style="dark" />
             <SafeAreaView className="flex-1">
                 <KeyboardAvoidingView
                     behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -63,7 +64,7 @@ export default function recuperacioncontrasena() {
                             from={{ opacity: 0, translateY: -50 }}
                             animate={{ opacity: 1, translateY: 0 }}
                             transition={{ type: 'timing', duration: 900 }}
-                            className="text-white text-4xl font-bold mb-9 text-center"
+                            className="text-gray-800 text-4xl font-bold mb-9 text-center"
                         >
                             Recuperar Contraseña
                         </MotiText>
@@ -72,7 +73,7 @@ export default function recuperacioncontrasena() {
                             from={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ type: 'timing', duration: 900, delay: 200 }}
-                            className="text-white/80 text-lg mb-8 text-center"
+                            className="text-gray-600 text-lg mb-8 text-center"
                         >
                             Introduce tu correo electrónico asociado a la cuenta.
                         </MotiText>
@@ -84,13 +85,19 @@ export default function recuperacioncontrasena() {
                             className="w-full"
                         > 
                             <View 
-                                className="w-full bg-white/20 p-4 rounded-2xl mb-6 border-2 flex-row items-center"
+                                className="w-full p-4 rounded-2xl mb-6 border-2 flex-row items-center"
+                                style={{ 
+                                    backgroundColor: 'rgba(238, 3, 89, 0.25)', // #EE0359 con transparencia
+                                    borderColor: isFocused ? '#9D046D' : 'rgba(0,0,0,0.1)'
+                                }}
                             >
-                                <Feather name="mail" size={20} color="white" style={{ marginRight: 10 }} />
+                                <Feather name="mail" size={20} color="#9D046D" style={{ marginRight: 10 }} />
                                 <TextInput
-                                    className="flex-1 text-white text-lg"
+                                    onFocus={() => setIsFocused(true)}
+                                    onBlur={() => setIsFocused(false)}
+                                    className="flex-1 text-gray-800 text-lg font-semibold"
                                     placeholder="Correo Electrónico"
-                                    placeholderTextColor="#ccc"
+                                    placeholderTextColor="#9D046D"
                                     value={email}
                                     onChangeText={setEmail}
                                     keyboardType="email-address"
@@ -108,9 +115,9 @@ export default function recuperacioncontrasena() {
                             <TouchableOpacity 
                                 onPress={handlePasswordReset} 
                                 disabled={isLoading}
-                                className="w-full bg-white p-4 rounded-2xl items-center mb-6"
+                                style={{backgroundColor: '#9D046D'}} className="w-full p-4 rounded-2xl items-center mb-6 shadow-lg shadow-black/20"
                             >
-                                <Text className="text-black text-xl font-bold">
+                                <Text className="text-white text-xl font-bold">
                                     {isLoading ? 'Enviando...' : 'Enviar Enlace de Recuperación'}
                                 </Text>
                             </TouchableOpacity>
@@ -118,7 +125,7 @@ export default function recuperacioncontrasena() {
 
                         <Link href="/auth" asChild>
                             <TouchableOpacity className='w-full items-center mt-4'>
-                                <Text className='text-white/60 text-base font-semibold underline'>
+                                <Text className='text-black text-base font-semibold underline'>
                                     Volver al inicio de sesión
                                 </Text>
                             </TouchableOpacity>
