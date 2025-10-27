@@ -13,13 +13,19 @@ import Login from './src/pages/login';
 import RegisterPage from './src/pages/RegisterPage';
 import PageAdmin from './src/pages/PageAdmin';
 import RegisterArtesano from './src/pages/RegisterArtesano';
-import ArtPage from './src/pages/ArtPage';
+//import ArtPage from './src/pages/ArtPage';
 import ClientPage from './src/pages/ClientPage';
 import NotFoundPage from './src/pages/NotFoundPage';
 import MagicLink from './src/pages/MagicLink';
 import ChangePassword from './src/pages/ChangePassword';
 import CompleteProfilePage from './src/pages/CompleteProfilePage';
-import CreatePostPage from './src/pages/CreatePostPage'; 
+
+import MainTabsNavigatorClient from './src/navigation/MainTabsNavigatorClient'; 
+import MainTabsNavigatorArtesano from './src/navigation/MainTabsNavigatorArtesano'; 
+//import MainTabsNavigatorAdmin from './src/navigation/MainTabsNavigatorAdmin';   
+
+
+import CreatePostPage from './src/pages/CreatePostPage';   
 
 // --- Componente simple para mostrar una pantalla de carga ---
 const LoadingScreen = () => (
@@ -124,22 +130,51 @@ export default function App() {
                     <>
                         <Stack.Screen name="PageAdmin" component={PageAdmin} options={{ title: 'Modo Admin' }} />
                         <Stack.Screen name="MagicLink" component={MagicLink} options={{ title: 'Invitar Artesano' }} />
+
+                        <Stack.Screen 
+                            name="MainTabs" 
+                            component={MainTabsNavigatorArtesano}
+                            options={{ headerShown: false }}
+                        />
                     </>
                 );
             case 'artesano':
                 return (
-                <>
-                <Stack.Screen name="ArtPage" component={ArtPage} options={{ title: 'Página del Artesano' }} />
-                <Stack.Screen
-                            name="CreatePost"
-                            component={CreatePostPage}
-                            options={{ headerShown: false }} // Ya tiene header personalizado
-                            />
-                            </>
+                    <>
+                        {/* ✅ CAMBIO: Usar MainTabs en lugar de ArtPage directamente */}
+                        <Stack.Screen 
+                            name="MainTabs" 
+                            component={MainTabsNavigatorArtesano}
+                            options={{ headerShown: false }}
+                        />
+                        <Stack.Screen 
+                            name="CreatePost" 
+                            component={CreatePostPage} 
+                            options={{ title: 'Crear Publicación' }} 
+                        />
+                        {/* Mantener ArtPage para transición */}
+                        
+                    </>
                 );
 
             case 'cliente':
-                return <Stack.Screen name="ClientPage" component={ClientPage} options={{ title: 'Página del Cliente' }} />;
+                return (
+                    <>
+                        {/* ✅ Los clientes también pueden ver el feed */}
+                        <Stack.Screen 
+                            name="MainTabs" 
+                            component={MainTabsNavigatorClient}
+                            options={{ headerShown: false }}
+                        />
+                        <Stack.Screen 
+                            name="PerfilPage" 
+                            component={ClientPage} 
+                            options={{ title: 'Página del Cliente' }} 
+                        />
+
+                    </>
+                );
+
             case 'En proceso':
                 return (
                     <>
