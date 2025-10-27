@@ -70,6 +70,9 @@ export default function AppLayout() {
       <Stack.Screen name="NotFoundPage" options={{ title: "Error de permisos" }} />
       <Stack.Screen name="clientProfile" options={{ title: "" }} />
       <Stack.Screen name="ArtesanoList" options={{ title: "Lista de artesanos" }} />
+      <Stack.Screen name="CreatePostPage" options={{title: "Crea una publicacion"}}/>
+      <Stack.Screen name="FeedPage" options={{title: "Publicaciones"}}/>
+      <Stack.Screen name="MarketplacePage" options={{title: "Marketplace"}}/>
     </Stack>
   );
 }
