@@ -20,7 +20,8 @@ import MagicLink from './src/pages/MagicLink';
 import ChangePassword from './src/pages/ChangePassword';
 import CompleteProfilePage from './src/pages/CompleteProfilePage';
 import UploadProductModal from './src/components/UploadProductModal';
-import MarketplacePage from './src/pages/MarketplacePage';      
+import MarketplacePage from './src/pages/MarketplacePage';   
+import ProductDetailPage from './src/pages/ProductDetailPage';   
 
 
 import MainTabsNavigatorClient from './src/navigation/MainTabsNavigatorClient'; 
@@ -144,6 +145,11 @@ export default function App() {
                             component={MarketplacePage} 
                             options={{ title: 'Marketplace' }} 
                         />
+                        <Stack.Screen 
+                            name="ProductDetail" 
+                            component={ProductDetailPage} 
+                            options={{ title: 'Detalle del Producto' }} 
+                        />
                     </>
                 );
             case 'artesano':
@@ -171,6 +177,11 @@ export default function App() {
                             component={MarketplacePage} 
                             options={{ title: 'Marketplace' }} 
                         />
+                        <Stack.Screen 
+                            name="ProductDetail" 
+                            component={ProductDetailPage} 
+                            options={{ title: 'Detalle del Producto' }} 
+                        />
                     </>
                 );
 
@@ -191,6 +202,11 @@ export default function App() {
                             name="Marketplace" 
                             component={MarketplacePage} 
                             options={{ title: 'Marketplace' }} 
+                        />
+                        <Stack.Screen 
+                            name="ProductDetail" 
+                            component={ProductDetailPage} 
+                            options={{ title: 'Detalle del Producto' }} 
                         />
                     </>
                 );

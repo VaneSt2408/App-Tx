@@ -110,12 +110,7 @@ const MarketplacePage = ({ navigation }) => {
 
   // Navegar a detalle de producto
   const handleProductPress = (product) => {
-    // Por ahora solo mostramos alerta, más adelante navegaremos a detalle
-    Alert.alert(
-      product.nombre,
-      `Precio: ${formatPrice(product.precio)}\n\nArtesano: ${product.artesano.nombre}\nUbicación: ${product.artesano.ubicacion || 'No especificada'}`,
-      [{ text: 'OK' }]
-    );
+    navigation.navigate('ProductDetail', { productId: product.id });
     // TODO: Navegar a pantalla de detalle
     // navigation.navigate('ProductDetail', { productId: product.id });
   };
