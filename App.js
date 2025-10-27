@@ -19,6 +19,7 @@ import NotFoundPage from './src/pages/NotFoundPage';
 import MagicLink from './src/pages/MagicLink';
 import ChangePassword from './src/pages/ChangePassword';
 import CompleteProfilePage from './src/pages/CompleteProfilePage';
+import UploadProductModal from './src/components/UploadProductModal';
 
 import MainTabsNavigatorClient from './src/navigation/MainTabsNavigatorClient'; 
 import MainTabsNavigatorArtesano from './src/navigation/MainTabsNavigatorArtesano'; 
@@ -152,8 +153,12 @@ export default function App() {
                             component={CreatePostPage} 
                             options={{ title: 'Crear Publicación' }} 
                         />
-                        {/* Mantener ArtPage para transición */}
-                        
+                        {/* Modal para subir productos */}
+                        <Stack.Screen 
+                            name="UploadProduct" 
+                            component={UploadProductModal} 
+                            options={{ title: 'Subir Producto' }} 
+                        />
                     </>
                 );
 

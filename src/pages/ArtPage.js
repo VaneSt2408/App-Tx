@@ -6,15 +6,21 @@ import { supabase } from '../supabase/client'; // Similar a ClientPage.js
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Similar a ClientPage.js
 import { MaterialIcons } from '@expo/vector-icons'; // Para el ícono de agregar
 import { useNavigation } from '@react-navigation/native';
+import UploadProductModal from '../components/UploadProductModal'; // Modal para subir productos
 
 function ArtPage() {
     const navigation = useNavigation();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [showUploadModal, setShowUploadModal] = useState(false);
 
     // ✅ Función para navegar a crear publicación
     const irACrearPublicacion = () => {
         navigation.navigate('CreatePost');
+    };
+
+    const handleUploadProduct = () => { // Función para mostrar el modal de subir producto
+        setShowUploadModal(true);
     };
 
     useEffect(() => {
@@ -56,6 +62,23 @@ function ArtPage() {
             >
                 <Text style={styles.botonCrearText}>+ Crear Publicación</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity
+                style={styles.botonCrear}
+                onPress={handleUploadProduct}
+            >
+                <Text style={styles.botonCrearText}>+ Subir producto</Text>
+            </TouchableOpacity>
+
+            {/* Modal para subir productos */}
+            <UploadProductModal
+                visible={showUploadModal}
+                onClose={() => setShowUploadModal(false)}
+                onProductUploaded={() => {
+                    setShowUploadModal(false);
+                    // Opcional: recargar productos aquí
+                }}
+            />
         </View>
     );
 }
