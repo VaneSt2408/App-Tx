@@ -14,9 +14,12 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Image, // Se importa el componente Image
 } from 'react-native';
 // Se importa SafeAreaView desde la librería correcta
 import { SafeAreaView } from 'react-native-safe-area-context';
+// Se importa el selector de imágenes de Expo
+import * as ImagePicker from 'expo-image-picker';
 
 
 // --- Definición de Tipos y Componente Reutilizable ---
@@ -75,16 +78,42 @@ export default function RegisterArtisanScreen() {
   const [craftDescription, setCraftDescription] = useState('');
   const [address, setAddress] = useState('');
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  const handlePickImage = async () => {
+    // Pedir permiso para acceder a la galería
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permiso denegado', 'Lo sentimos, necesitamos permisos de la galería para que esto funcione.');
+      return;
+    }
+
+    // Abrir el selector de imágenes
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1], // Forzar un recorte cuadrado para la foto de perfil
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setProfileImage(result.assets[0].uri);
+    }
+  };
+
   const handleCompleteRegistration = async () => {
-    if (!workshopName.trim() || !craftDescription.trim() || !address.trim()) {
+    if (!profileImage) {
+      Alert.alert('Foto de Perfil Requerida', 'Por favor, selecciona una foto de perfil para continuar.');
+      return;
+    }
+    if (!workshopName.trim() || !craftDescription.trim() || !address.trim() ) {
       Alert.alert('Campos Incompletos', 'Por favor, rellena todos los campos para continuar.');
       return;
     }
 
     setIsLoading(true);
-    console.log('Completando registro de artesano:', { workshopName, craftDescription, address });
+    console.log('Completando registro de artesano:', { profileImage, workshopName, craftDescription, address });
 
     await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -110,6 +139,28 @@ export default function RegisterArtisanScreen() {
             <MotiText from={{ opacity: 0, translateY: -30 }} animate={{ opacity: 1, translateY: 0 }} transition={{ type: 'timing', duration: 700, delay: 100 }} className="text-white/80 text-base mb-10 text-center">
               Cuéntanos más sobre tu increíble trabajo.
             </MotiText>
+
+            {/* --- NUEVO: SELECTOR DE IMAGEN DE PERFIL --- */}
+            <MotiView
+              from={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: 'timing', duration: 400, delay: 150 }}
+              className="mb-8"
+            >
+              <TouchableOpacity 
+                onPress={handlePickImage} 
+                className="w-32 h-32 bg-white/20 rounded-full justify-center items-center border-2 border-dashed border-white/50"
+              >
+                {profileImage ? (
+                  <Image source={{ uri: profileImage }} className="w-full h-full rounded-full" />
+                ) : (
+                  <View className="items-center">
+                    <Feather name="camera" size={32} color="white" />
+                    <Text className="text-white/80 text-center mt-2 text-xs">Añadir foto de perfil</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </MotiView>
 
             <MotiView from={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'timing', duration: 300, delay: 200 }} className="w-full">
               <FormInput
