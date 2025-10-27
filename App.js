@@ -20,10 +20,12 @@ import MagicLink from './src/pages/MagicLink';
 import ChangePassword from './src/pages/ChangePassword';
 import CompleteProfilePage from './src/pages/CompleteProfilePage';
 import UploadProductModal from './src/components/UploadProductModal';
+import MarketplacePage from './src/pages/MarketplacePage';      
+
 
 import MainTabsNavigatorClient from './src/navigation/MainTabsNavigatorClient'; 
 import MainTabsNavigatorArtesano from './src/navigation/MainTabsNavigatorArtesano'; 
-//import MainTabsNavigatorAdmin from './src/navigation/MainTabsNavigatorAdmin';   
+import MainTabsNavigatorAdmin from './src/navigation/MainTabsNavigatorAdmin';   
 
 
 import CreatePostPage from './src/pages/CreatePostPage';   
@@ -134,8 +136,13 @@ export default function App() {
 
                         <Stack.Screen 
                             name="MainTabs" 
-                            component={MainTabsNavigatorArtesano}
+                            component={MainTabsNavigatorAdmin}
                             options={{ headerShown: false }}
+                        />
+                        <Stack.Screen 
+                            name="Marketplace" 
+                            component={MarketplacePage} 
+                            options={{ title: 'Marketplace' }} 
                         />
                     </>
                 );
@@ -159,13 +166,17 @@ export default function App() {
                             component={UploadProductModal} 
                             options={{ title: 'Subir Producto' }} 
                         />
+                        <Stack.Screen 
+                            name="Marketplace" 
+                            component={MarketplacePage} 
+                            options={{ title: 'Marketplace' }} 
+                        />
                     </>
                 );
 
             case 'cliente':
                 return (
                     <>
-                        {/* ✅ Los clientes también pueden ver el feed */}
                         <Stack.Screen 
                             name="MainTabs" 
                             component={MainTabsNavigatorClient}
@@ -176,7 +187,11 @@ export default function App() {
                             component={ClientPage} 
                             options={{ title: 'Página del Cliente' }} 
                         />
-
+                        <Stack.Screen 
+                            name="Marketplace" 
+                            component={MarketplacePage} 
+                            options={{ title: 'Marketplace' }} 
+                        />
                     </>
                 );
 

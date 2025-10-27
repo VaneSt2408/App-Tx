@@ -8,6 +8,7 @@ import { View, Text, StyleSheet } from 'react-native';
 // Importar pantallas
 import FeedPage from '../pages/FeedPage';
 import ArtPage from '../pages/ArtPage'; 
+import MarketplacePage from '../pages/MarketplacePage';
 
 //import MarketplacePage from '../pages/MarketplacePage'; // Placeholder por ahora
 //import ProfilePage from '../pages/ProfilePage'; // Placeholder por ahora
@@ -74,7 +75,7 @@ const MainTabsNavigator = () => {
       />
       <Tab.Screen 
         name="Marketplace" 
-        component={MarketplacePlaceholder}
+        component={MarketplacePage}
         options={{
           tabBarLabel: 'Marketplace',
         }}
