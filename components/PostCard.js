@@ -1,5 +1,5 @@
 // src/components/PostCard.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -10,6 +10,12 @@ const PostCard = ({ post, onLike, currentUserId }) => {
   const [liked, setLiked] = useState(post.liked_by_user);
   const [likesCount, setLikesCount] = useState(post.likes_count);
   const [isLiking, setIsLiking] = useState(false);
+
+  // Sincronizar estado cuando cambia el post (útil al recargar)
+  useEffect(() => {
+    setLiked(post.liked_by_user);
+    setLikesCount(post.likes_count);
+  }, [post.id, post.liked_by_user, post.likes_count]);
 
   // Formatear fecha relativa
   const getTimeAgo = (dateString) => {

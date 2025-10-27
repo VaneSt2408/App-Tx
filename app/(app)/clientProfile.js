@@ -156,6 +156,26 @@ export default function ClientProfile() {
     router.back();
   };
 
+  const handleLogout = async () => {
+    Alert.alert(
+      'Cerrar Sesión',
+      '¿Estás seguro de que deseas cerrar sesión?',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel'
+        },
+        {
+          text: 'Cerrar Sesión',
+          style: 'destructive',
+          onPress: async () => {
+            await signOut();
+          }
+        }
+      ]
+    );
+  };
+
 
   const handleEdit = () => {
     setEditData({
@@ -979,6 +999,12 @@ export default function ClientProfile() {
             🚫 Sesión será cerrada después de 6 intentos fallidos
           </Text>
         )}
+        
+        {/* Botón de cerrar sesión */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <MaterialCommunityIcons name="logout" size={20} color="#fff" />
+          <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
+        </TouchableOpacity>
           </View>
         )}
       </View>
@@ -1832,6 +1858,27 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   deleteGoogleProfileButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  // Estilos para botón de cerrar sesión
+  logoutButton: {
+    backgroundColor: '#db4437',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 15,
+    borderRadius: 10,
+    marginTop: 20,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  logoutButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',

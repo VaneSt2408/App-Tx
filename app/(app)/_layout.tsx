@@ -69,10 +69,12 @@ export default function AppLayout() {
       <Stack.Screen name="ChangePassword" options={{ title: "Confirmar contraseña" }} />
       <Stack.Screen name="NotFoundPage" options={{ title: "Error de permisos" }} />
       <Stack.Screen name="clientProfile" options={{ title: "" }} />
+      <Stack.Screen name="ArtesanoProfile" options={{ title: "Perfil del Artesano" }} />
       <Stack.Screen name="ArtesanoList" options={{ title: "Lista de artesanos" }} />
       <Stack.Screen name="CreatePostPage" options={{title: "Crea una publicacion"}}/>
       <Stack.Screen name="FeedPage" options={{title: "Publicaciones"}}/>
       <Stack.Screen name="MarketplacePage" options={{title: "Marketplace"}}/>
+      <Stack.Screen name="ProductDetailPage" options={{title: "Detalle del Producto"}}/>
     </Stack>
   );
 }

@@ -82,7 +82,7 @@ export default function ArtesanoList() {
   // Función para navegar al perfil del artesano
   const navigateToProfile = (userId) => {
     router.push({
-      pathname: './ArtesanoProfile',
+      pathname: '/ArtesanoProfile',
       params: { userId: userId.toString() }
     });
   };
@@ -99,7 +99,6 @@ export default function ArtesanoList() {
             <Image 
               source={{ uri: item.avatar_url }} 
               style={styles.avatar}
-              defaultSource={require('../../assets/images/icon.png')}
             />
           ) : (
             <View style={styles.defaultAvatar}>
