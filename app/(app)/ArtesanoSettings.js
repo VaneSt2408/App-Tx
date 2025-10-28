@@ -37,14 +37,28 @@ export default function ArtesanoSettings() {
       icon: 'package-variant',
       title: 'Mis Productos',
       description: 'Gestiona tus productos',
-      onPress: () => Alert.alert('Próximamente', 'Esta función estará disponible pronto')
+      onPress: () => {
+        if (session?.user?.id) {
+          router.push({
+            pathname: '/ArtesanoProducts',
+            params: { userId: session.user.id }
+          });
+        }
+      }
     },
     {
       id: 'posts',
       icon: 'image-multiple',
       title: 'Mis Publicaciones',
       description: 'Gestiona tus publicaciones',
-      onPress: () => Alert.alert('Próximamente', 'Esta función estará disponible pronto')
+      onPress: () => {
+        if (session?.user?.id) {
+          router.push({
+            pathname: '/ArtesanoPublications',
+            params: { userId: session.user.id }
+          });
+        }
+      }
     },
   ];
 

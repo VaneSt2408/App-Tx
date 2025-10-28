@@ -446,15 +446,15 @@ export default function ClientProfile() { // Exportar la función ClientProfile
         // Actualizar estados UI
         setCurrentPasswordAttempts(newAttempts);
         await saveFailedAttempts(newTotalAttempts);
-        
-        if (newAttempts >= 3) {
-          setPasswordBlocked(true); // Establecer el estado de la contraseña bloqueada
-          setBlockTimeRemaining(300); // 5 minutos en segundos
+          
+          if (newAttempts >= 3) {
+            setPasswordBlocked(true); // Establecer el estado de la contraseña bloqueada
+            setBlockTimeRemaining(300); // 5 minutos en segundos
           currentPasswordAttemptsRef.current = 0; // Resetear contador local
           setCurrentPasswordAttempts(0);
-          
-          // Verificar si es el segundo bloqueo (6 intentos totales)
-          if (newTotalAttempts >= 6) {
+            
+            // Verificar si es el segundo bloqueo (6 intentos totales)
+            if (newTotalAttempts >= 6) {
             // Mostrar alerta ANTES de cerrar sesión
             Alert.alert(
               'Sesión será cerrada por seguridad',
@@ -467,7 +467,7 @@ export default function ClientProfile() { // Exportar la función ClientProfile
                     setShowChangePassword(false);
                     setCurrentPasswordValidated(false);
                     setPasswordValidationErrors([]);
-                    setPasswordData({
+                setPasswordData({
                       currentPassword: '',
                       newPassword: '',
                       confirmPassword: ''
@@ -477,40 +477,40 @@ export default function ClientProfile() { // Exportar la función ClientProfile
                     currentPasswordAttemptsRef.current = 0;
                     setCurrentPasswordAttempts(0);
                     setPasswordBlocked(false);
-                    
-                    // Cerrar sesión
+                
+                // Cerrar sesión
                     await signOut();
                     
-                    // Redirigir al login
-                    router.replace('/(auth)');
-                  }
-                }
-              ]
-            );
-          } else {
-            // Primer bloqueo (3 intentos), cerrar modal pero mantener sesión
+                        // Redirigir al login
+                        router.replace('/(auth)');
+                      }
+                    }
+                  ]
+                );
+            } else {
+              // Primer bloqueo (3 intentos), cerrar modal pero mantener sesión
             setTimeout(() => {
               setShowChangePassword(false);
               setCurrentPasswordValidated(false);
               setPasswordValidationErrors([]);
-              setPasswordData({
+                setPasswordData({
                 currentPassword: '',
                 newPassword: '',
                 confirmPassword: ''
-              });
-            }, 2000);
+                });
+              }, 2000);
             
             Alert.alert(
               'Acceso bloqueado',
               'Has excedido el número de intentos. El acceso estará bloqueado por 5 minutos.'
             );
           }
-        } else {
-          Alert.alert(
-            'Contraseña incorrecta', 
-            `Intentos restantes: ${3 - newAttempts}`
-          );
-        }
+          } else {
+            Alert.alert(
+              'Contraseña incorrecta', 
+              `Intentos restantes: ${3 - newAttempts}`
+            );
+          }
       }
     } catch (error) { 
       console.error('Error validating current password:', error);
@@ -684,8 +684,8 @@ export default function ClientProfile() { // Exportar la función ClientProfile
         await saveDeleteAttempts(newTotalAttempts);
         await saveFailedAttempts(newTotalAttempts); // Guardar en contador compartido
         setTotalFailedAttempts(newTotalAttempts); // Actualizar UI del contador compartido
-        
-        if (newAttempts >= 3) { 
+          
+          if (newAttempts >= 3) { 
             setDeletePasswordBlocked(true); // Establecer el estado de la contraseña de eliminación bloqueada
             setDeleteBlockTimeRemaining(300); // 5 minutos en segundos
             
@@ -712,16 +712,16 @@ export default function ClientProfile() { // Exportar la función ClientProfile
                       deletePasswordAttemptsRef.current = 0;
                       setDeletePasswordAttempts(0);
                       setDeletePasswordBlocked(false);
-                      
-                      // Cerrar sesión
+                
+                // Cerrar sesión
                       await signOut();
                       
-                      // Redirigir al login
-                      router.replace('/(auth)');
+                        // Redirigir al login
+                        router.replace('/(auth)');
+                      }
                     }
-                  }
-                ]
-              );
+                  ]
+                );
             } else {
               // Primer bloqueo (3 intentos), cerrar modal pero mantener sesión
               setTimeout(() => {
@@ -731,11 +731,11 @@ export default function ClientProfile() { // Exportar la función ClientProfile
                   currentPassword: ''
                 });
               }, 2000);
-              
-              Alert.alert(
-                'Acceso bloqueado',
-                'Has excedido el número de intentos. El acceso estará bloqueado por 5 minutos.'
-              );
+            
+            Alert.alert(
+              'Acceso bloqueado',
+              'Has excedido el número de intentos. El acceso estará bloqueado por 5 minutos.'
+            );
             }
           } else {
             Alert.alert(

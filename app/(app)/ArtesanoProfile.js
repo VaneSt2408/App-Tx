@@ -3,7 +3,7 @@
 // Muestra el perfil del artesano registrado en la base de datos y permite editarlo, cambiar la contraseña, eliminar el perfil y cambiar la foto de perfil.
 
 import React, { useState, useEffect, useRef } from 'react'; // Importar los hooks de react
-import {View,Text,StyleSheet,ScrollView,Image,TouchableOpacity,SafeAreaView,ActivityIndicator,Alert,Dimensions,FlatList,Modal,TextInput} from 'react-native';
+import {View,Text,StyleSheet,ScrollView,Image,TouchableOpacity,SafeAreaView,ActivityIndicator,Alert,Dimensions,FlatList,Modal,TextInput,PanResponder,Animated} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Importar los componentes de expo-vector-icons
 import { useRouter, useLocalSearchParams } from 'expo-router'; // Importar el router de expo-router
 import { artesanoService } from '../../src/services/artesanoService'; // Importar el servicio de artesano
@@ -20,14 +20,14 @@ const imageSize = (width - 60) / 3; // Para grid de 3 columnas
 
 export default function ArtesanoProfile() { // Exportar la función ArtesanoProfile
   const router = useRouter(); // Obtener el router
-  const { userId } = useLocalSearchParams(); // Obtener el id del usuario
+  const { userId, tab } = useLocalSearchParams(); // Obtener el id del usuario y la tab
   const { session } = useAuth(); // Obtener la sesión
   
   const [artesano, setArtesano] = useState(null); // Establecer el estado del artesano
   const [publicaciones, setPublicaciones] = useState([]); // Establecer el estado de las publicaciones
   const [productos, setProductos] = useState([]); // Establecer el estado de los productos
   const [loading, setLoading] = useState(true); // Establecer el estado de carga
-  const [activeTab, setActiveTab] = useState('publicaciones'); // 'publicaciones' o 'productos'
+  const [activeTab, setActiveTab] = useState(tab || 'publicaciones'); // 'publicaciones' o 'productos'
   const [showSettingsMenu, setShowSettingsMenu] = useState(false); // Establecer el estado del menú de ajustes
   const [showEditModal, setShowEditModal] = useState(false); // Establecer el estado del modal de edición
   const [showPasswordModal, setShowPasswordModal] = useState(false); // Establecer el estado del modal de cambio de contraseña
@@ -52,11 +52,24 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
   const deletePasswordAttemptsRef = useRef(0); // Ref para intentos de contraseña de eliminación
   const totalFailedAttemptsRef = useRef(0); // Ref para intentos fallidos totales (compartido)
 
+  // Estados para modal de productos
+  const [selectedProducto, setSelectedProducto] = useState(null);
+  const [selectedProductoIndex, setSelectedProductoIndex] = useState(0);
+  const [showProductoModal, setShowProductoModal] = useState(false);
+  const productoSliderAnim = React.useRef(new Animated.Value(0)).current;
+
   useEffect(() => { // Efecto para cargar el perfil del artesano
     if (userId) { // Si hay id de usuario
       loadArtesanoCompleto(); // Cargar el perfil del artesano
     }
   }, [userId]); // Dependencias del efecto
+
+  // Efecto para actualizar la pestaña activa si viene en los parámetros
+  useEffect(() => {
+    if (tab && (tab === 'publicaciones' || tab === 'productos')) {
+      setActiveTab(tab);
+    }
+  }, [tab]);
 
   // Funciones AsyncStorage para persistencia de intentos fallidos
   const loadFailedAttempts = async () => {
@@ -647,6 +660,87 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
     </View>
   );
 
+  // Funciones para navegación de productos
+  const handleSelectProducto = (producto, index) => {
+    setSelectedProducto(producto);
+    setSelectedProductoIndex(index);
+    setShowProductoModal(true);
+  };
+
+  const handleCloseProductoModal = () => {
+    setShowProductoModal(false);
+    setSelectedProducto(null);
+    setSelectedProductoIndex(0);
+    productoSliderAnim.setValue(0);
+  };
+
+  const handleNextProducto = () => {
+    if (selectedProductoIndex < productos.length - 1) {
+      const nextIndex = selectedProductoIndex + 1;
+      setSelectedProductoIndex(nextIndex);
+      setSelectedProducto(productos[nextIndex]);
+      productoSliderAnim.setValue(0);
+    }
+  };
+
+  const handlePreviousProducto = () => {
+    if (selectedProductoIndex > 0) {
+      const prevIndex = selectedProductoIndex - 1;
+      setSelectedProductoIndex(prevIndex);
+      setSelectedProducto(productos[prevIndex]);
+      productoSliderAnim.setValue(0);
+    }
+  };
+
+  // PanResponder para gestos de deslizamiento en productos
+  const productoPanResponder = React.useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (evt, gestureState) => {
+        return Math.abs(gestureState.dx) > 10 || Math.abs(gestureState.dy) > 10;
+      },
+      onPanResponderRelease: (evt, gestureState) => {
+        const { dx, vx } = gestureState;
+        
+        // Deslizar hacia la izquierda (siguiente)
+        if (dx < -50 || vx < -0.5) {
+          handleNextProducto();
+        }
+        // Deslizar hacia la derecha (anterior)
+        else if (dx > 50 || vx > 0.5) {
+          handlePreviousProducto();
+        } else {
+          // Resetear animación si no se alcanzó el umbral
+          Animated.spring(productoSliderAnim, {
+            toValue: 0,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
+      onPanResponderMove: (evt, gestureState) => {
+        productoSliderAnim.setValue(gestureState.dx);
+      },
+    })
+  ).current;
+
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('es-MX', {
+      style: 'currency',
+      currency: 'MXN',
+      minimumFractionDigits: 0,
+    }).format(price);
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   const renderPublicacion = ({ item }) => (
     <View style={styles.gridItem}>
       {item.imagen_url ? (
@@ -659,8 +753,12 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
     </View>
   );
 
-  const renderProducto = ({ item }) => (
-    <View style={styles.gridItem}>
+  const renderProducto = ({ item, index }) => (
+    <TouchableOpacity
+      style={styles.gridItem}
+      onPress={() => handleSelectProducto(item, index)}
+      activeOpacity={0.7}
+    >
       {item.imagen_url ? (
         <Image source={{ uri: item.imagen_url }} style={styles.gridImage} />
       ) : (
@@ -671,10 +769,10 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
       <View style={styles.overlay}>
         <View style={styles.overlayContent}>
           <MaterialCommunityIcons name="currency-usd" size={16} color="#fff" />
-          <Text style={styles.overlayText}>{item.precio ? `$${item.precio}` : 'N/A'}</Text>
+          <Text style={styles.overlayText}>{item.precio ? formatPrice(item.precio) : 'N/A'}</Text>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   const renderContent = () => {
@@ -1078,6 +1176,139 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
           </View>
         </View>
       )}
+
+      {/* Modal de detalles de producto */}
+      <Modal
+        visible={showProductoModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={handleCloseProductoModal}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent} {...productoPanResponder.panHandlers}>
+            <View style={styles.modalHeader}>
+              <View style={styles.headerLeft}>
+                {selectedProductoIndex > 0 && (
+                  <TouchableOpacity
+                    style={styles.navButton}
+                    onPress={handlePreviousProducto}
+                  >
+                    <MaterialCommunityIcons name="chevron-left" size={24} color="#333" />
+                  </TouchableOpacity>
+                )}
+                <Text style={styles.modalTitle}>
+                  Producto {selectedProductoIndex + 1} de {productos.length}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={handleCloseProductoModal}>
+                <MaterialCommunityIcons name="close" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+
+            <Animated.View 
+              style={[
+                styles.modalBody,
+                {
+                  transform: [{ translateX: productoSliderAnim }],
+                  opacity: productoSliderAnim.interpolate({
+                    inputRange: [-200, 0, 200],
+                    outputRange: [0.5, 1, 0.5],
+                  }),
+                },
+              ]}
+            >
+            <ScrollView>
+              {selectedProducto && (
+                <>
+                  {/* Imagen */}
+                  {selectedProducto.imagen_url ? (
+                    <Image 
+                      source={{ uri: selectedProducto.imagen_url }} 
+                      style={styles.modalImage}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View style={styles.modalImagePlaceholder}>
+                      <MaterialCommunityIcons name="package" size={60} color="#ccc" />
+                    </View>
+                  )}
+
+                  {/* Información */}
+                  <View style={styles.modalInfo}>
+                    <View style={styles.infoRow}>
+                      <MaterialCommunityIcons name="tag" size={20} color="#2575fc" />
+                      <Text style={styles.infoLabel}>Nombre:</Text>
+                      <Text style={styles.infoValue}>{selectedProducto.nombre || 'Sin nombre'}</Text>
+                    </View>
+
+                    <View style={styles.infoRow}>
+                      <MaterialCommunityIcons name="currency-usd" size={20} color="#28a745" />
+                      <Text style={styles.infoLabel}>Precio:</Text>
+                      <Text style={styles.infoValue}>{formatPrice(selectedProducto.precio)}</Text>
+                    </View>
+
+                    {selectedProducto.categoria && (
+                      <View style={styles.infoRow}>
+                        <MaterialCommunityIcons name="tag-outline" size={20} color="#ff9800" />
+                        <Text style={styles.infoLabel}>Categoría:</Text>
+                        <Text style={styles.infoValue}>{selectedProducto.categoria}</Text>
+                      </View>
+                    )}
+
+                    <View style={styles.infoRow}>
+                      <MaterialCommunityIcons name="calendar" size={20} color="#2196f3" />
+                      <Text style={styles.infoLabel}>Fecha:</Text>
+                      <Text style={styles.infoValue}>{formatDate(selectedProducto.created_at)}</Text>
+                    </View>
+
+                    {/* Descripción */}
+                    {selectedProducto.descripcion && (
+                      <View style={styles.textSection}>
+                        <Text style={styles.textLabel}>Descripción:</Text>
+                        <Text style={styles.textContent}>{selectedProducto.descripcion}</Text>
+                      </View>
+                    )}
+                  </View>
+                </>
+              )}
+            </ScrollView>
+            </Animated.View>
+
+            {/* Botones de navegación */}
+            <View style={styles.modalNavigation}>
+              <TouchableOpacity
+                style={[styles.navButton, selectedProductoIndex === 0 && styles.navButtonDisabled]}
+                onPress={handlePreviousProducto}
+                disabled={selectedProductoIndex === 0}
+              >
+                <MaterialCommunityIcons 
+                  name="chevron-left" 
+                  size={24} 
+                  color={selectedProductoIndex === 0 ? '#ccc' : '#333'} 
+                />
+                <Text style={[styles.navButtonText, selectedProductoIndex === 0 && styles.navButtonTextDisabled]}>
+                  Anterior
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.navButton, selectedProductoIndex === productos.length - 1 && styles.navButtonDisabled]}
+                onPress={handleNextProducto}
+                disabled={selectedProductoIndex === productos.length - 1}
+              >
+                <Text style={[styles.navButtonText, selectedProductoIndex === productos.length - 1 && styles.navButtonTextDisabled]}>
+                  Siguiente
+                </Text>
+                <MaterialCommunityIcons 
+                  name="chevron-right" 
+                  size={24} 
+                  color={selectedProductoIndex === productos.length - 1 ? '#ccc' : '#333'} 
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1669,5 +1900,97 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#177eaaff',
     fontWeight: '600',
+  },
+  // Estilos para modal de productos
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  modalBody: {
+    maxHeight: 400,
+  },
+  modalImage: {
+    width: '100%',
+    height: 250,
+    backgroundColor: '#f0f0f0',
+  },
+  modalImagePlaceholder: {
+    width: '100%',
+    height: 250,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalInfo: {
+    padding: 20,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  infoLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginLeft: 10,
+    marginRight: 10,
+  },
+  infoValue: {
+    fontSize: 16,
+    color: '#666',
+    flex: 1,
+  },
+  textSection: {
+    marginTop: 10,
+  },
+  textLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  textContent: {
+    fontSize: 15,
+    color: '#666',
+    lineHeight: 22,
+  },
+  modalNavigation: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 15,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+    backgroundColor: '#f8f9fa',
+  },
+  navButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  navButtonDisabled: {
+    opacity: 0.5,
+  },
+  navButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginHorizontal: 5,
+  },
+  navButtonTextDisabled: {
+    color: '#ccc',
   },
 });

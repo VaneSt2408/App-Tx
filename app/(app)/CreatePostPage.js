@@ -3,7 +3,7 @@ import { View, TextInput, Button, Image, StyleSheet, Alert, ActivityIndicator, S
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '../../src/supabase/client';
-import { createPost } from '../../src/services/PublicacionService'; // Importamos la nueva función del servicio
+import { createPost } from '../../src/services/PublicacionService'; // Importamos la función individual
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Para el icono de imagen
 
 export default function CreatePostPage() {
@@ -71,6 +71,7 @@ export default function CreatePostPage() {
             <TextInput
                 style={styles.textInput}
                 placeholder="¿Qué estás pensando?"
+                placeholderTextColor="#000"
                 multiline
                 value={text}
                 onChangeText={setText}
