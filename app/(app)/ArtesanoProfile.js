@@ -1,182 +1,119 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Image,
-  TouchableOpacity,
-  SafeAreaView,
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  FlatList,
-  Modal,
-  TextInput
-} from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { artesanoService } from '../../src/services/artesanoService';
-import { supabase } from '../../src/supabase/client';
-import { useAuth } from '../../src/context/AuthContext';
-import * as ImagePicker from 'expo-image-picker';
-import { decode } from 'base64-arraybuffer';
+// En: app/(app)/ArtesanoProfile.js -> Archivo del perfil del artesano (Frontend) 
+// Este archivo es el encargado de mostrar el perfil del artesano en la aplicación.
+// Muestra el perfil del artesano registrado en la base de datos y permite editarlo, cambiar la contraseña, eliminar el perfil y cambiar la foto de perfil.
 
-const { width } = Dimensions.get('window');
+import React, { useState, useEffect } from 'react'; // Importar los hooks de react
+import {View,Text,StyleSheet,ScrollView,Image,TouchableOpacity,SafeAreaView,ActivityIndicator,Alert,Dimensions,FlatList,Modal,TextInput} from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons'; // Importar los componentes de expo-vector-icons
+import { useRouter, useLocalSearchParams } from 'expo-router'; // Importar el router de expo-router
+import { artesanoService } from '../../src/services/artesanoService'; // Importar el servicio de artesano
+import { supabase } from '../../src/supabase/client'; // Importar el cliente de supabase
+import { useAuth } from '../../src/context/AuthContext'; // Importar el contexto de autenticación
+import * as ImagePicker from 'expo-image-picker'; // Importar el selector de imágenes
+import { updatePerfilArtesano, eliminarPerfilArtesano, subirAvatarArtesano } from '../../src/services/ArtesanoProfileService'; // Importar los servicios de perfil
+import ChangePasswordModal from '../../components/ChangePasswordModal'; // Importar el modal de cambio de contraseña
+
+const { width } = Dimensions.get('window'); // Obtener el ancho de la ventana
 const imageSize = (width - 60) / 3; // Para grid de 3 columnas
 
-export default function ArtesanoProfile() {
-  const router = useRouter();
-  const { userId } = useLocalSearchParams();
-  const { session } = useAuth();
+export default function ArtesanoProfile() { // Exportar la función ArtesanoProfile
+  const router = useRouter(); // Obtener el router
+  const { userId } = useLocalSearchParams(); // Obtener el id del usuario
+  const { session } = useAuth(); // Obtener la sesión
   
-  const [artesano, setArtesano] = useState(null);
-  const [publicaciones, setPublicaciones] = useState([]);
-  const [productos, setProductos] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [artesano, setArtesano] = useState(null); // Establecer el estado del artesano
+  const [publicaciones, setPublicaciones] = useState([]); // Establecer el estado de las publicaciones
+  const [productos, setProductos] = useState([]); // Establecer el estado de los productos
+  const [loading, setLoading] = useState(true); // Establecer el estado de carga
   const [activeTab, setActiveTab] = useState('publicaciones'); // 'publicaciones' o 'productos'
-  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [showAvatarMenu, setShowAvatarMenu] = useState(false);
-  const [editData, setEditData] = useState({ nombre: '', telefono: '', ubicacion: '', descripcion: '' });
-  const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const isOwnProfile = session?.user?.id === userId;
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false); // Establecer el estado del menú de ajustes
+  const [showEditModal, setShowEditModal] = useState(false); // Establecer el estado del modal de edición
+  const [showPasswordModal, setShowPasswordModal] = useState(false); // Establecer el estado del modal de cambio de contraseña
+  const [showAvatarMenu, setShowAvatarMenu] = useState(false); // Establecer el estado del modal de cambio de foto de perfil
+  const [editData, setEditData] = useState({ nombre: '', telefono: '', ubicacion: '', descripcion: '' }); // Establecer el estado de los datos de edición
+  const [uploadingAvatar, setUploadingAvatar] = useState(false); // Establecer el estado de subida de foto de perfil
+  const isOwnProfile = session?.user?.id === userId; // Verificar si el usuario es el propio
 
-  useEffect(() => {
-    if (userId) {
-      loadArtesanoCompleto();
+  useEffect(() => { // Efecto para cargar el perfil del artesano
+    if (userId) { // Si hay id de usuario
+      loadArtesanoCompleto(); // Cargar el perfil del artesano
     }
-  }, [userId]);
+  }, [userId]); // Dependencias del efecto
 
-  const loadArtesanoCompleto = async () => {
+  const loadArtesanoCompleto = async () => { // Función para cargar el perfil del artesano
     try {
-      setLoading(true);
-      const data = await artesanoService.getArtesanoCompleto(userId);
-      setArtesano(data.artesano);
-      setPublicaciones(data.publicaciones);
-      setProductos(data.productos);
+      setLoading(true); // Establecer el estado de carga
+      const data = await artesanoService.getArtesanoCompleto(userId); // Cargar el perfil del artesano
+      setArtesano(data.artesano); // Establecer el estado del artesano
+      setPublicaciones(data.publicaciones); // Establecer el estado de las publicaciones
+      setProductos(data.productos); // Establecer el estado de los productos
       
       // Cargar datos para edición
-      if (isOwnProfile && data.artesano) {
-        setEditData({
-          nombre: data.artesano.nombre || '',
-          telefono: data.artesano.telefono || '',
-          ubicacion: data.artesano.ubicacion || '',
-          descripcion: data.artesano.descripcion || ''
-        });
+      if (isOwnProfile && data.artesano) { // Si el usuario es el propio y hay datos del artesano
+        setEditData({ nombre: data.artesano.nombre || '', telefono: data.artesano.telefono || '', ubicacion: data.artesano.ubicacion || '', descripcion: data.artesano.descripcion || '' }); // Establecer el estado de los datos de edición
       }
-    } catch (error) {
-      console.error('Error al cargar perfil:', error);
-      Alert.alert('Error', 'No se pudo cargar el perfil del artesano');
-      router.back();
-    } finally {
-      setLoading(false);
+    } catch (error) { // Capturar el error
+      console.error('Error al cargar perfil:', error); // Mostrar el error en la consola
+      Alert.alert('Error', 'No se pudo cargar el perfil del artesano'); // Mostrar el error en la alerta
+      router.back(); // Redirigir a la página anterior
+    } finally { // Finalmente
+      setLoading(false); // Establecer el estado de carga
     }
   };
 
-  const handleEditProfile = async () => {
+  const handleEditProfile = async () => { // Función para editar el perfil del artesano
     try {
-      const { error } = await supabase
-        .from('artesanos')
-        .update({
-          nombre: editData.nombre,
-          telefono: editData.telefono,
-          ubicacion: editData.ubicacion,
-          descripcion: editData.descripcion
-        })
-        .eq('user_id', userId);
-
-      if (error) throw error;
+      const result = await updatePerfilArtesano(userId, editData);
+      
+      if (!result.success) {
+        throw new Error(result.error);
+      }
 
       Alert.alert('Éxito', 'Perfil actualizado correctamente');
-      setShowEditModal(false);
-      await loadArtesanoCompleto();
-    } catch (error) {
-      console.error('Error al editar perfil:', error);
-      Alert.alert('Error', 'No se pudo actualizar el perfil');
+      setShowEditModal(false); // Establecer el estado del modal de edición
+      await loadArtesanoCompleto(); // Cargar el perfil del artesano
+    } catch (error) { // Capturar el error
+      console.error('Error al editar perfil:', error); // Mostrar el error en la consola
+      Alert.alert('Error', 'No se pudo actualizar el perfil'); // Mostrar el error en la alerta
     }
   };
 
-  const handleChangePassword = async () => {
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      Alert.alert('Error', 'Las contraseñas no coinciden');
-      return;
-    }
-
-    if (passwordData.newPassword.length < 6) {
-      Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
-      return;
-    }
-
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: passwordData.newPassword
-      });
-
-      if (error) throw error;
-
-      Alert.alert(
-        'Éxito',
-        'Contraseña actualizada. Serás redirigido al login.',
-        [{
-          text: 'OK',
-          onPress: async () => {
-            await supabase.auth.signOut();
-            router.replace('/(auth)');
-          }
-        }]
-      );
-    } catch (error) {
-      console.error('Error al cambiar contraseña:', error);
-      Alert.alert('Error', 'No se pudo cambiar la contraseña');
-    }
+  const handlePasswordChangeSuccess = () => { // Función para redirigir al login después de cambiar contraseña
+    // Redirigir al login después de cambiar contraseña
+    router.replace('/(auth)'); // Redirigir al login
   };
 
-  const handleDeleteProfile = () => {
-    Alert.alert(
+  const handleDeleteProfile = () => { // Función para eliminar el perfil del artesano
+    Alert.alert( // Mostrar el alert de eliminación de perfil
       'Eliminar Perfil',
       '¿Estás seguro de que deseas eliminar tu perfil? Esta acción no se puede deshacer.',
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Cancelar', style: 'cancel' }, // Texto del botón de cancelar
         {
-          text: 'Eliminar',
-          style: 'destructive',
+          text: 'Eliminar', // Texto del botón de eliminar
+          style: 'destructive', // Estilo del botón de eliminar
           onPress: async () => {
-            try {
-              // Eliminar productos
-              await supabase
-                .from('productos')
-                .delete()
-                .eq('artesano_id', userId);
+            try { // Intentar eliminar el perfil del artesano
+              const result = await eliminarPerfilArtesano(userId);
 
-              // Eliminar publicaciones
-              await supabase
-                .from('publicaciones')
-                .delete()
-                .eq('artesano_user_id', userId);
+              if (!result.success) {
+                throw new Error(result.error);
+              }
 
-              // Eliminar perfil de artesano
-              await supabase
-                .from('artesanos')
-                .delete()
-                .eq('user_id', userId);
-
-              Alert.alert(
-                'Perfil Eliminado',
-                'Tu perfil ha sido eliminado. Serás redirigido al login.',
+              Alert.alert( // Mostrar el alert de eliminación de perfil
+                'Perfil Eliminado', // Texto del alert de eliminación de perfil
+                'Tu perfil ha sido eliminado. Serás redirigido al login.', // Texto del alert de eliminación de perfil
                 [{
-                  text: 'OK',
+                  text: 'OK', // Texto del botón de OK
                   onPress: async () => {
-                    await supabase.auth.signOut();
-                    router.replace('/(auth)');
+                    await supabase.auth.signOut(); // Cerrar la sesión
+                    router.replace('/(auth)'); // Redirigir al login
                   }
                 }]
               );
-            } catch (error) {
-              console.error('Error al eliminar perfil:', error);
-              Alert.alert('Error', 'No se pudo eliminar el perfil');
+            } catch (error) { // Capturar el error
+              console.error('Error al eliminar perfil:', error); // Mostrar el error en la consola
+              Alert.alert('Error', 'No se pudo eliminar el perfil'); // Mostrar el error en la alerta
             }
           }
         }
@@ -184,69 +121,54 @@ export default function ArtesanoProfile() {
     );
   };
 
-  const selectAvatarImage = async () => {
+  const selectAvatarImage = async () => { // Función para seleccionar la imagen de perfil
     try {
       // Cerrar el modal
-      setShowAvatarMenu(false);
+      setShowAvatarMenu(false); // Establecer el estado del modal de cambio de foto de perfil
       
       // Pequeño delay para que el modal se cierre antes de abrir la galería
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise(resolve => setTimeout(resolve, 300)); // Esperar 300ms
       
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permisos necesarios', 'Se requiere acceso a la galería para cambiar la foto de perfil');
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync(); // Solicitar permisos para acceder a la galería
+      if (status !== 'granted') { // Si no hay permisos
+        Alert.alert('Permisos necesarios', 'Se requiere acceso a la galería para cambiar la foto de perfil'); // Mostrar el alert de permisos necesarios
         return;
       }
 
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.5,
-        base64: true,
+      const result = await ImagePicker.launchImageLibraryAsync({ // Abrir el selector de imágenes
+        mediaTypes: ImagePicker.MediaTypeOptions.Images, // Tipo de media: imágenes
+        allowsEditing: true, // Permitir edición
+        aspect: [1, 1], // Aspecto cuadrado
+        quality: 0.5, // Calidad de la imagen
+        base64: true, // Convertir a base64
       });
 
-      if (!result.canceled && result.assets && result.assets[0]) {
-        await uploadAvatarImage(result.assets[0]);
+      if (!result.canceled && result.assets && result.assets[0]) { // Si no se canceló y hay assets y el primer asset
+        await uploadAvatarImage(result.assets[0]); // Subir la imagen de perfil
       }
-    } catch (error) {
-      console.error('Error al seleccionar imagen:', error);
-      Alert.alert('Error', 'No se pudo seleccionar la imagen: ' + error.message);
+    } catch (error) { // Capturar el error
+      console.error('Error al seleccionar imagen:', error); // Mostrar el error en la consola
+      Alert.alert('Error', 'No se pudo seleccionar la imagen: ' + error.message); // Mostrar el error en la alerta
     }
   };
 
-  const uploadAvatarImage = async (imageAsset) => {
+  const uploadAvatarImage = async (imageAsset) => { // Función para subir la imagen de perfil
     try {
-      setUploadingAvatar(true);
+      setUploadingAvatar(true); // Establecer el estado de subida de foto de perfil
 
-      const fileExt = imageAsset.uri.split('.').pop();
-      const fileName = `avatar_${Date.now()}.${fileExt}`;
-      const filePath = `${userId}/${fileName}`;
+      const result = await subirAvatarArtesano(userId, imageAsset);
 
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, decode(imageAsset.base64), {
-          contentType: imageAsset.mimeType ?? 'image/jpeg',
-        });
+      if (!result.success) {
+        throw new Error(result.error);
+      }
 
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
-      
-      const { error: updateError } = await supabase
-        .from('artesanos')
-        .update({ avatar_url: urlData.publicUrl })
-        .eq('user_id', userId);
-
-      if (updateError) throw updateError;
-
-      setArtesano(prev => ({ ...prev, avatar_url: urlData.publicUrl }));
+      setArtesano(prev => ({ ...prev, avatar_url: result.avatar_url })); // Establecer el estado del artesano
       Alert.alert('Éxito', 'Foto de perfil actualizada correctamente');
-    } catch (error) {
-      console.error('Error al subir avatar:', error);
-      Alert.alert('Error', 'No se pudo actualizar la foto de perfil');
-    } finally {
-      setUploadingAvatar(false);
+    } catch (error) { // Capturar el error
+      console.error('Error al subir avatar:', error); // Mostrar el error en la consola
+      Alert.alert('Error', 'No se pudo actualizar la foto de perfil'); // Mostrar el error en la alerta
+    } finally { // Finalmente
+      setUploadingAvatar(false); // Establecer el estado de subida de foto de perfil
     }
   };
 
@@ -626,54 +548,11 @@ export default function ArtesanoProfile() {
       </Modal>
 
       {/* Modal de Cambiar Contraseña */}
-      <Modal
+      <ChangePasswordModal
         visible={showPasswordModal}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setShowPasswordModal(false)}
-      >
-        <View style={styles.editModalContainer}>
-          <View style={styles.editModalContent}>
-            <View style={styles.editModalHeader}>
-              <Text style={styles.editModalTitle}>Cambiar Contraseña</Text>
-              <TouchableOpacity onPress={() => setShowPasswordModal(false)}>
-                <MaterialCommunityIcons name="close" size={24} color="#333" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.editModalBody}>
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Nueva Contraseña</Text>
-                <TextInput
-                  style={styles.input}
-                  secureTextEntry
-                  value={passwordData.newPassword}
-                  onChangeText={(text) => setPasswordData({ ...passwordData, newPassword: text })}
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Confirmar Contraseña</Text>
-                <TextInput
-                  style={styles.input}
-                  secureTextEntry
-                  value={passwordData.confirmPassword}
-                  onChangeText={(text) => setPasswordData({ ...passwordData, confirmPassword: text })}
-                />
-              </View>
-            </View>
-
-            <View style={styles.editModalFooter}>
-              <TouchableOpacity
-                style={styles.saveButton}
-                onPress={handleChangePassword}
-              >
-                <Text style={styles.saveButtonText}>Cambiar Contraseña</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setShowPasswordModal(false)}
+        onSuccess={handlePasswordChangeSuccess}
+      />
 
       {/* Modal de Menú de Avatar */}
       <Modal

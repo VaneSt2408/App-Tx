@@ -1,91 +1,85 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  ActivityIndicator, 
-  Alert,
-  TouchableOpacity,
-  Image,
-  TextInput
-} from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { supabase } from '../../src/supabase/client';
-import { getClientProfile, editClientProfile, uploadAvatar, changeClientPassword, validateCurrentPassword, validateNewPassword, deleteClientProfile, deleteGoogleClientProfile } from '../../src/services/profileInfo';
-import { useAuth } from '../../src/context/AuthContext';
-import * as ImagePicker from 'expo-image-picker';
+// En: app/(app)/ClientProfile.js -> Archivo de perfil del cliente (Frontend) 
+// Este archivo es el encargado de mostrar el perfil del cliente en la aplicación.
+// Muestra el perfil del cliente registrado en la base de datos y permite editarlo, cambiar la contraseña, eliminar el perfil y cambiar la foto de perfil.
 
-export default function ClientProfile() {
-  const { signOut } = useAuth();
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
+import React, { useState, useEffect } from 'react'; // Importar los hooks de react
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert,TouchableOpacity,Image,TextInput} from 'react-native'; // Importar los componentes de react-native
+import { MaterialCommunityIcons } from '@expo/vector-icons'; // Importar los componentes de expo-vector-icons
+import { useRouter } from 'expo-router'; // Importar el router de expo-router
+import { supabase } from '../../src/supabase/client'; // Importar el cliente de supabase
+import { getClientProfile, editClientProfile, uploadAvatar, changeClientPassword, validateCurrentPassword, validateNewPassword, deleteClientProfile, deleteGoogleClientProfile } from '../../src/services/profileInfo'; // Importar los servicios de perfil de cliente
+import { useAuth } from '../../src/context/AuthContext'; // Importar el contexto de autenticación
+import * as ImagePicker from 'expo-image-picker'; // Importar el componente de expo-image-picker
+
+export default function ClientProfile() { // Exportar la función ClientProfile
+  const { signOut } = useAuth(); // Obtener el signOut del contexto de autenticación
+  const [profile, setProfile] = useState(null); // Establecer el estado del perfil
+  const [loading, setLoading] = useState(true); // Establecer el estado de carga
+  const [isEditing, setIsEditing] = useState(false); // Establecer el estado de edición
   const [editData, setEditData] = useState({
-    nombre_completo: '',
-    telefono: '',
-    avatar_url: null
+    nombre_completo: '', // Establecer el estado del nombre completo
+    telefono: '', // Establecer el estado del teléfono
+    avatar_url: null // Establecer el estado de la url de la imagen
   });
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [saving, setSaving] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null); // Establecer el estado de la imagen seleccionada
+  const [saving, setSaving] = useState(false); // Establecer el estado de guardado
   
   // Estados para cambio de contraseña
-  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false); // Establecer el estado de la visualización del modal de cambio de contraseña
   const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+    currentPassword: '', // Establecer el estado de la contraseña actual
+    newPassword: '', // Establecer el estado de la nueva contraseña
+    confirmPassword: '' // Establecer el estado de la confirmación de la nueva contraseña
   });
-  const [passwordLoading, setPasswordLoading] = useState(false);
-  const [showPasswords, setShowPasswords] = useState({
-    current: false,
-    new: false,
-    confirm: false
+  const [passwordLoading, setPasswordLoading] = useState(false); // Establecer el estado de carga
+  const [showPasswords, setShowPasswords] = useState({ // Establecer el estado de la visualización del modal de contraseñas
+    current: false, // Establecer el estado de la visualización de la contraseña actual
+    new: false, // Establecer el estado de la visualización de la nueva contraseña
+    confirm: false // Establecer el estado de la visualización de la confirmación de la nueva contraseña
   });
   
   // Estados para validaciones de seguridad
-  const [currentPasswordValidated, setCurrentPasswordValidated] = useState(false);
-  const [currentPasswordAttempts, setCurrentPasswordAttempts] = useState(0);
-  const [passwordBlocked, setPasswordBlocked] = useState(false);
-  const [blockTimeRemaining, setBlockTimeRemaining] = useState(0);
-  const [passwordValidationErrors, setPasswordValidationErrors] = useState([]);
-  const [totalFailedAttempts, setTotalFailedAttempts] = useState(0);
+  const [currentPasswordValidated, setCurrentPasswordValidated] = useState(false); // Establecer el estado de la validación de la contraseña actual
+  const [currentPasswordAttempts, setCurrentPasswordAttempts] = useState(0); // Establecer el estado de los intentos de la contraseña actual
+  const [passwordBlocked, setPasswordBlocked] = useState(false); // Establecer el estado de la contraseña bloqueada
+  const [blockTimeRemaining, setBlockTimeRemaining] = useState(0); // Establecer el estado de la duración del bloqueo de la contraseña
+  const [passwordValidationErrors, setPasswordValidationErrors] = useState([]); // Establecer el estado de los errores de validación de la contraseña
+  const [totalFailedAttempts, setTotalFailedAttempts] = useState(0); // Establecer el estado de los intentos fallidos de la contraseña
   
   // Estados para eliminación de perfil
-  const [showDeleteProfile, setShowDeleteProfile] = useState(false);
+  const [showDeleteProfile, setShowDeleteProfile] = useState(false); // Establecer el estado de la visualización del modal de eliminación de perfil
   const [deletePasswordData, setDeletePasswordData] = useState({
-    currentPassword: ''
+    currentPassword: '' // Establecer el estado de la contraseña actual
   });
-  const [deletePasswordLoading, setDeletePasswordLoading] = useState(false);
-  const [showDeletePassword, setShowDeletePassword] = useState(false);
-  const [deletePasswordValidated, setDeletePasswordValidated] = useState(false);
-  const [deletePasswordAttempts, setDeletePasswordAttempts] = useState(0);
-  const [deletePasswordBlocked, setDeletePasswordBlocked] = useState(false);
-  const [deleteBlockTimeRemaining, setDeleteBlockTimeRemaining] = useState(0);
-  const [totalDeleteAttempts, setTotalDeleteAttempts] = useState(0);
+  const [deletePasswordLoading, setDeletePasswordLoading] = useState(false); // Establecer el estado de carga
+  const [showDeletePassword, setShowDeletePassword] = useState(false); // Establecer el estado de la visualización del modal de eliminación de contraseña
+  const [deletePasswordValidated, setDeletePasswordValidated] = useState(false); // Establecer el estado de la validación de la contraseña de eliminación
+  const [deletePasswordAttempts, setDeletePasswordAttempts] = useState(0); // Establecer el estado de los intentos de la contraseña de eliminación
+  const [deletePasswordBlocked, setDeletePasswordBlocked] = useState(false); // Establecer el estado de la contraseña de eliminación bloqueada
+  const [deleteBlockTimeRemaining, setDeleteBlockTimeRemaining] = useState(0); // Establecer el estado de la duración del bloqueo de la contraseña de eliminación
+  const [totalDeleteAttempts, setTotalDeleteAttempts] = useState(0); // Establecer el estado de los intentos fallidos de la contraseña de eliminación
   
   // Estados para eliminación de perfil Google
-  const [showDeleteGoogleProfile, setShowDeleteGoogleProfile] = useState(false);
-  const [deleteGoogleLoading, setDeleteGoogleLoading] = useState(false);
-  const [isGoogleUser, setIsGoogleUser] = useState(false);
+  const [showDeleteGoogleProfile, setShowDeleteGoogleProfile] = useState(false); // Establecer el estado de la visualización del modal de eliminación de perfil Google
+  const [deleteGoogleLoading, setDeleteGoogleLoading] = useState(false); // Establecer el estado de carga
+  const [isGoogleUser, setIsGoogleUser] = useState(false); // Establecer el estado de si el usuario es de Google
   
-  const router = useRouter();
+  const router = useRouter(); // Obtener el router de expo-router
 
-  useEffect(() => {
-    fetchProfile();
-    checkUserProvider();
-  }, []);
+  useEffect(() => { // Efecto para cargar el perfil del cliente
+    fetchProfile(); // Cargar el perfil del cliente
+    checkUserProvider(); // Verificar si el usuario es de Google
+  }, []); // Dependencias del efecto
 
   // useEffect para manejar el contador de bloqueo
-  useEffect(() => {
-    let interval;
-    if (passwordBlocked && blockTimeRemaining > 0) {
+  useEffect(() => { // Efecto para manejar el contador de bloqueo
+    let interval; // Establecer el intervalo
+    if (passwordBlocked && blockTimeRemaining > 0) { // Si la contraseña está bloqueada y el tiempo de bloqueo es mayor a 0
       interval = setInterval(() => {
-        setBlockTimeRemaining(prev => {
+        setBlockTimeRemaining(prev => { // Establecer el tiempo de bloqueo
           if (prev <= 1) {
-            setPasswordBlocked(false);
-            setCurrentPasswordAttempts(0);
+            setPasswordBlocked(false); // Desbloquear la contraseña
+            setCurrentPasswordAttempts(0); // Establecer el contador de intentos de la contraseña actual a 0
             return 0;
           }
           return prev - 1;
@@ -96,14 +90,14 @@ export default function ClientProfile() {
   }, [passwordBlocked, blockTimeRemaining]);
 
   // Timer para bloqueo de eliminación de perfil
-  useEffect(() => {
-    let interval;
-    if (deletePasswordBlocked && deleteBlockTimeRemaining > 0) {
+  useEffect(() => { // Efecto para manejar el contador de bloqueo de eliminación de perfil
+    let interval; // Establecer el intervalo
+    if (deletePasswordBlocked && deleteBlockTimeRemaining > 0) { // Si la contraseña de eliminación está bloqueada y el tiempo de bloqueo es mayor a 0
       interval = setInterval(() => {
-        setDeleteBlockTimeRemaining(prev => {
+        setDeleteBlockTimeRemaining(prev => { // Establecer el tiempo de bloqueo de eliminación
           if (prev <= 1) {
-            setDeletePasswordBlocked(false);
-            setDeletePasswordAttempts(0);
+            setDeletePasswordBlocked(false); // Desbloquear la contraseña de eliminación
+            setDeletePasswordAttempts(0); // Establecer el contador de intentos de la contraseña de eliminación a 0
             return 0;
           }
           return prev - 1;
@@ -113,50 +107,50 @@ export default function ClientProfile() {
     return () => clearInterval(interval);
   }, [deletePasswordBlocked, deleteBlockTimeRemaining]);
 
-  const fetchProfile = async () => {
+  const fetchProfile = async () => { // Función para cargar el perfil del cliente
     try {
-      setLoading(true);
+      setLoading(true); // Establecer el estado de carga
       
       // Obtener usuario actual
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        Alert.alert('Error', 'No se encontró la sesión del usuario');
+      const { data: { user } } = await supabase.auth.getUser(); // Obtener el usuario actual
+      if (!user) { // Si no se encontró el usuario
+        Alert.alert('Error', 'No se encontró la sesión del usuario'); // Mostrar alerta de error
         return;
       }
 
       // Obtener perfil del cliente
-      const { data, error } = await getClientProfile(user.id);
+      const { data, error } = await getClientProfile(user.id); // Obtener el perfil del cliente
       
-      if (error) {
-        Alert.alert('Error', 'No se pudo cargar el perfil: ' + error);
-        return;
+      if (error) { // Si hay error
+        Alert.alert('Error', 'No se pudo cargar el perfil: ' + error); // Mostrar alerta de error
+        return; 
       }
 
-      setProfile(data);
+      setProfile(data); // Establecer el perfil del cliente
     } catch (error) {
-      Alert.alert('Error', 'Ocurrió un error inesperado');
-      console.error('Error fetching profile:', error);
+      Alert.alert('Error', 'Ocurrió un error inesperado'); // Mostrar alerta de error
+      console.error('Error fetching profile:', error); // Mostrar error en la consola
     } finally {
-      setLoading(false);
+      setLoading(false); // Establecer el estado de carga
     }
   };
 
-  const checkUserProvider = async () => {
+  const checkUserProvider = async () => { // Función para verificar si el usuario es de Google
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user && user.app_metadata && user.app_metadata.provider) {
-        setIsGoogleUser(user.app_metadata.provider === 'google');
+      const { data: { user } } = await supabase.auth.getUser(); // Obtener el usuario actual
+      if (user && user.app_metadata && user.app_metadata.provider) { // Si el usuario es de Google
+        setIsGoogleUser(user.app_metadata.provider === 'google'); // Establecer el estado de si el usuario es de Google
       }
     } catch (error) {
-      console.error('Error checking user provider:', error);
+      console.error('Error checking user provider:', error); // Mostrar error en la consola
     }
   };
 
-  const handleGoBack = () => {
-    router.back();
+  const handleGoBack = () => { // Función para volver a la página anterior
+    router.back(); // Volver a la página anterior
   };
 
-  const handleLogout = async () => {
+  const handleLogout = async () => { // Función para cerrar sesión
     Alert.alert(
       'Cerrar Sesión',
       '¿Estás seguro de que deseas cerrar sesión?',
@@ -168,8 +162,8 @@ export default function ClientProfile() {
         {
           text: 'Cerrar Sesión',
           style: 'destructive',
-          onPress: async () => {
-            await signOut();
+          onPress: async () => { // Función para cerrar sesión
+            await signOut(); // Cerrar sesión
           }
         }
       ]
@@ -177,16 +171,16 @@ export default function ClientProfile() {
   };
 
 
-  const handleEdit = () => {
+  const handleEdit = () => { // Función para editar el perfil del cliente
     setEditData({
-      nombre_completo: profile.nombre_completo,
-      telefono: profile.telefono,
-      avatar_url: profile.avatar_url
+      nombre_completo: profile.nombre_completo, // Establecer el estado del nombre completo
+      telefono: profile.telefono, // Establecer el estado del teléfono
+      avatar_url: profile.avatar_url // Establecer el estado de la url de la imagen
     });
-    setIsEditing(true);
+    setIsEditing(true); // Establecer el estado de edición
   };
 
-  const handleCancelEdit = () => {
+  const handleCancelEdit = () => { // Función para cancelar la edición del perfil del cliente
     setIsEditing(false);
     setEditData({
       nombre_completo: '',
@@ -196,198 +190,194 @@ export default function ClientProfile() {
     setSelectedImage(null);
   };
 
-  const handleInputChange = (field, value) => {
+  const handleInputChange = (field, value) => { // Función para manejar el cambio de input en el perfil del cliente
     setEditData(prev => ({
       ...prev,
       [field]: value
     }));
   };
 
-  const handleSelectImage = async () => {
+  const handleSelectImage = async () => { // Función para seleccionar la imagen del perfil del cliente
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permisos requeridos', 'Necesitamos acceso a tu galería para seleccionar una foto');
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync(); // Obtener el estado de los permisos de la galería
+      if (status !== 'granted') { // Si no se tienen permisos de la galería
+        Alert.alert('Permisos requeridos', 'Necesitamos acceso a tu galería para seleccionar una foto'); // Mostrar alerta de permisos requeridos
         return;
       }
 
-      const result = await ImagePicker.launchImageLibraryAsync({
+      const result = await ImagePicker.launchImageLibraryAsync({ // Abrir el selector de imágenes
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.5,
-        base64: true,
+        aspect: [1, 1], // Aspect ratio de la imagen
+        quality: 0.5, // Calidad de la imagen
+        base64: true, // Base64 de la imagen
       });
 
-      if (!result.canceled && result.assets[0]) {
-        setSelectedImage(result.assets[0]);
+      if (!result.canceled && result.assets[0]) { // Si no se canceló la selección y se seleccionó una imagen
+        setSelectedImage(result.assets[0]); // Establecer la imagen seleccionada
         setEditData(prev => ({
           ...prev,
-          avatar_url: result.assets[0].uri
+          avatar_url: result.assets[0].uri // Establecer la url de la imagen
         }));
       }
-    } catch (error) {
-      Alert.alert('Error', 'No se pudo seleccionar la imagen');
+    } catch (error) { 
+      Alert.alert('Error', 'No se pudo seleccionar la imagen'); // Mostrar alerta de error
     }
   };
 
-  const handleSave = async () => {
-    if (!editData.nombre_completo.trim()) {
-      Alert.alert('Error', 'El nombre completo es requerido');
+  const handleSave = async () => { // Función para guardar el perfil del cliente
+    if (!editData.nombre_completo.trim()) { // Si el nombre completo está vacío
+      Alert.alert('Error', 'El nombre completo es requerido'); // Mostrar alerta de error
       return;
     }
 
-    setSaving(true);
+    setSaving(true); // Establecer el estado de guardado
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        Alert.alert('Error', 'No se encontró la sesión del usuario');
+      const { data: { user } } = await supabase.auth.getUser(); // Obtener el usuario actual
+      if (!user) { // Si no se encontró el usuario
+        Alert.alert('Error', 'No se encontró la sesión del usuario'); // Mostrar alerta de error
         return;
       }
 
-      let avatarUrl = editData.avatar_url;
+      let avatarUrl = editData.avatar_url; // Establecer la url de la imagen
 
       // Si se seleccionó una nueva imagen, subirla
-      if (selectedImage) {
-        const { data: uploadedUrl, error: uploadError } = await uploadAvatar(user.id, selectedImage);
-        if (uploadError) {
-          Alert.alert('Error', 'No se pudo subir la imagen: ' + uploadError);
+      if (selectedImage) { // Si se seleccionó una nueva imagen
+        const { data: uploadedUrl, error: uploadError } = await uploadAvatar(user.id, selectedImage); // Subir la imagen
+        if (uploadError) { // Si hay error
+          Alert.alert('Error', 'No se pudo subir la imagen: ' + uploadError); // Mostrar alerta de error
           return;
         }
-        avatarUrl = uploadedUrl;
+        avatarUrl = uploadedUrl; // Establecer la url de la imagen
       }
 
-      // Actualizar perfil
-      const { data, error } = await editClientProfile(user.id, {
-        nombre_completo: editData.nombre_completo,
-        telefono: editData.telefono,
-        avatar_url: avatarUrl
+      // Actualizar perfil 
+      const { data, error } = await editClientProfile(user.id, { // Actualizar el perfil del cliente
+        nombre_completo: editData.nombre_completo, // Establecer el estado del nombre completo
+        telefono: editData.telefono, // Establecer el estado del teléfono
+        avatar_url: avatarUrl // Establecer la url de la imagen
       });
 
       if (error) {
-        Alert.alert('Error', 'No se pudo actualizar el perfil: ' + error);
+        Alert.alert('Error', 'No se pudo actualizar el perfil: ' + error); // Mostrar alerta de error
         return;
       }
 
       // Actualizar el estado local
-      setProfile(prev => ({
+      setProfile(prev => ({ 
         ...prev,
-        nombre_completo: editData.nombre_completo,
-        telefono: editData.telefono,
+        nombre_completo: editData.nombre_completo, // Establecer el estado del nombre completo
+        telefono: editData.telefono, // Establecer el estado del teléfono
         avatar_url: avatarUrl
       }));
 
-      Alert.alert('Éxito', 'Perfil actualizado correctamente');
-      setIsEditing(false);
-      setSelectedImage(null);
+      Alert.alert('Éxito', 'Perfil actualizado correctamente'); // Mostrar alerta de éxito
+      setIsEditing(false); // Establecer el estado de edición
+      setSelectedImage(null); // Establecer la imagen seleccionada
     } catch (error) {
       Alert.alert('Error', 'Ocurrió un error inesperado');
-      console.error('Error saving profile:', error);
+      console.error('Error saving profile:', error); // Mostrar error en la consola
     } finally {
       setSaving(false);
     }
   };
 
   // Funciones para cambio de contraseña
-  const handleChangePassword = () => {
-    if (passwordBlocked) {
-      Alert.alert(
-        'Acceso bloqueado',
-        `Has excedido el número de intentos. Inténtalo de nuevo en ${Math.ceil(blockTimeRemaining / 60)} minutos.`
-      );
+  const handleChangePassword = () => { // Función para abrir el modal de cambio de contraseña
+    if (passwordBlocked) { // Si la contraseña está bloqueada
+      Alert.alert('Acceso bloqueado', `Has excedido el número de intentos. Inténtalo de nuevo en ${Math.ceil(blockTimeRemaining / 60)} minutos.`); // Mostrar alerta de acceso bloqueado
       return;
     }
-    
-    console.log('Abriendo modal de cambio de contraseña...');
-    setShowChangePassword(true);
+    console.log('Abriendo modal de cambio de contraseña...'); // Mostrar mensaje en la consola
+    setShowChangePassword(true); // Establecer el estado de la visualización del modal de cambio de contraseña
     setPasswordData({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
+      currentPassword: '', // Establecer el estado de la contraseña actual
+      newPassword: '', // Establecer el estado de la nueva contraseña
+      confirmPassword: '' // Establecer el estado de la confirmación de la nueva contraseña
     });
-    setCurrentPasswordValidated(false);
-    setPasswordValidationErrors([]);
-    setCurrentPasswordAttempts(0);
+    setCurrentPasswordValidated(false); // Establecer el estado de la validación de la contraseña actual
+    setPasswordValidationErrors([]); // Establecer el estado de los errores de validación de la contraseña
+    setCurrentPasswordAttempts(0); // Establecer el contador de intentos de la contraseña actual a 0
     // No resetear totalFailedAttempts aquí para mantener el conteo entre sesiones
   };
 
-  const handleCancelPasswordChange = () => {
-    setShowChangePassword(false);
+  const handleCancelPasswordChange = () => { // Función para cancelar el cambio de contraseña
+    setShowChangePassword(false); // Establecer el estado de la visualización del modal de cambio de contraseña
     setPasswordData({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
+      currentPassword: '', // Establecer el estado de la contraseña actual
+      newPassword: '', // Establecer el estado de la nueva contraseña
+      confirmPassword: '' // Establecer el estado de la confirmación de la nueva contraseña
     });
-    setCurrentPasswordValidated(false);
-    setPasswordValidationErrors([]);
+    setCurrentPasswordValidated(false); // Establecer el estado de la validación de la contraseña actual
+    setPasswordValidationErrors([]); // Establecer el estado de los errores de validación de la contraseña
     // Resetear contadores al cancelar
-    setCurrentPasswordAttempts(0);
-    setTotalFailedAttempts(0);
+    setCurrentPasswordAttempts(0); // Establecer el contador de intentos de la contraseña actual a 0
+    setTotalFailedAttempts(0); // Establecer el contador de intentos fallidos de la contraseña
   };
 
-  const handlePasswordInputChange = (field, value) => {
-    setPasswordData(prev => ({
+  const handlePasswordInputChange = (field, value) => { // Función para manejar el cambio de input en el modal de cambio de contraseña
+    setPasswordData(prev => ({ // Establecer el estado de la contraseña
       ...prev,
-      [field]: value
+      [field]: value // Establecer el valor del input
     }));
     
     // Si es la nueva contraseña, validar en tiempo real solo si ya se validó la actual
-    if (field === 'newPassword' && currentPasswordValidated) {
-      validateNewPasswordField(value);
+    if (field === 'newPassword' && currentPasswordValidated) { // Si es la nueva contraseña y ya se validó la actual
+      validateNewPasswordField(value); // Validar la nueva contraseña
     }
   };
 
-  const handleVerifyCurrentPassword = async () => {
-    if (!passwordData.currentPassword.trim()) {
-      Alert.alert('Error', 'Por favor ingresa tu contraseña actual');
+  const handleVerifyCurrentPassword = async () => { // Función para verificar la contraseña actual
+    if (!passwordData.currentPassword.trim()) { // Si la contraseña actual está vacía
+      Alert.alert('Error', 'Por favor ingresa tu contraseña actual'); // Mostrar alerta de error
       return;
     }
     
-    if (passwordData.currentPassword.length < 6) {
+    if (passwordData.currentPassword.length < 6) { // Si la contraseña actual tiene menos de 6 caracteres
       Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
       return;
     }
     
     try {
-      console.log('Verificando contraseña actual...');
-      const { data, error } = await validateCurrentPassword(passwordData.currentPassword);
-      if (data) {
-        console.log('Contraseña validada correctamente, desbloqueando campos...');
-        setCurrentPasswordValidated(true);
-        setCurrentPasswordAttempts(0);
-        setPasswordValidationErrors([]);
-        Alert.alert('Éxito', 'Contraseña actual verificada correctamente');
-      } else {
-        setCurrentPasswordValidated(false);
-        setCurrentPasswordAttempts(prev => {
-          const newAttempts = prev + 1;
-          const newTotalAttempts = totalFailedAttempts + 1;
-          setTotalFailedAttempts(newTotalAttempts);
+      console.log('Verificando contraseña actual...'); // Mostrar mensaje en la consola
+      const { data, error } = await validateCurrentPassword(passwordData.currentPassword); // Validar la contraseña actual
+      if (data) { // Si la contraseña actual es válida
+        console.log('Contraseña validada correctamente, desbloqueando campos...'); // Mostrar mensaje en la consola
+        setCurrentPasswordValidated(true); // Establecer el estado de la validación de la contraseña actual
+        setCurrentPasswordAttempts(0); // Establecer el contador de intentos de la contraseña actual a 0
+        setPasswordValidationErrors([]); // Establecer el estado de los errores de validación de la contraseña
+        Alert.alert('Éxito', 'Contraseña actual verificada correctamente'); // Mostrar alerta de éxito
+      } else { // Si la contraseña actual no es válida
+        setCurrentPasswordValidated(false); // Establecer el estado de la validación de la contraseña actual
+        setCurrentPasswordAttempts(prev => { // Establecer el contador de intentos de la contraseña actual
+          const newAttempts = prev + 1; // Establecer el contador de intentos de la contraseña actual
+          const newTotalAttempts = totalFailedAttempts + 1; // Establecer el contador de intentos fallidos de la contraseña
+          setTotalFailedAttempts(newTotalAttempts); // Establecer el contador de intentos fallidos de la contraseña
           
           if (newAttempts >= 3) {
-            setPasswordBlocked(true);
+            setPasswordBlocked(true); // Establecer el estado de la contraseña bloqueada
             setBlockTimeRemaining(300); // 5 minutos en segundos
             
             // Verificar si es el segundo bloqueo (6 intentos totales)
             if (newTotalAttempts >= 6) {
               // Cerrar sesión automáticamente después de 6 intentos fallidos
-              setTimeout(() => {
-                setShowChangePassword(false);
-                setCurrentPasswordValidated(false);
-                setPasswordValidationErrors([]);
+              setTimeout(() => { // Esperar 2 segundos
+                setShowChangePassword(false); // Establecer el estado de la visualización del modal de cambio de contraseña
+                setCurrentPasswordValidated(false); // Establecer el estado de la validación de la contraseña actual  
+                setPasswordValidationErrors([]); // Establecer el estado de los errores de validación de la contraseña
                 setPasswordData({
-                  currentPassword: '',
-                  newPassword: '',
-                  confirmPassword: ''
+                  currentPassword: '', // Establecer el estado de la contraseña actual
+                  newPassword: '', // Establecer el estado de la nueva contraseña
+                  confirmPassword: '' // Establecer el estado de la confirmación de la nueva contraseña
                 });
-                setTotalFailedAttempts(0);
-                setCurrentPasswordAttempts(0);
-                setPasswordBlocked(false);
+                setTotalFailedAttempts(0); // Establecer el contador de intentos fallidos de la contraseña
+                setCurrentPasswordAttempts(0); // Establecer el contador de intentos de la contraseña actual a 0
+                setPasswordBlocked(false); // Establecer el estado de la contraseña bloqueada
                 
                 // Cerrar sesión
                 signOut();
                 
-                Alert.alert(
+                Alert.alert( 
                   'Sesión cerrada por seguridad',
                   'Has excedido 6 intentos fallidos. Tu sesión ha sido cerrada por seguridad. Intenta recuperar tu contraseña desde el login.',
                   [
@@ -403,14 +393,14 @@ export default function ClientProfile() {
               }, 2000);
             } else {
               // Primer bloqueo (3 intentos), cerrar modal pero mantener sesión
-              setTimeout(() => {
-                setShowChangePassword(false);
-                setCurrentPasswordValidated(false);
-                setPasswordValidationErrors([]);
+              setTimeout(() => { // Esperar 2 segundos
+                setShowChangePassword(false); // Establecer el estado de la visualización del modal de cambio de contraseña
+                setCurrentPasswordValidated(false); // Establecer el estado de la validación de la contraseña actual  
+                setPasswordValidationErrors([]); // Establecer el estado de los errores de validación de la contraseña
                 setPasswordData({
-                  currentPassword: '',
-                  newPassword: '',
-                  confirmPassword: ''
+                  currentPassword: '', // Establecer el estado de la contraseña actual
+                  newPassword: '', // Establecer el estado de la nueva contraseña
+                  confirmPassword: '' // Establecer el estado de la confirmación de la nueva contraseña
                 });
               }, 2000);
             }
@@ -428,56 +418,56 @@ export default function ClientProfile() {
           return newAttempts;
         });
       }
-    } catch (error) {
+    } catch (error) { 
       console.error('Error validating current password:', error);
       Alert.alert('Error', 'Ocurrió un error al verificar la contraseña');
     }
   };
-
-  const validateNewPasswordField = (password) => {
-    if (!currentPasswordValidated) return;
+ 
+  const validateNewPasswordField = (password) => { // Función para validar la nueva contraseña
+    if (!currentPasswordValidated) return; // Si no se ha validado la contraseña actual, no validar la nueva contraseña
     
-    const validation = validateNewPassword(password, passwordData.currentPassword);
-    setPasswordValidationErrors(validation.errors);
+    const validation = validateNewPassword(password, passwordData.currentPassword); // Validar la nueva contraseña
+    setPasswordValidationErrors(validation.errors); // Establecer el estado de los errores de validación de la contraseña
   };
 
-  const togglePasswordVisibility = (field) => {
-    setShowPasswords(prev => ({
+  const togglePasswordVisibility = (field) => { // Función para mostrar/ocultar la contraseña
+    setShowPasswords(prev => ({ // Establecer el estado de la visualización de la contraseña
       ...prev,
-      [field]: !prev[field]
+      [field]: !prev[field] // Establecer el estado de la visualización de la contraseña
     }));
   };
 
-  const handleSavePassword = async () => {
+  const handleSavePassword = async () => { // Función para guardar la nueva contraseña
     // Validaciones básicas
-    if (!currentPasswordValidated) {
-      Alert.alert('Error', 'Debes validar tu contraseña actual primero');
+    if (!currentPasswordValidated) { // Si no se ha validado la contraseña actual
+      Alert.alert('Error', 'Debes validar tu contraseña actual primero'); 
       return;
     }
-    if (!passwordData.newPassword.trim()) {
+    if (!passwordData.newPassword.trim()) { // Si la nueva contraseña está vacía
       Alert.alert('Error', 'La nueva contraseña es requerida');
       return;
     }
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
+    if (passwordData.newPassword !== passwordData.confirmPassword) { // Si las contraseas nuevas no coinciden
       Alert.alert('Error', 'Las contraseñas nuevas no coinciden');
       return;
     }
     
     // Validar que no haya errores de validación
-    if (passwordValidationErrors.length > 0) {
+    if (passwordValidationErrors.length > 0) { // Si hay errores de validación
       Alert.alert('Error', passwordValidationErrors.join('\n'));
       return;
     }
 
     setPasswordLoading(true);
-    try {
-      const { data, error } = await changeClientPassword(
+    try { 
+      const { data, error } = await changeClientPassword( // Cambiar la contraseña del cliente
         passwordData.currentPassword,
         passwordData.newPassword
       );
       
-      if (error) {
-        Alert.alert('Error', error);
+      if (error) { // Si hay error
+        Alert.alert('Error', error); // Mostrar alerta de error
         return;
       }
       
@@ -487,12 +477,12 @@ export default function ClientProfile() {
         [
           {
             text: 'OK',
-            onPress: () => {
-              setShowChangePassword(false);
-              setCurrentPasswordValidated(false);
-              setPasswordValidationErrors([]);
+            onPress: () => { 
+              setShowChangePassword(false); // Establecer el estado de la visualización del modal de cambio de contraseña
+              setCurrentPasswordValidated(false); // Establecer el estado de la validación de la contraseña actual
+              setPasswordValidationErrors([]); // Establecer el estado de los errores de validación de la contraseña
               // Redirigir al login después de cambiar contraseña
-              router.replace('/(auth)');
+              router.replace('/(auth)'); // Redirigir al login
             }
           }
         ]
@@ -506,11 +496,11 @@ export default function ClientProfile() {
   };
 
   // Funciones para eliminación de perfil
-  const handleDeleteProfile = () => {
-    if (deletePasswordBlocked) {
+  const handleDeleteProfile = () => { // Función para eliminar el perfil del cliente
+    if (deletePasswordBlocked) { // Si la contraseña de eliminación está bloqueada
       Alert.alert(
         'Acceso bloqueado',
-        `Has excedido el número de intentos. Inténtalo de nuevo en ${Math.ceil(deleteBlockTimeRemaining / 60)} minutos.`
+        `Has excedido el número de intentos. Inténtalo de nuevo en ${Math.ceil(deleteBlockTimeRemaining / 60)} minutos.` // Mostrar alerta de acceso bloqueado
       );
       return;
     }
@@ -526,79 +516,79 @@ export default function ClientProfile() {
         {
           text: 'Eliminar',
           style: 'destructive',
-          onPress: () => {
-            setShowDeleteProfile(true);
+          onPress: () => { 
+            setShowDeleteProfile(true); // Establecer el estado de la visualización del modal de eliminación de perfil
             setDeletePasswordData({
-              currentPassword: ''
+              currentPassword: '' // Establecer el estado de la contraseña actual
             });
-            setDeletePasswordValidated(false);
-            setDeletePasswordAttempts(0);
+            setDeletePasswordValidated(false); // Establecer el estado de la validación de la contraseña de eliminación
+            setDeletePasswordAttempts(0); // Establecer el contador de intentos de la contraseña de eliminación a 0
           }
         }
       ]
     );
   };
 
-  const handleCancelDeleteProfile = () => {
-    setShowDeleteProfile(false);
+  const handleCancelDeleteProfile = () => { // Función para cancelar la eliminación de perfil
+    setShowDeleteProfile(false); // Establecer el estado de la visualización del modal de eliminación de perfil
     setDeletePasswordData({
-      currentPassword: ''
+      currentPassword: '' // Establecer el estado de la contraseña actual
     });
-    setDeletePasswordValidated(false);
-    setDeletePasswordAttempts(0);
-    setTotalDeleteAttempts(0);
+    setDeletePasswordValidated(false); // Establecer el estado de la validación de la contraseña de eliminación
+    setDeletePasswordAttempts(0); // Establecer el contador de intentos de la contraseña de eliminación a 0
+    setTotalDeleteAttempts(0); // Establecer el contador de intentos fallidos de la contraseña de eliminación a 0
   };
 
-  const handleDeletePasswordInputChange = (value) => {
-    setDeletePasswordData(prev => ({
+  const handleDeletePasswordInputChange = (value) => { // Función para manejar el cambio de input en el modal de eliminación de perfil
+    setDeletePasswordData(prev => ({ // Establecer el estado de la contraseña de eliminación
       ...prev,
-      currentPassword: value
+      currentPassword: value // Establecer el valor del input
     }));
   };
 
-  const handleVerifyDeletePassword = async () => {
-    if (!deletePasswordData.currentPassword.trim()) {
+  const handleVerifyDeletePassword = async () => { // Función para verificar la contraseña de eliminación
+    if (!deletePasswordData.currentPassword.trim()) { // Si la contraseña de eliminación está vacía
       Alert.alert('Error', 'Por favor ingresa tu contraseña actual');
       return;
     }
     
-    if (deletePasswordData.currentPassword.length < 6) {
+    if (deletePasswordData.currentPassword.length < 6) { // Si la contraseña de eliminación tiene menos de 6 caracteres
       Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
       return;
     }
     
     try {
-      console.log('Verificando contraseña para eliminación...');
-      const { data, error } = await validateCurrentPassword(deletePasswordData.currentPassword);
+      console.log('Verificando contraseña para eliminación...'); // Mostrar mensaje en la consola
+      const { data, error } = await validateCurrentPassword(deletePasswordData.currentPassword); // Validar la contraseña de eliminación
       if (data) {
-        console.log('Contraseña validada, procediendo con eliminación...');
-        setDeletePasswordValidated(true);
-        setDeletePasswordAttempts(0);
-        setTotalDeleteAttempts(0);
+        console.log('Contraseña validada, procediendo con eliminación...'); // Mostrar mensaje en la consola
+        setDeletePasswordValidated(true); // Establecer el estado de la validación de la contraseña de eliminación
+        setDeletePasswordAttempts(0); // Establecer el contador de intentos de la contraseña de eliminación a 0
+        setTotalDeleteAttempts(0); // Establecer el contador de intentos fallidos de la contraseña de eliminación a 0
         Alert.alert('Éxito', 'Contraseña verificada. Procediendo con la eliminación...');
       } else {
-        setDeletePasswordValidated(false);
-        setDeletePasswordAttempts(prev => {
-          const newAttempts = prev + 1;
-          const newTotalAttempts = totalDeleteAttempts + 1;
-          setTotalDeleteAttempts(newTotalAttempts);
+        setDeletePasswordValidated(false); // Establecer el estado de la validación de la contraseña de eliminación
+        setDeletePasswordAttempts(prev => { // Establecer el contador de intentos de la contraseña de eliminación
+          const newAttempts = prev + 1; // Establecer el contador de intentos de la contraseña de eliminación
+          const newTotalAttempts = totalDeleteAttempts + 1; // Establecer el contador de intentos fallidos de la contraseña de eliminación
+          setTotalDeleteAttempts(newTotalAttempts); // Establecer el contador de intentos fallidos de la contraseña de eliminación
           
-          if (newAttempts >= 3) {
-            setDeletePasswordBlocked(true);
+          if (newAttempts >= 3) { 
+            setDeletePasswordBlocked(true); // Establecer el estado de la contraseña de eliminación bloqueada
             setDeleteBlockTimeRemaining(300); // 5 minutos en segundos
             
             // Verificar si es el segundo bloqueo (6 intentos totales)
             if (newTotalAttempts >= 6) {
               // Cerrar sesión automáticamente después de 6 intentos fallidos
               setTimeout(() => {
-                setShowDeleteProfile(false);
-                setDeletePasswordValidated(false);
-                setDeletePasswordData({
-                  currentPassword: ''
+                setShowDeleteProfile(false); // Establecer el estado de la visualización del modal de eliminación de perfil
+                setDeletePasswordValidated(false); // Establecer el estado de la validación de la contraseña de eliminación
+                setDeletePasswordData({ // Establecer el estado de la contraseña de eliminación
+                  currentPassword: '' // Establecer el estado de la contraseña actual
                 });
-                setTotalDeleteAttempts(0);
-                setDeletePasswordAttempts(0);
-                setDeletePasswordBlocked(false);
+                setTotalDeleteAttempts(0); // Establecer el contador de intentos fallidos de la contraseña de eliminación a 0
+                setDeletePasswordAttempts(0); // Establecer el contador de intentos de la contraseña de eliminación a 0 
+                setDeletePasswordBlocked(false); // Establecer el estado de la contraseña de eliminación bloqueada
                 
                 // Cerrar sesión
                 signOut();
@@ -619,11 +609,11 @@ export default function ClientProfile() {
               }, 2000);
             } else {
               // Primer bloqueo (3 intentos), cerrar modal pero mantener sesión
-              setTimeout(() => {
-                setShowDeleteProfile(false);
-                setDeletePasswordValidated(false);
-                setDeletePasswordData({
-                  currentPassword: ''
+              setTimeout(() => { // Esperar 2 segundos
+                setShowDeleteProfile(false); // Establecer el estado de la visualización del modal de eliminación de perfil
+                setDeletePasswordValidated(false); // Establecer el estado de la validación de la contraseña de eliminación
+                setDeletePasswordData({ // Establecer el estado de la contraseña de eliminación
+                  currentPassword: '' // Establecer el estado de la contraseña actual
                 });
               }, 2000);
             }
@@ -647,8 +637,8 @@ export default function ClientProfile() {
     }
   };
 
-  const handleConfirmDeleteProfile = async () => {
-    if (!deletePasswordValidated) {
+  const handleConfirmDeleteProfile = async () => { // Función para confirmar la eliminación de perfil
+    if (!deletePasswordValidated) { // Si no se ha validado la contraseña de eliminación
       Alert.alert('Error', 'Debes validar tu contraseña actual primero');
       return;
     }
@@ -665,9 +655,9 @@ export default function ClientProfile() {
           text: 'ELIMINAR DEFINITIVAMENTE',
           style: 'destructive',
           onPress: async () => {
-            setDeletePasswordLoading(true);
+            setDeletePasswordLoading(true); // Establecer el estado de la carga de la contraseña de eliminación
             try {
-              const { data, error } = await deleteClientProfile(deletePasswordData.currentPassword);
+              const { data, error } = await deleteClientProfile(deletePasswordData.currentPassword); // Eliminar el perfil del cliente
               
               if (error) {
                 Alert.alert('Error', error);
@@ -700,7 +690,7 @@ export default function ClientProfile() {
   };
 
   // Funciones para eliminación de perfil Google
-  const handleDeleteGoogleProfile = () => {
+  const handleDeleteGoogleProfile = () => { // Función para eliminar el perfil del cliente
     Alert.alert(
       'Eliminar Perfil (Google)',
       '¿Estás seguro de que quieres eliminar tu perfil? Esta acción es IRREVERSIBLE y eliminará todos tus datos.\n\nComo usuario de Google, no necesitas validar contraseña.',
@@ -713,18 +703,18 @@ export default function ClientProfile() {
           text: 'Eliminar',
           style: 'destructive',
           onPress: () => {
-            setShowDeleteGoogleProfile(true);
+            setShowDeleteGoogleProfile(true); // Establecer el estado de la visualización del modal de eliminación de perfil
           }
         }
       ]
     );
   };
 
-  const handleCancelDeleteGoogleProfile = () => {
-    setShowDeleteGoogleProfile(false);
+  const handleCancelDeleteGoogleProfile = () => { // Función para cancelar la eliminación de perfil
+    setShowDeleteGoogleProfile(false); // Establecer el estado de la visualización del modal de eliminación de perfil
   };
 
-  const handleConfirmDeleteGoogleProfile = async () => {
+  const handleConfirmDeleteGoogleProfile = async () => { // Función para confirmar la eliminación de perfil
     Alert.alert(
       'Confirmar Eliminación (Google)',
       'Esta acción es IRREVERSIBLE. Se eliminarán TODOS tus datos incluyendo:\n\n• Perfil de cliente\n• Avatar e imágenes\n• Productos (si eres artesano)\n• Sesión actual (serás deslogueado)\n\nNota: La cuenta de autenticación permanecerá pero sin datos asociados.\n\n¿Estás completamente seguro?',
@@ -737,10 +727,10 @@ export default function ClientProfile() {
           text: 'ELIMINAR DEFINITIVAMENTE',
           style: 'destructive',
           onPress: async () => {
-            setDeleteGoogleLoading(true);
+            setDeleteGoogleLoading(true); // Establecer el estado de la carga de la eliminación de perfil
             try {
               // Llamar a la función de eliminación sin validación de contraseña
-              const { data, error } = await deleteGoogleClientProfile();
+              const { data, error } = await deleteGoogleClientProfile(); // Eliminar el perfil del cliente
               
               if (error) {
                 Alert.alert('Error', error);
@@ -781,7 +771,7 @@ export default function ClientProfile() {
     );
   }
 
-  if (!profile) {
+  if (!profile) { // Si no se encontró el perfil
     return (
       <View style={styles.errorContainer}>
         <MaterialCommunityIcons name="alert-circle" size={48} color="#db4437" />
@@ -793,7 +783,7 @@ export default function ClientProfile() {
     );
   }
 
-  return (
+  return ( // Retornar el componente ScrollView
     <ScrollView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
@@ -933,6 +923,7 @@ export default function ClientProfile() {
               <MaterialCommunityIcons name="pencil" size={20} color="#fff" />
               <Text style={styles.editButtonText}>Editar perfil</Text>
             </TouchableOpacity>
+            
         {/* Botón de cambio de contraseña - Solo visible para usuarios con contraseña (no Google) */}
         {!isGoogleUser && (
           <TouchableOpacity 
