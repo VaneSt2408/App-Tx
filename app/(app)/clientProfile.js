@@ -2,14 +2,16 @@
 // Este archivo es el encargado de mostrar el perfil del cliente en la aplicación.
 // Muestra el perfil del cliente registrado en la base de datos y permite editarlo, cambiar la contraseña, eliminar el perfil y cambiar la foto de perfil.
 
-import React, { useState, useEffect } from 'react'; // Importar los hooks de react
+import React, { useState, useEffect, useRef } from 'react'; // Importar los hooks de react
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert,TouchableOpacity,Image,TextInput} from 'react-native'; // Importar los componentes de react-native
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Importar los componentes de expo-vector-icons
 import { useRouter } from 'expo-router'; // Importar el router de expo-router
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Importar AsyncStorage para persistencia
 import { supabase } from '../../src/supabase/client'; // Importar el cliente de supabase
 import { getClientProfile, editClientProfile, uploadAvatar, changeClientPassword, validateCurrentPassword, validateNewPassword, deleteClientProfile, deleteGoogleClientProfile } from '../../src/services/profileInfo'; // Importar los servicios de perfil de cliente
 import { useAuth } from '../../src/context/AuthContext'; // Importar el contexto de autenticación
 import * as ImagePicker from 'expo-image-picker'; // Importar el componente de expo-image-picker
+import ChangePasswordModal from '../../components/ChangePasswordModal'; // Importar el modal de cambio de contraseña
 
 export default function ClientProfile() { // Exportar la función ClientProfile
   const { signOut } = useAuth(); // Obtener el signOut del contexto de autenticación
@@ -46,6 +48,11 @@ export default function ClientProfile() { // Exportar la función ClientProfile
   const [passwordValidationErrors, setPasswordValidationErrors] = useState([]); // Establecer el estado de los errores de validación de la contraseña
   const [totalFailedAttempts, setTotalFailedAttempts] = useState(0); // Establecer el estado de los intentos fallidos de la contraseña
   
+  // Refs para evitar race conditions en contadores
+  const totalFailedAttemptsRef = useRef(0); // Ref compartido para TOTAL de intentos fallidos (cambio + eliminación)
+  const currentPasswordAttemptsRef = useRef(0); // Ref para el contador de intentos de cambio de contraseña
+  const deletePasswordAttemptsRef = useRef(0); // Ref para el contador de intentos de eliminación
+  
   // Estados para eliminación de perfil
   const [showDeleteProfile, setShowDeleteProfile] = useState(false); // Establecer el estado de la visualización del modal de eliminación de perfil
   const [deletePasswordData, setDeletePasswordData] = useState({
@@ -57,7 +64,7 @@ export default function ClientProfile() { // Exportar la función ClientProfile
   const [deletePasswordAttempts, setDeletePasswordAttempts] = useState(0); // Establecer el estado de los intentos de la contraseña de eliminación
   const [deletePasswordBlocked, setDeletePasswordBlocked] = useState(false); // Establecer el estado de la contraseña de eliminación bloqueada
   const [deleteBlockTimeRemaining, setDeleteBlockTimeRemaining] = useState(0); // Establecer el estado de la duración del bloqueo de la contraseña de eliminación
-  const [totalDeleteAttempts, setTotalDeleteAttempts] = useState(0); // Establecer el estado de los intentos fallidos de la contraseña de eliminación
+  const [totalDeleteAttempts, setTotalDeleteAttempts] = useState(0); // DEPRECATED: Usar totalFailedAttempts (compartido)
   
   // Estados para eliminación de perfil Google
   const [showDeleteGoogleProfile, setShowDeleteGoogleProfile] = useState(false); // Establecer el estado de la visualización del modal de eliminación de perfil Google
@@ -66,9 +73,83 @@ export default function ClientProfile() { // Exportar la función ClientProfile
   
   const router = useRouter(); // Obtener el router de expo-router
 
+  // Función para cargar intentos fallidos desde AsyncStorage
+  const loadFailedAttempts = async () => {
+    try {
+      const attempts = await AsyncStorage.getItem('passwordFailedAttempts');
+      if (attempts !== null) {
+        const parsedAttempts = parseInt(attempts);
+        setTotalFailedAttempts(parsedAttempts);
+        totalFailedAttemptsRef.current = parsedAttempts;
+      }
+    } catch (error) {
+      console.error('Error loading failed attempts:', error);
+    }
+  };
+
+  // Función para guardar intentos fallidos en AsyncStorage
+  const saveFailedAttempts = async (attempts) => {
+    try {
+      await AsyncStorage.setItem('passwordFailedAttempts', attempts.toString());
+      totalFailedAttemptsRef.current = attempts;
+      setTotalFailedAttempts(attempts);
+    } catch (error) {
+      console.error('Error saving failed attempts:', error);
+    }
+  };
+
+  // Función para limpiar intentos fallidos
+  const clearFailedAttempts = async () => {
+    try {
+      await AsyncStorage.removeItem('passwordFailedAttempts');
+      totalFailedAttemptsRef.current = 0;
+      setTotalFailedAttempts(0);
+    } catch (error) {
+      console.error('Error clearing failed attempts:', error);
+    }
+  };
+
+  // Función para cargar intentos fallidos de eliminación desde AsyncStorage
+  const loadDeleteAttempts = async () => {
+    try {
+      const attempts = await AsyncStorage.getItem('deleteFailedAttempts');
+      if (attempts !== null) {
+        const parsedAttempts = parseInt(attempts);
+        setTotalDeleteAttempts(parsedAttempts);
+        deletePasswordAttemptsRef.current = parsedAttempts;
+      }
+    } catch (error) {
+      console.error('Error loading delete attempts:', error);
+    }
+  };
+
+  // Función para guardar intentos fallidos de eliminación en AsyncStorage
+  const saveDeleteAttempts = async (attempts) => {
+    try {
+      await AsyncStorage.setItem('deleteFailedAttempts', attempts.toString());
+      deletePasswordAttemptsRef.current = attempts;
+      setTotalDeleteAttempts(attempts);
+    } catch (error) {
+      console.error('Error saving delete attempts:', error);
+    }
+  };
+
+  // Función para limpiar intentos fallidos de eliminación
+  const clearDeleteAttempts = async () => {
+    try {
+      await AsyncStorage.removeItem('deleteFailedAttempts');
+      deletePasswordAttemptsRef.current = 0;
+      setTotalDeleteAttempts(0);
+    } catch (error) {
+      console.error('Error clearing delete attempts:', error);
+    }
+  };
+
   useEffect(() => { // Efecto para cargar el perfil del cliente
     fetchProfile(); // Cargar el perfil del cliente
     checkUserProvider(); // Verificar si el usuario es de Google
+    loadFailedAttempts(); // Cargar intentos fallidos guardados
+    loadDeleteAttempts(); // Cargar intentos de eliminación guardados
   }, []); // Dependencias del efecto
 
   // useEffect para manejar el contador de bloqueo
@@ -298,7 +379,9 @@ export default function ClientProfile() { // Exportar la función ClientProfile
     setCurrentPasswordValidated(false); // Establecer el estado de la validación de la contraseña actual
     setPasswordValidationErrors([]); // Establecer el estado de los errores de validación de la contraseña
     setCurrentPasswordAttempts(0); // Establecer el contador de intentos de la contraseña actual a 0
+    currentPasswordAttemptsRef.current = 0; // Resetear ref al abrir modal
     // No resetear totalFailedAttempts aquí para mantener el conteo entre sesiones
+    console.log(`Intentos fallidos totales: ${totalFailedAttemptsRef.current}`); // Debug
   };
 
   const handleCancelPasswordChange = () => { // Función para cancelar el cambio de contraseña
@@ -312,7 +395,9 @@ export default function ClientProfile() { // Exportar la función ClientProfile
     setPasswordValidationErrors([]); // Establecer el estado de los errores de validación de la contraseña
     // Resetear contadores al cancelar
     setCurrentPasswordAttempts(0); // Establecer el contador de intentos de la contraseña actual a 0
-    setTotalFailedAttempts(0); // Establecer el contador de intentos fallidos de la contraseña
+    currentPasswordAttemptsRef.current = 0; // Resetear ref
+    // NO resetear totalFailedAttempts aquí para mantener el conteo entre sesiones
+    // setTotalFailedAttempts(0); // COMENTADO: mantener conteo persistente
   };
 
   const handlePasswordInputChange = (field, value) => { // Función para manejar el cambio de input en el modal de cambio de contraseña
@@ -333,8 +418,8 @@ export default function ClientProfile() { // Exportar la función ClientProfile
       return;
     }
     
-    if (passwordData.currentPassword.length < 6) { // Si la contraseña actual tiene menos de 6 caracteres
-      Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
+    if (passwordData.currentPassword.length < 8) { // Si la contraseña actual tiene menos de 8 caracteres
+      Alert.alert('Error', 'La contraseña debe tener al menos 8 caracteres');
       return;
     }
     
@@ -345,78 +430,87 @@ export default function ClientProfile() { // Exportar la función ClientProfile
         console.log('Contraseña validada correctamente, desbloqueando campos...'); // Mostrar mensaje en la consola
         setCurrentPasswordValidated(true); // Establecer el estado de la validación de la contraseña actual
         setCurrentPasswordAttempts(0); // Establecer el contador de intentos de la contraseña actual a 0
+        currentPasswordAttemptsRef.current = 0; // Resetear ref
         setPasswordValidationErrors([]); // Establecer el estado de los errores de validación de la contraseña
         Alert.alert('Éxito', 'Contraseña actual verificada correctamente'); // Mostrar alerta de éxito
       } else { // Si la contraseña actual no es válida
         setCurrentPasswordValidated(false); // Establecer el estado de la validación de la contraseña actual
-        setCurrentPasswordAttempts(prev => { // Establecer el contador de intentos de la contraseña actual
-          const newAttempts = prev + 1; // Establecer el contador de intentos de la contraseña actual
-          const newTotalAttempts = totalFailedAttempts + 1; // Establecer el contador de intentos fallidos de la contraseña
-          setTotalFailedAttempts(newTotalAttempts); // Establecer el contador de intentos fallidos de la contraseña
+        
+        // Usar refs para evitar race conditions
+        currentPasswordAttemptsRef.current = currentPasswordAttemptsRef.current + 1;
+        totalFailedAttemptsRef.current = totalFailedAttemptsRef.current + 1;
+        
+        const newAttempts = currentPasswordAttemptsRef.current;
+        const newTotalAttempts = totalFailedAttemptsRef.current;
+        
+        // Actualizar estados UI
+        setCurrentPasswordAttempts(newAttempts);
+        await saveFailedAttempts(newTotalAttempts);
+        
+        if (newAttempts >= 3) {
+          setPasswordBlocked(true); // Establecer el estado de la contraseña bloqueada
+          setBlockTimeRemaining(300); // 5 minutos en segundos
+          currentPasswordAttemptsRef.current = 0; // Resetear contador local
+          setCurrentPasswordAttempts(0);
           
-          if (newAttempts >= 3) {
-            setPasswordBlocked(true); // Establecer el estado de la contraseña bloqueada
-            setBlockTimeRemaining(300); // 5 minutos en segundos
-            
-            // Verificar si es el segundo bloqueo (6 intentos totales)
-            if (newTotalAttempts >= 6) {
-              // Cerrar sesión automáticamente después de 6 intentos fallidos
-              setTimeout(() => { // Esperar 2 segundos
-                setShowChangePassword(false); // Establecer el estado de la visualización del modal de cambio de contraseña
-                setCurrentPasswordValidated(false); // Establecer el estado de la validación de la contraseña actual  
-                setPasswordValidationErrors([]); // Establecer el estado de los errores de validación de la contraseña
-                setPasswordData({
-                  currentPassword: '', // Establecer el estado de la contraseña actual
-                  newPassword: '', // Establecer el estado de la nueva contraseña
-                  confirmPassword: '' // Establecer el estado de la confirmación de la nueva contraseña
-                });
-                setTotalFailedAttempts(0); // Establecer el contador de intentos fallidos de la contraseña
-                setCurrentPasswordAttempts(0); // Establecer el contador de intentos de la contraseña actual a 0
-                setPasswordBlocked(false); // Establecer el estado de la contraseña bloqueada
-                
-                // Cerrar sesión
-                signOut();
-                
-                Alert.alert( 
-                  'Sesión cerrada por seguridad',
-                  'Has excedido 6 intentos fallidos. Tu sesión ha sido cerrada por seguridad. Intenta recuperar tu contraseña desde el login.',
-                  [
-                    {
-                      text: 'OK',
-                      onPress: () => {
-                        // Redirigir al login
-                        router.replace('/(auth)');
-                      }
-                    }
-                  ]
-                );
-              }, 2000);
-            } else {
-              // Primer bloqueo (3 intentos), cerrar modal pero mantener sesión
-              setTimeout(() => { // Esperar 2 segundos
-                setShowChangePassword(false); // Establecer el estado de la visualización del modal de cambio de contraseña
-                setCurrentPasswordValidated(false); // Establecer el estado de la validación de la contraseña actual  
-                setPasswordValidationErrors([]); // Establecer el estado de los errores de validación de la contraseña
-                setPasswordData({
-                  currentPassword: '', // Establecer el estado de la contraseña actual
-                  newPassword: '', // Establecer el estado de la nueva contraseña
-                  confirmPassword: '' // Establecer el estado de la confirmación de la nueva contraseña
-                });
-              }, 2000);
-            }
+          // Verificar si es el segundo bloqueo (6 intentos totales)
+          if (newTotalAttempts >= 6) {
+            // Mostrar alerta ANTES de cerrar sesión
+            Alert.alert(
+              'Sesión será cerrada por seguridad',
+              'Has excedido 6 intentos fallidos. Tu sesión será cerrada por seguridad. Intenta recuperar tu contraseña desde el login.',
+              [
+                {
+                  text: 'Entendido',
+                  onPress: async () => {
+                    // Limpiar datos del modal
+                    setShowChangePassword(false);
+                    setCurrentPasswordValidated(false);
+                    setPasswordValidationErrors([]);
+                    setPasswordData({
+                      currentPassword: '',
+                      newPassword: '',
+                      confirmPassword: ''
+                    });
+                    await clearFailedAttempts();
+                    setTotalFailedAttempts(0);
+                    currentPasswordAttemptsRef.current = 0;
+                    setCurrentPasswordAttempts(0);
+                    setPasswordBlocked(false);
+                    
+                    // Cerrar sesión
+                    await signOut();
+                    
+                    // Redirigir al login
+                    router.replace('/(auth)');
+                  }
+                }
+              ]
+            );
+          } else {
+            // Primer bloqueo (3 intentos), cerrar modal pero mantener sesión
+            setTimeout(() => {
+              setShowChangePassword(false);
+              setCurrentPasswordValidated(false);
+              setPasswordValidationErrors([]);
+              setPasswordData({
+                currentPassword: '',
+                newPassword: '',
+                confirmPassword: ''
+              });
+            }, 2000);
             
             Alert.alert(
               'Acceso bloqueado',
               'Has excedido el número de intentos. El acceso estará bloqueado por 5 minutos.'
             );
-          } else {
-            Alert.alert(
-              'Contraseña incorrecta', 
-              `Intentos restantes: ${3 - newAttempts}`
-            );
           }
-          return newAttempts;
-        });
+        } else {
+          Alert.alert(
+            'Contraseña incorrecta', 
+            `Intentos restantes: ${3 - newAttempts}`
+          );
+        }
       }
     } catch (error) { 
       console.error('Error validating current password:', error);
@@ -516,13 +610,15 @@ export default function ClientProfile() { // Exportar la función ClientProfile
         {
           text: 'Eliminar',
           style: 'destructive',
-          onPress: () => { 
+          onPress: async () => { 
             setShowDeleteProfile(true); // Establecer el estado de la visualización del modal de eliminación de perfil
             setDeletePasswordData({
               currentPassword: '' // Establecer el estado de la contraseña actual
             });
             setDeletePasswordValidated(false); // Establecer el estado de la validación de la contraseña de eliminación
             setDeletePasswordAttempts(0); // Establecer el contador de intentos de la contraseña de eliminación a 0
+            deletePasswordAttemptsRef.current = 0; // Resetear ref local
+            // No cargar loadDeleteAttempts porque ahora usamos el contador compartido totalFailedAttempts
           }
         }
       ]
@@ -536,7 +632,9 @@ export default function ClientProfile() { // Exportar la función ClientProfile
     });
     setDeletePasswordValidated(false); // Establecer el estado de la validación de la contraseña de eliminación
     setDeletePasswordAttempts(0); // Establecer el contador de intentos de la contraseña de eliminación a 0
-    setTotalDeleteAttempts(0); // Establecer el contador de intentos fallidos de la contraseña de eliminación a 0
+    deletePasswordAttemptsRef.current = 0; // Resetear ref
+    // NO resetear totalDeleteAttempts para mantener el conteo persistente
+    // setTotalDeleteAttempts(0); // COMENTADO: mantener conteo persistente
   };
 
   const handleDeletePasswordInputChange = (value) => { // Función para manejar el cambio de input en el modal de eliminación de perfil
@@ -552,8 +650,8 @@ export default function ClientProfile() { // Exportar la función ClientProfile
       return;
     }
     
-    if (deletePasswordData.currentPassword.length < 6) { // Si la contraseña de eliminación tiene menos de 6 caracteres
-      Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
+    if (deletePasswordData.currentPassword.length < 8) { // Si la contraseña de eliminación tiene menos de 8 caracteres
+      Alert.alert('Error', 'La contraseña debe tener al menos 8 caracteres');
       return;
     }
     
@@ -564,72 +662,87 @@ export default function ClientProfile() { // Exportar la función ClientProfile
         console.log('Contraseña validada, procediendo con eliminación...'); // Mostrar mensaje en la consola
         setDeletePasswordValidated(true); // Establecer el estado de la validación de la contraseña de eliminación
         setDeletePasswordAttempts(0); // Establecer el contador de intentos de la contraseña de eliminación a 0
+        deletePasswordAttemptsRef.current = 0; // Resetear ref
+        await clearDeleteAttempts(); // Limpiar intentos de AsyncStorage
         setTotalDeleteAttempts(0); // Establecer el contador de intentos fallidos de la contraseña de eliminación a 0
         Alert.alert('Éxito', 'Contraseña verificada. Procediendo con la eliminación...');
       } else {
         setDeletePasswordValidated(false); // Establecer el estado de la validación de la contraseña de eliminación
-        setDeletePasswordAttempts(prev => { // Establecer el contador de intentos de la contraseña de eliminación
-          const newAttempts = prev + 1; // Establecer el contador de intentos de la contraseña de eliminación
-          const newTotalAttempts = totalDeleteAttempts + 1; // Establecer el contador de intentos fallidos de la contraseña de eliminación
-          setTotalDeleteAttempts(newTotalAttempts); // Establecer el contador de intentos fallidos de la contraseña de eliminación
-          
-          if (newAttempts >= 3) { 
+        
+        // Usar refs para evitar race conditions
+        // COMPARTIR contador total con cambio de contraseña para mejor seguridad
+        deletePasswordAttemptsRef.current = deletePasswordAttemptsRef.current + 1;
+        totalFailedAttemptsRef.current = totalFailedAttemptsRef.current + 1; // COMPARTIDO
+        
+        const newAttempts = deletePasswordAttemptsRef.current;
+        const newTotalAttempts = totalFailedAttemptsRef.current; // Usar contador compartido
+        
+        console.log('Nuevos intentos eliminación:', newAttempts, 'Nuevos totales:', newTotalAttempts); // Debug
+        
+        // Actualizar estados UI
+        setDeletePasswordAttempts(newAttempts);
+        await saveDeleteAttempts(newTotalAttempts);
+        await saveFailedAttempts(newTotalAttempts); // Guardar en contador compartido
+        setTotalFailedAttempts(newTotalAttempts); // Actualizar UI del contador compartido
+        
+        if (newAttempts >= 3) { 
             setDeletePasswordBlocked(true); // Establecer el estado de la contraseña de eliminación bloqueada
             setDeleteBlockTimeRemaining(300); // 5 minutos en segundos
             
-            // Verificar si es el segundo bloqueo (6 intentos totales)
+            // Verificar si es el segundo bloqueo (6 intentos totales COMPARTIDOS entre cambio y eliminación)
             if (newTotalAttempts >= 6) {
-              // Cerrar sesión automáticamente después de 6 intentos fallidos
-              setTimeout(() => {
-                setShowDeleteProfile(false); // Establecer el estado de la visualización del modal de eliminación de perfil
-                setDeletePasswordValidated(false); // Establecer el estado de la validación de la contraseña de eliminación
-                setDeletePasswordData({ // Establecer el estado de la contraseña de eliminación
-                  currentPassword: '' // Establecer el estado de la contraseña actual
-                });
-                setTotalDeleteAttempts(0); // Establecer el contador de intentos fallidos de la contraseña de eliminación a 0
-                setDeletePasswordAttempts(0); // Establecer el contador de intentos de la contraseña de eliminación a 0 
-                setDeletePasswordBlocked(false); // Establecer el estado de la contraseña de eliminación bloqueada
-                
-                // Cerrar sesión
-                signOut();
-                
-                Alert.alert(
-                  'Sesión cerrada por seguridad',
-                  'Has excedido 6 intentos fallidos. Tu sesión ha sido cerrada por seguridad.',
-                  [
-                    {
-                      text: 'OK',
-                      onPress: () => {
-                        // Redirigir al login
-                        router.replace('/(auth)');
-                      }
+              // Mostrar alerta ANTES de cerrar sesión
+              Alert.alert(
+                'Sesión será cerrada por seguridad',
+                'Has excedido 6 intentos fallidos. Tu sesión será cerrada por seguridad.',
+                [
+                  {
+                    text: 'Entendido',
+                    onPress: async () => {
+                      // Limpiar datos del modal
+                      setShowDeleteProfile(false);
+                      setDeletePasswordValidated(false);
+                      setDeletePasswordData({
+                        currentPassword: ''
+                      });
+                      await clearDeleteAttempts();
+                      await clearFailedAttempts(); // Limpiar contador compartido
+                      setTotalFailedAttempts(0);
+                      // totalDeleteAttempts eliminado, usar totalFailedAttempts
+                      deletePasswordAttemptsRef.current = 0;
+                      setDeletePasswordAttempts(0);
+                      setDeletePasswordBlocked(false);
+                      
+                      // Cerrar sesión
+                      await signOut();
+                      
+                      // Redirigir al login
+                      router.replace('/(auth)');
                     }
-                  ]
-                );
-              }, 2000);
+                  }
+                ]
+              );
             } else {
               // Primer bloqueo (3 intentos), cerrar modal pero mantener sesión
-              setTimeout(() => { // Esperar 2 segundos
-                setShowDeleteProfile(false); // Establecer el estado de la visualización del modal de eliminación de perfil
-                setDeletePasswordValidated(false); // Establecer el estado de la validación de la contraseña de eliminación
-                setDeletePasswordData({ // Establecer el estado de la contraseña de eliminación
-                  currentPassword: '' // Establecer el estado de la contraseña actual
+              setTimeout(() => {
+                setShowDeleteProfile(false);
+                setDeletePasswordValidated(false);
+                setDeletePasswordData({
+                  currentPassword: ''
                 });
               }, 2000);
+              
+              Alert.alert(
+                'Acceso bloqueado',
+                'Has excedido el número de intentos. El acceso estará bloqueado por 5 minutos.'
+              );
             }
-            
-            Alert.alert(
-              'Acceso bloqueado',
-              'Has excedido el número de intentos. El acceso estará bloqueado por 5 minutos.'
-            );
           } else {
             Alert.alert(
               'Contraseña incorrecta', 
               `Intentos restantes: ${3 - newAttempts}`
             );
           }
-          return newAttempts;
-        });
       }
     } catch (error) {
       console.error('Error validating delete password:', error);
@@ -978,18 +1091,7 @@ export default function ClientProfile() { // Exportar la función ClientProfile
           </TouchableOpacity>
         )}
         
-        {/* Indicador de intentos fallidos para eliminación - Solo para usuarios con contraseña */}
-        {!isGoogleUser && totalDeleteAttempts > 0 && totalDeleteAttempts < 6 && (
-          <Text style={styles.attemptsWarning}>
-            ⚠️ Intentos fallidos eliminación: {totalDeleteAttempts}/6
-          </Text>
-        )}
-        
-        {!isGoogleUser && totalDeleteAttempts >= 6 && (
-          <Text style={styles.attemptsDanger}>
-            🚫 Sesión será cerrada después de 6 intentos fallidos
-          </Text>
-        )}
+        {/* NOTA: totalDeleteAttempts DEPRECATED - usar totalFailedAttempts (compartido con cambio de contraseña) */}
         
         {/* Botón de cerrar sesión */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
@@ -1000,175 +1102,24 @@ export default function ClientProfile() { // Exportar la función ClientProfile
         )}
       </View>
 
-      {/* Modal de cambio de contraseña */}
-      {showChangePassword && (
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Cambiar contraseña</Text>
-              <TouchableOpacity onPress={handleCancelPasswordChange}>
-                <MaterialCommunityIcons name="close" size={24} color="#666" />
-              </TouchableOpacity>
-            </View>
-            
-            <View style={styles.passwordForm}>
-              {/* Contraseña actual */}
-              <View style={styles.passwordInputContainer}>
-                <Text style={styles.passwordLabel}>
-                  Contraseña actual
-                  {currentPasswordValidated && (
-                    <Text style={styles.validationSuccess}> ✓</Text>
-                  )}
-                </Text>
-                <View style={[
-                  styles.passwordInputWrapper,
-                  currentPasswordValidated && styles.passwordInputValid,
-                  currentPasswordAttempts > 0 && !currentPasswordValidated && styles.passwordInputError
-                ]}>
-                  <TextInput
-                    style={styles.passwordInput}
-                    placeholder="Ingresa tu contraseña actual"
-                    value={passwordData.currentPassword}
-                    onChangeText={(value) => handlePasswordInputChange('currentPassword', value)}
-                    secureTextEntry={!showPasswords.current}
-                    editable={!passwordLoading && !currentPasswordValidated}
-                  />
-                  <TouchableOpacity 
-                    onPress={() => togglePasswordVisibility('current')}
-                    style={styles.eyeButton}
-                  >
-                    <MaterialCommunityIcons 
-                      name={showPasswords.current ? "eye-off" : "eye"} 
-                      size={20} 
-                      color="#666" 
-                    />
-                  </TouchableOpacity>
-                </View>
-                
-                {/* Botón de verificación */}
-                {!currentPasswordValidated && (
-                  <TouchableOpacity 
-                    style={styles.verifyButton}
-                    onPress={handleVerifyCurrentPassword}
-                    disabled={passwordLoading || !passwordData.currentPassword.trim()}
-                  >
-                    <MaterialCommunityIcons name="check-circle" size={20} color="#fff" />
-                    <Text style={styles.verifyButtonText}>Verificar contraseña</Text>
-                  </TouchableOpacity>
-                )}
-                
-                {currentPasswordAttempts > 0 && !currentPasswordValidated && (
-                  <Text style={styles.errorText}>
-                    Contraseña incorrecta. Intentos restantes: {3 - currentPasswordAttempts}
-                  </Text>
-                )}
-              </View>
-
-              {/* Nueva contraseña */}
-              <View style={styles.passwordInputContainer}>
-                <Text style={styles.passwordLabel}>
-                  Nueva contraseña
-                  {!currentPasswordValidated && (
-                    <Text style={styles.validationWarning}> (Bloqueado hasta validar contraseña actual)</Text>
-                  )}
-                </Text>
-                <View style={[
-                  styles.passwordInputWrapper,
-                  !currentPasswordValidated && styles.passwordInputDisabled
-                ]}>
-                  <TextInput
-                    style={[
-                      styles.passwordInput,
-                      !currentPasswordValidated && styles.passwordInputDisabled
-                    ]}
-                    placeholder={currentPasswordValidated ? "Ingresa tu nueva contraseña" : "Primero valida tu contraseña actual"}
-                    value={passwordData.newPassword}
-                    onChangeText={(value) => handlePasswordInputChange('newPassword', value)}
-                    secureTextEntry={!showPasswords.new}
-                    editable={currentPasswordValidated && !passwordLoading}
-                  />
-                  <TouchableOpacity 
-                    onPress={() => togglePasswordVisibility('new')}
-                    style={styles.eyeButton}
-                    disabled={!currentPasswordValidated}
-                  >
-                    <MaterialCommunityIcons 
-                      name={showPasswords.new ? "eye-off" : "eye"} 
-                      size={20} 
-                      color={currentPasswordValidated ? "#666" : "#ccc"} 
-                    />
-                  </TouchableOpacity>
-                </View>
-                {passwordValidationErrors.length > 0 && currentPasswordValidated && (
-                  <View style={styles.validationErrorsContainer}>
-                    {passwordValidationErrors.map((error, index) => (
-                      <Text key={index} style={styles.validationErrorText}>• {error}</Text>
-                    ))}
-                  </View>
-                )}
-              </View>
-
-              {/* Confirmar contraseña */}
-              <View style={styles.passwordInputContainer}>
-                <Text style={styles.passwordLabel}>
-                  Confirmar nueva contraseña
-                  {!currentPasswordValidated && (
-                    <Text style={styles.validationWarning}> (Bloqueado hasta validar contraseña actual)</Text>
-                  )}
-                </Text>
-                <View style={[
-                  styles.passwordInputWrapper,
-                  !currentPasswordValidated && styles.passwordInputDisabled
-                ]}>
-                  <TextInput
-                    style={[
-                      styles.passwordInput,
-                      !currentPasswordValidated && styles.passwordInputDisabled
-                    ]}
-                    placeholder={currentPasswordValidated ? "Confirma tu nueva contraseña" : "Primero valida tu contraseña actual"}
-                    value={passwordData.confirmPassword}
-                    onChangeText={(value) => handlePasswordInputChange('confirmPassword', value)}
-                    secureTextEntry={!showPasswords.confirm}
-                    editable={currentPasswordValidated && !passwordLoading}
-                  />
-                  <TouchableOpacity 
-                    onPress={() => togglePasswordVisibility('confirm')}
-                    style={styles.eyeButton}
-                    disabled={!currentPasswordValidated}
-                  >
-                    <MaterialCommunityIcons 
-                      name={showPasswords.confirm ? "eye-off" : "eye"} 
-                      size={20} 
-                      color={currentPasswordValidated ? "#666" : "#ccc"} 
-                    />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-
-            <View style={styles.modalActions}>
-              <TouchableOpacity 
-                style={styles.cancelPasswordButton} 
-                onPress={handleCancelPasswordChange}
-                disabled={passwordLoading}
-              >
-                <Text style={styles.cancelPasswordButtonText}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.savePasswordButton, passwordLoading && styles.savePasswordButtonDisabled]} 
-                onPress={handleSavePassword}
-                disabled={passwordLoading}
-              >
-                {passwordLoading ? (
-                  <ActivityIndicator color="#fff" size="small" />
-                ) : (
-                  <Text style={styles.savePasswordButtonText}>Cambiar contraseña</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      )}
+      {/* Modal de cambio de contraseña - Usando componente reutilizable */}
+      <ChangePasswordModal
+        visible={showChangePassword}
+        onClose={() => setShowChangePassword(false)}
+        onSuccess={() => {
+          // Limpiar estados locales al cerrar
+          setPasswordData({
+            currentPassword: '',
+            newPassword: '',
+            confirmPassword: ''
+          });
+          setCurrentPasswordValidated(false);
+          setPasswordValidationErrors([]);
+          setCurrentPasswordAttempts(0);
+          // Redirigir al login después de cambiar contraseña
+          router.replace('/(auth)');
+        }}
+      />
 
       {/* Modal de eliminación de perfil */}
       {showDeleteProfile && (

@@ -2,16 +2,18 @@
 // Este archivo es el encargado de mostrar el perfil del artesano en la aplicación.
 // Muestra el perfil del artesano registrado en la base de datos y permite editarlo, cambiar la contraseña, eliminar el perfil y cambiar la foto de perfil.
 
-import React, { useState, useEffect } from 'react'; // Importar los hooks de react
+import React, { useState, useEffect, useRef } from 'react'; // Importar los hooks de react
 import {View,Text,StyleSheet,ScrollView,Image,TouchableOpacity,SafeAreaView,ActivityIndicator,Alert,Dimensions,FlatList,Modal,TextInput} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Importar los componentes de expo-vector-icons
 import { useRouter, useLocalSearchParams } from 'expo-router'; // Importar el router de expo-router
 import { artesanoService } from '../../src/services/artesanoService'; // Importar el servicio de artesano
 import { supabase } from '../../src/supabase/client'; // Importar el cliente de supabase
-import { useAuth } from '../../src/context/AuthContext'; // Importar el contexto de autenticación
+import { useAuth, signOut } from '../../src/context/AuthContext'; // Importar el contexto de autenticación
 import * as ImagePicker from 'expo-image-picker'; // Importar el selector de imágenes
 import { updatePerfilArtesano, eliminarPerfilArtesano, subirAvatarArtesano } from '../../src/services/ArtesanoProfileService'; // Importar los servicios de perfil
 import ChangePasswordModal from '../../components/ChangePasswordModal'; // Importar el modal de cambio de contraseña
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Importar AsyncStorage para persistencia
+import { validateCurrentPassword } from '../../src/services/profileInfo'; // Importar validación de contraseña
 
 const { width } = Dimensions.get('window'); // Obtener el ancho de la ventana
 const imageSize = (width - 60) / 3; // Para grid de 3 columnas
@@ -33,12 +35,107 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
   const [editData, setEditData] = useState({ nombre: '', telefono: '', ubicacion: '', descripcion: '' }); // Establecer el estado de los datos de edición
   const [uploadingAvatar, setUploadingAvatar] = useState(false); // Establecer el estado de subida de foto de perfil
   const isOwnProfile = session?.user?.id === userId; // Verificar si el usuario es el propio
+  
+  // Estados para eliminación de perfil con validación de contraseña
+  const [showDeleteProfile, setShowDeleteProfile] = useState(false); // Modal de eliminación de perfil
+  const [deletePasswordData, setDeletePasswordData] = useState({ currentPassword: '' }); // Datos de contraseña de eliminación
+  const [deletePasswordValidated, setDeletePasswordValidated] = useState(false); // Contraseña de eliminación validada
+  const [deletePasswordAttempts, setDeletePasswordAttempts] = useState(0); // Intentos de contraseña de eliminación
+  const [deletePasswordLoading, setDeletePasswordLoading] = useState(false); // Carga de eliminación
+  const [deletePasswordBlocked, setDeletePasswordBlocked] = useState(false); // Bloqueo por intentos fallidos
+  const [deleteBlockTimeRemaining, setDeleteBlockTimeRemaining] = useState(0); // Tiempo restante de bloqueo
+  const [showDeletePassword, setShowDeletePassword] = useState(false); // Mostrar/ocultar contraseña
+  const [totalFailedAttempts, setTotalFailedAttempts] = useState(0); // Intentos fallidos totales (compartido con cambio de contraseña)
+  
+  // Refs para evitar race conditions en contadores
+  const deletePasswordAttemptsRef = useRef(0); // Ref para intentos de contraseña de eliminación
+  const totalFailedAttemptsRef = useRef(0); // Ref para intentos fallidos totales (compartido)
 
   useEffect(() => { // Efecto para cargar el perfil del artesano
     if (userId) { // Si hay id de usuario
       loadArtesanoCompleto(); // Cargar el perfil del artesano
     }
   }, [userId]); // Dependencias del efecto
+
+  // Funciones AsyncStorage para persistencia de intentos fallidos
+  const loadFailedAttempts = async () => {
+    try {
+      const stored = await AsyncStorage.getItem('artesanoFailedAttempts');
+      if (stored !== null) {
+        const attempts = parseInt(stored, 10);
+        totalFailedAttemptsRef.current = attempts;
+        setTotalFailedAttempts(attempts);
+      }
+    } catch (error) {
+      console.error('Error loading failed attempts:', error);
+    }
+  };
+
+  const saveFailedAttempts = async (attempts) => {
+    try {
+      await AsyncStorage.setItem('artesanoFailedAttempts', attempts.toString());
+    } catch (error) {
+      console.error('Error saving failed attempts:', error);
+    }
+  };
+
+  const clearFailedAttempts = async () => {
+    try {
+      await AsyncStorage.removeItem('artesanoFailedAttempts');
+    } catch (error) {
+      console.error('Error clearing failed attempts:', error);
+    }
+  };
+
+  const saveDeleteAttempts = async (attempts) => {
+    try {
+      await AsyncStorage.setItem('artesanoDeleteAttempts', attempts.toString());
+    } catch (error) {
+      console.error('Error saving delete attempts:', error);
+    }
+  };
+
+  const loadDeleteAttempts = async () => {
+    try {
+      const stored = await AsyncStorage.getItem('artesanoDeleteAttempts');
+      if (stored !== null) {
+        const attempts = parseInt(stored, 10);
+        deletePasswordAttemptsRef.current = attempts;
+        setDeletePasswordAttempts(attempts);
+      }
+    } catch (error) {
+      console.error('Error loading delete attempts:', error);
+    }
+  };
+
+  const clearDeleteAttempts = async () => {
+    try {
+      await AsyncStorage.removeItem('artesanoDeleteAttempts');
+    } catch (error) {
+      console.error('Error clearing delete attempts:', error);
+    }
+  };
+
+  // Timer para bloqueo de eliminación
+  useEffect(() => {
+    if (deleteBlockTimeRemaining > 0) {
+      const timer = setTimeout(() => {
+        setDeleteBlockTimeRemaining(prev => {
+          if (prev <= 1) {
+            setDeletePasswordBlocked(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [deleteBlockTimeRemaining]);
+
+  // Cargar intentos fallidos al montar
+  useEffect(() => {
+    loadFailedAttempts();
+  }, []);
 
   const loadArtesanoCompleto = async () => { // Función para cargar el perfil del artesano
     try {
@@ -83,37 +180,186 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
     router.replace('/(auth)'); // Redirigir al login
   };
 
-  const handleDeleteProfile = () => { // Función para eliminar el perfil del artesano
-    Alert.alert( // Mostrar el alert de eliminación de perfil
-      'Eliminar Perfil',
-      '¿Estás seguro de que deseas eliminar tu perfil? Esta acción no se puede deshacer.',
-      [
-        { text: 'Cancelar', style: 'cancel' }, // Texto del botón de cancelar
-        {
-          text: 'Eliminar', // Texto del botón de eliminar
-          style: 'destructive', // Estilo del botón de eliminar
-          onPress: async () => {
-            try { // Intentar eliminar el perfil del artesano
-              const result = await eliminarPerfilArtesano(userId);
+  // Funciones para eliminación de perfil
+  const handleDeleteProfile = () => {
+    if (deletePasswordBlocked) {
+      Alert.alert(
+        'Acceso bloqueado',
+        `Has excedido el número de intentos. Inténtalo de nuevo en ${Math.ceil(deleteBlockTimeRemaining / 60)} minutos.`
+      );
+      return;
+    }
+    
+    // Abrir directamente el modal de eliminación con validación de contraseña
+    setShowDeleteProfile(true);
+    setDeletePasswordData({ currentPassword: '' });
+    setDeletePasswordValidated(false);
+    setDeletePasswordAttempts(0);
+    deletePasswordAttemptsRef.current = 0;
+  };
 
-              if (!result.success) {
-                throw new Error(result.error);
-              }
+  const handleCancelDeleteProfile = () => {
+    setShowDeleteProfile(false);
+    setDeletePasswordData({ currentPassword: '' });
+    setDeletePasswordValidated(false);
+    setDeletePasswordAttempts(0);
+    deletePasswordAttemptsRef.current = 0;
+  };
 
-              Alert.alert( // Mostrar el alert de eliminación de perfil
-                'Perfil Eliminado', // Texto del alert de eliminación de perfil
-                'Tu perfil ha sido eliminado. Serás redirigido al login.', // Texto del alert de eliminación de perfil
-                [{
-                  text: 'OK', // Texto del botón de OK
+  const handleDeletePasswordInputChange = (value) => {
+    setDeletePasswordData(prev => ({
+      ...prev,
+      currentPassword: value
+    }));
+  };
+
+  const handleVerifyDeletePassword = async () => {
+    if (!deletePasswordData.currentPassword.trim()) {
+      Alert.alert('Error', 'Por favor ingresa tu contraseña actual');
+      return;
+    }
+    
+    if (deletePasswordData.currentPassword.length < 8) {
+      Alert.alert('Error', 'La contraseña debe tener al menos 8 caracteres');
+      return;
+    }
+    
+    try {
+      console.log('Verificando contraseña para eliminación...');
+      const { data, error } = await validateCurrentPassword(deletePasswordData.currentPassword);
+      if (data) {
+        console.log('Contraseña validada, procediendo con eliminación...');
+        setDeletePasswordValidated(true);
+        setDeletePasswordAttempts(0);
+        deletePasswordAttemptsRef.current = 0;
+        await clearDeleteAttempts();
+        await clearFailedAttempts();
+        setTotalFailedAttempts(0);
+        Alert.alert('Éxito', 'Contraseña verificada. Procediendo con la eliminación...');
+      } else {
+        setDeletePasswordValidated(false);
+        
+        // Usar refs para evitar race conditions
+        // COMPARTIR contador total con cambio de contraseña para mejor seguridad
+        deletePasswordAttemptsRef.current = deletePasswordAttemptsRef.current + 1;
+        totalFailedAttemptsRef.current = totalFailedAttemptsRef.current + 1; // COMPARTIDO
+        
+        const newAttempts = deletePasswordAttemptsRef.current;
+        const newTotalAttempts = totalFailedAttemptsRef.current; // Usar contador compartido
+        
+        console.log('Nuevos intentos eliminación:', newAttempts, 'Nuevos totales:', newTotalAttempts);
+        
+        // Actualizar estados UI
+        setDeletePasswordAttempts(newAttempts);
+        await saveDeleteAttempts(newTotalAttempts);
+        await saveFailedAttempts(newTotalAttempts); // Guardar en contador compartido
+        setTotalFailedAttempts(newTotalAttempts); // Actualizar UI del contador compartido
+        
+        if (newAttempts >= 3) {
+          setDeletePasswordBlocked(true);
+          setDeleteBlockTimeRemaining(300); // 5 minutos en segundos
+          
+          // Verificar si es el segundo bloqueo (6 intentos totales COMPARTIDOS entre cambio y eliminación)
+          if (newTotalAttempts >= 6) {
+            // Mostrar alerta ANTES de cerrar sesión
+            Alert.alert(
+              'Sesión será cerrada por seguridad',
+              'Has excedido 6 intentos fallidos. Tu sesión será cerrada por seguridad.',
+              [
+                {
+                  text: 'Entendido',
                   onPress: async () => {
-                    await supabase.auth.signOut(); // Cerrar la sesión
-                    router.replace('/(auth)'); // Redirigir al login
+                    // Limpiar datos del modal
+                    setShowDeleteProfile(false);
+                    setDeletePasswordValidated(false);
+                    setDeletePasswordData({ currentPassword: '' });
+                    await clearDeleteAttempts();
+                    await clearFailedAttempts(); // Limpiar contador compartido
+                    setTotalFailedAttempts(0);
+                    deletePasswordAttemptsRef.current = 0;
+                    setDeletePasswordAttempts(0);
+                    setDeletePasswordBlocked(false);
+                    
+                    // Cerrar sesión
+                    await signOut();
+                    
+                    // Redirigir al login
+                    router.replace('/(auth)');
                   }
-                }]
+                }
+              ]
+            );
+          } else {
+            // Primer bloqueo (3 intentos), cerrar modal pero mantener sesión
+            setTimeout(() => {
+              setShowDeleteProfile(false);
+              setDeletePasswordValidated(false);
+              setDeletePasswordData({ currentPassword: '' });
+            }, 2000);
+            
+            Alert.alert(
+              'Acceso bloqueado',
+              'Has excedido el número de intentos. El acceso estará bloqueado por 5 minutos.'
+            );
+          }
+        } else {
+          Alert.alert(
+            'Contraseña incorrecta',
+            `Intentos restantes: ${3 - newAttempts}`
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error validating delete password:', error);
+      Alert.alert('Error', 'Ocurrió un error al verificar la contraseña');
+    }
+  };
+
+  const handleConfirmDeleteProfile = async () => {
+    if (!deletePasswordValidated) {
+      Alert.alert('Error', 'Debes validar tu contraseña actual primero');
+      return;
+    }
+
+    Alert.alert(
+      'Confirmar Eliminación',
+      'Esta acción es IRREVERSIBLE. Se eliminarán TODOS tus datos incluyendo:\n\n• Perfil de artesano\n• Avatar e imágenes\n• Productos y publicaciones\n• Sesión actual (serás deslogueado)\n\nNota: La cuenta de autenticación permanecerá pero sin datos asociados.\n\n¿Estás completamente seguro?',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel'
+        },
+        {
+          text: 'ELIMINAR DEFINITIVAMENTE',
+          style: 'destructive',
+          onPress: async () => {
+            setDeletePasswordLoading(true);
+            try {
+              const result = await eliminarPerfilArtesano(userId);
+              
+              if (!result.success) {
+                Alert.alert('Error', result.error);
+                return;
+              }
+              
+              Alert.alert(
+                'Perfil Eliminado',
+                'Tu perfil ha sido eliminado completamente. Serás redirigido al login.',
+                [
+                  {
+                    text: 'OK',
+                    onPress: () => {
+                      // Redirigir al login después de eliminar perfil
+                      router.replace('/(auth)');
+                    }
+                  }
+                ]
               );
-            } catch (error) { // Capturar el error
-              console.error('Error al eliminar perfil:', error); // Mostrar el error en la consola
-              Alert.alert('Error', 'No se pudo eliminar el perfil'); // Mostrar el error en la alerta
+            } catch (error) {
+              Alert.alert('Error', 'Ocurrió un error inesperado');
+              console.error('Error deleting profile:', error);
+            } finally {
+              setDeletePasswordLoading(false);
             }
           }
         }
@@ -460,8 +706,12 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
 
             <TouchableOpacity
               style={[styles.settingsMenuItem, styles.deleteItem]}
-              onPress={() => {
+              onPress={async () => {
+                // Cerrar el menú de ajustes primero
                 setShowSettingsMenu(false);
+                // Pequeño delay para que el menú se cierre antes de mostrar el modal
+                await new Promise(resolve => setTimeout(resolve, 300));
+                // Llamar a la función de eliminación
                 handleDeleteProfile();
               }}
             >
@@ -584,6 +834,129 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
           </View>
         </TouchableOpacity>
       </Modal>
+
+      {/* Modal de Eliminación de Perfil */}
+      {showDeleteProfile && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Eliminar Perfil</Text>
+              <TouchableOpacity 
+                onPress={handleCancelDeleteProfile}
+                style={styles.closeButton}
+              >
+                <MaterialCommunityIcons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.deleteForm}>
+              <Text style={styles.deleteWarning}>
+                ⚠️ Esta acción es IRREVERSIBLE
+              </Text>
+              <Text style={styles.deleteDescription}>
+                Se eliminarán TODOS tus datos incluyendo:
+              </Text>
+              <Text style={styles.deleteList}>
+                • Perfil de artesano{'\n'}
+                • Avatar e imágenes{'\n'}
+                • Productos y publicaciones{'\n'}
+                • Sesión actual (serás deslogueado){'\n'}
+                {'\n'}Nota: La cuenta de autenticación permanecerá pero sin datos asociados.
+              </Text>
+              
+              {/* Contraseña actual para eliminación */}
+              <View style={styles.passwordInputContainer}>
+                <Text style={styles.passwordLabel}>
+                  Contraseña actual
+                  {deletePasswordValidated && (
+                    <Text style={styles.validationSuccess}> ✓</Text>
+                  )}
+                </Text>
+                <View style={[
+                  styles.passwordInputWrapper,
+                  deletePasswordValidated && styles.passwordInputValid,
+                  deletePasswordAttempts > 0 && !deletePasswordValidated && styles.passwordInputError
+                ]}>
+                  <TextInput
+                    style={styles.passwordInput}
+                    placeholder="Ingresa tu contraseña actual"
+                    value={deletePasswordData.currentPassword}
+                    onChangeText={handleDeletePasswordInputChange}
+                    secureTextEntry={!showDeletePassword}
+                    editable={!deletePasswordLoading && !deletePasswordValidated}
+                  />
+                  <TouchableOpacity 
+                    onPress={() => setShowDeletePassword(!showDeletePassword)}
+                    style={styles.eyeButton}
+                  >
+                    <MaterialCommunityIcons 
+                      name={showDeletePassword ? "eye-off" : "eye"} 
+                      size={20} 
+                      color="#666" 
+                    />
+                  </TouchableOpacity>
+                </View>
+                
+                {/* Botón de verificación para eliminación */}
+                {!deletePasswordValidated && (
+                  <TouchableOpacity 
+                    style={[
+                      styles.verifyButton,
+                      deletePasswordBlocked && styles.verifyButtonDisabled,
+                      deletePasswordBlocked && styles.verifyButtonBlocked
+                    ]}
+                    onPress={handleVerifyDeletePassword}
+                    disabled={deletePasswordLoading || !deletePasswordData.currentPassword.trim() || deletePasswordBlocked}
+                  >
+                    {deletePasswordBlocked ? (
+                      <>
+                        <MaterialCommunityIcons name="lock" size={20} color="#999" />
+                        <Text style={styles.verifyButtonTextDisabled}>Bloqueado</Text>
+                      </>
+                    ) : (
+                      <>
+                        <MaterialCommunityIcons name="check-circle" size={20} color="#fff" />
+                        <Text style={styles.verifyButtonText}>Verificar contraseña</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                )}
+                
+                {deletePasswordAttempts > 0 && !deletePasswordValidated && (
+                  <Text style={styles.errorText}>
+                    Contraseña incorrecta. Intentos restantes: {3 - deletePasswordAttempts}
+                  </Text>
+                )}
+              </View>
+            </View>
+            
+            <View style={styles.modalActions}>
+              <TouchableOpacity 
+                style={styles.cancelButton}
+                onPress={handleCancelDeleteProfile}
+                disabled={deletePasswordLoading}
+              >
+                <Text style={styles.cancelButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.deleteConfirmButton, !deletePasswordValidated && styles.deleteConfirmButtonDisabled]}
+                onPress={handleConfirmDeleteProfile}
+                disabled={!deletePasswordValidated || deletePasswordLoading}
+              >
+                {deletePasswordLoading ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <>
+                    <MaterialCommunityIcons name="delete-forever" size={20} color="#fff" />
+                    <Text style={styles.deleteConfirmButtonText}>ELIMINAR DEFINITIVAMENTE</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -790,9 +1163,15 @@ const styles = StyleSheet.create({
   },
   // Estilos para Modales
   modalOverlay: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
   },
   settingsMenu: {
     backgroundColor: '#fff',
@@ -956,5 +1335,178 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     fontWeight: '600',
+  },
+  // Estilos para Modal de Eliminación
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    padding: 20,
+    width: '90%',
+    maxWidth: 400,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  closeButton: {
+    padding: 4,
+  },
+  deleteForm: {
+    padding: 10,
+  },
+  deleteWarning: {
+    color: '#dc3545',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  deleteDescription: {
+    color: '#333',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  deleteList: {
+    color: '#666',
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 20,
+    backgroundColor: '#f8f9fa',
+    padding: 12,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: '#dc3545',
+  },
+  passwordInputContainer: {
+    marginBottom: 15,
+    marginTop: 10,
+  },
+  passwordLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  passwordInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    backgroundColor: '#fff',
+  },
+  passwordInput: {
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: '#333',
+  },
+  eyeButton: {
+    padding: 12,
+  },
+  verifyButton: {
+    backgroundColor: '#007bff',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    marginTop: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  verifyButtonDisabled: {
+    backgroundColor: '#ccc',
+    opacity: 0.6,
+  },
+  verifyButtonBlocked: {
+    backgroundColor: '#999',
+  },
+  verifyButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  verifyButtonTextDisabled: {
+    color: '#999',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  errorText: {
+    color: '#dc3545',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  validationSuccess: {
+    color: '#28a745',
+    fontWeight: 'bold',
+  },
+  passwordInputValid: {
+    borderColor: '#28a745',
+    borderWidth: 2,
+  },
+  passwordInputError: {
+    borderColor: '#dc3545',
+    borderWidth: 2,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderWidth: 2,
+    borderColor: '#db4437',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: '#db4437',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  deleteConfirmButton: {
+    backgroundColor: '#dc3545',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    flex: 1,
+    marginLeft: 10,
+  },
+  deleteConfirmButtonDisabled: {
+    backgroundColor: '#ccc',
+    opacity: 0.6,
+  },
+  deleteConfirmButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginLeft: 8,
   },
 });

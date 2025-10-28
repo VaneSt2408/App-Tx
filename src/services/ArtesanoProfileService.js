@@ -49,33 +49,238 @@ export async function updatePerfilArtesano(userId, data) {
  */
 export async function eliminarPerfilArtesano(userId) {
   try {
-    // Eliminar productos
-    const { error: productosError } = await supabase
+    console.log('Iniciando eliminación completa del perfil del artesano...');
+    console.log('User ID:', userId);
+    
+    // 1. Eliminar avatar del storage si existe
+    try {
+      console.log('Buscando avatar del artesano...');
+      const { data: artesanoData } = await supabase
+        .from('artesanos')
+        .select('avatar_url')
+        .eq('user_id', userId)
+        .single();
+      
+      if (artesanoData?.avatar_url) {
+        console.log('Eliminando avatar del storage...');
+        const avatarPath = artesanoData.avatar_url.split('/').pop();
+        const { error: storageError } = await supabase.storage
+          .from('avatars')
+          .remove([`${userId}/${avatarPath}`]);
+        
+        if (storageError) {
+          console.warn('Error eliminando avatar del storage:', storageError);
+        } else {
+          console.log('✓ Avatar eliminado del storage');
+        }
+      }
+    } catch (storageError) {
+      console.warn('Error eliminando avatar del storage:', storageError);
+      // Continuar con la eliminación aunque falle el storage
+    }
+    
+    // 2. Eliminar imágenes de productos del storage
+    try {
+      console.log('Eliminando imágenes de productos del storage...');
+      const { data: productosData } = await supabase
+        .from('productos')
+        .select('imagen_url')
+        .eq('artesano_id', userId);
+      
+      if (productosData && productosData.length > 0) {
+        const imagePaths = productosData
+          .map(producto => producto.imagen_url)
+          .filter(Boolean)
+          .map(url => `${userId}/${url.split('/').pop()}`);
+        
+        if (imagePaths.length > 0) {
+          const { error: productStorageError } = await supabase.storage
+            .from('productos')
+            .remove(imagePaths);
+          
+          if (productStorageError) {
+            console.warn('Error eliminando imágenes de productos:', productStorageError);
+          } else {
+            console.log(`✓ ${imagePaths.length} imágenes de productos eliminadas del storage`);
+          }
+        }
+      }
+    } catch (productStorageError) {
+      console.warn('Error eliminando imágenes de productos:', productStorageError);
+    }
+    
+    // 3. Eliminar imágenes de publicaciones del storage
+    try {
+      console.log('Eliminando imágenes de publicaciones del storage...');
+      const { data: publicacionesData } = await supabase
+        .from('publicaciones')
+        .select('imagen_url')
+        .eq('artesano_user_id', userId);
+      
+      if (publicacionesData && publicacionesData.length > 0) {
+        const imagePaths = publicacionesData
+          .map(publicacion => publicacion.imagen_url)
+          .filter(Boolean)
+          .map(url => `${userId}/${url.split('/').pop()}`);
+        
+        if (imagePaths.length > 0) {
+          const { error: pubStorageError } = await supabase.storage
+            .from('publicaciones')
+            .remove(imagePaths);
+          
+          if (pubStorageError) {
+            console.warn('Error eliminando imágenes de publicaciones:', pubStorageError);
+          } else {
+            console.log(`✓ ${imagePaths.length} imágenes de publicaciones eliminadas del storage`);
+          }
+        }
+      }
+    } catch (pubStorageError) {
+      console.warn('Error eliminando imágenes de publicaciones:', pubStorageError);
+    }
+    
+    // 4. Eliminar productos de la tabla productos
+    console.log('Eliminando productos de la tabla productos...');
+    const { data: productosDeleted, error: productosError } = await supabase
       .from('productos')
       .delete()
-      .eq('artesano_id', userId);
-
-    if (productosError) throw productosError;
-
-    // Eliminar publicaciones
-    const { error: publicacionesError } = await supabase
+      .eq('artesano_id', userId)
+      .select();
+    
+    if (productosError) {
+      console.error('Error eliminando productos:', productosError);
+      throw new Error(`Error eliminando productos: ${productosError.message}`);
+    }
+    
+    console.log(`✓ ${productosDeleted?.length || 0} productos eliminados`);
+    
+    // 5. Eliminar publicaciones de la tabla publicaciones
+    console.log('Eliminando publicaciones de la tabla publicaciones...');
+    const { data: publicacionesDeleted, error: publicacionesError } = await supabase
       .from('publicaciones')
       .delete()
-      .eq('artesano_user_id', userId);
-
-    if (publicacionesError) throw publicacionesError;
-
-    // Eliminar perfil de artesano
-    const { error: artesanoError } = await supabase
+      .eq('artesano_user_id', userId)
+      .select();
+    
+    if (publicacionesError) {
+      console.error('Error eliminando publicaciones:', publicacionesError);
+      throw new Error(`Error eliminando publicaciones: ${publicacionesError.message}`);
+    }
+    
+    console.log(`✓ ${publicacionesDeleted?.length || 0} publicaciones eliminadas`);
+    
+    // 6. Eliminar perfil de artesano de la tabla artesanos
+    console.log('Eliminando perfil de artesano de la tabla artesanos...');
+    const { data: artesanoDeleted, error: artesanoError } = await supabase
       .from('artesanos')
       .delete()
+      .eq('user_id', userId)
+      .select();
+    
+    if (artesanoError) {
+      console.error('Error eliminando artesano:', artesanoError);
+      throw new Error(`Error eliminando perfil de artesano: ${artesanoError.message}`);
+    }
+    
+    console.log(`✓ Perfil de artesano eliminado`);
+    
+    // 7. Eliminar registro de la tabla perfiles si existe
+    try {
+      console.log('Eliminando registro de la tabla perfiles...');
+      const { error: perfilesError } = await supabase
+        .from('perfiles')
+        .delete()
+        .eq('id', userId);
+      
+      if (perfilesError) {
+        console.warn('Error eliminando de perfiles:', perfilesError);
+        // No es crítico si esta tabla no existe o tiene triggers
+      } else {
+        console.log('✓ Registro de perfiles eliminado');
+      }
+    } catch (perfilesError) {
+      console.warn('Tabla perfiles no existe o error:', perfilesError);
+    }
+    
+    // 8. Eliminar registro de la tabla infousuario si existe
+    try {
+      console.log('Eliminando registro de la tabla infousuario...');
+      const { error: infousuarioError } = await supabase
+        .from('infousuario')
+        .delete()
+        .eq('user_id', userId);
+      
+      if (infousuarioError) {
+        console.warn('Error eliminando de infousuario:', infousuarioError);
+        // No es crítico
+      } else {
+        console.log('✓ Registro de infousuario eliminado');
+      }
+    } catch (infousuarioError) {
+      console.warn('Error eliminando de infousuario:', infousuarioError);
+    }
+    
+    // 9. Verificar que los datos se eliminaron correctamente
+    console.log('Verificando eliminación de datos...');
+    
+    const { data: verifyProductos } = await supabase
+      .from('productos')
+      .select('id')
+      .eq('artesano_id', userId);
+    
+    if (verifyProductos && verifyProductos.length > 0) {
+      console.warn('Advertencia: Algunos productos no se eliminaron');
+    } else {
+      console.log('✓ Todos los productos eliminados correctamente');
+    }
+    
+    const { data: verifyPublicaciones } = await supabase
+      .from('publicaciones')
+      .select('id')
+      .eq('artesano_user_id', userId);
+    
+    if (verifyPublicaciones && verifyPublicaciones.length > 0) {
+      console.warn('Advertencia: Algunas publicaciones no se eliminaron');
+    } else {
+      console.log('✓ Todas las publicaciones eliminadas correctamente');
+    }
+    
+    const { data: verifyArtesano } = await supabase
+      .from('artesanos')
+      .select('id')
       .eq('user_id', userId);
-
-    if (artesanoError) throw artesanoError;
-
+    
+    if (verifyArtesano && verifyArtesano.length > 0) {
+      console.warn('Advertencia: El perfil de artesano no se eliminó completamente');
+    } else {
+      console.log('✓ Perfil de artesano eliminado correctamente');
+    }
+    
+    console.log('Datos del perfil del artesano eliminados completamente');
+    
+    // 10. Cerrar sesión del usuario (no se puede eliminar cuenta de auth sin permisos especiales)
+    console.log('Cerrando sesión del usuario...');
+    try {
+      const { error: signOutError } = await supabase.auth.signOut();
+      if (signOutError) {
+        console.warn('Error cerrando sesión:', signOutError);
+      } else {
+        console.log('✓ Sesión cerrada correctamente');
+      }
+    } catch (signOutError) {
+      console.warn('Error cerrando sesión:', signOutError);
+    }
+    
+    // Nota: La eliminación de cuenta de autenticación requiere permisos especiales
+    // Los datos del perfil han sido eliminados completamente
+    console.log('Nota: Los datos del perfil han sido eliminados completamente');
+    console.log('La cuenta de autenticación permanece pero sin datos asociados');
+    
+    console.log('Perfil del artesano eliminado completamente');
+    
     return { success: true };
   } catch (error) {
-    console.error('Error al eliminar perfil:', error);
+    console.error('Error en eliminarPerfilArtesano:', error);
     return { success: false, error: error.message };
   }
 }
