@@ -656,12 +656,6 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
           <MaterialCommunityIcons name="image" size={30} color="#ccc" />
         </View>
       )}
-      <View style={styles.overlay}>
-        <View style={styles.overlayContent}>
-          <MaterialCommunityIcons name="heart" size={16} color="#fff" />
-          <Text style={styles.overlayText}>{item.likes_count || 0}</Text>
-        </View>
-      </View>
     </View>
   );
 

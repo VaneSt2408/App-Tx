@@ -98,19 +98,49 @@ export const artesanoService = {
   // Obtener datos completos del artesano (perfil + publicaciones + productos)
   async getArtesanoCompleto(userId) {
     try {
+      console.log('🔍 [SERVICIO] Obteniendo datos completos del artesano:', userId);
+      
       const [artesano, publicaciones, productos] = await Promise.all([
         this.getArtesanoById(userId),
         this.getPublicacionesByArtesano(userId),
         this.getProductosByArtesano(userId)
       ]);
 
+      // Calcular total de likes de todas las publicaciones del artesano
+      let totalLikes = 0;
+      if (publicaciones && publicaciones.length > 0) {
+        console.log('💖 [SERVICIO] Calculando likes totales para', publicaciones.length, 'publicaciones...');
+        
+        const publicacionIds = publicaciones.map(pub => pub.id);
+        
+        const { data: likesData, error: likesError } = await supabase
+          .from('likes')
+          .select('publicacion_id')
+          .in('publicacion_id', publicacionIds);
+
+        if (likesError) {
+          console.error('❌ [SERVICIO] Error al obtener likes:', likesError);
+        } else {
+          totalLikes = likesData?.length || 0;
+          console.log('💖 [SERVICIO] Total de likes calculado:', totalLikes);
+        }
+      }
+
+      // Agregar total_likes al objeto artesano
+      const artesanoConLikes = {
+        ...artesano,
+        total_likes: totalLikes
+      };
+
+      console.log('✅ [SERVICIO] Datos completos obtenidos - Total likes:', totalLikes);
+
       return {
-        artesano,
+        artesano: artesanoConLikes,
         publicaciones,
         productos
       };
     } catch (error) {
-      console.error('Error en getArtesanoCompleto:', error);
+      console.error('❌ [SERVICIO] Error en getArtesanoCompleto:', error);
       throw error;
     }
   }

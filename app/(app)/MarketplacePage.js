@@ -199,7 +199,8 @@ export default function MarketplacePage() {
             <MaterialCommunityIcons name="magnify" size={20} color="#666" />
             <TextInput
               style={styles.searchInput}
-              placeholder="Buscar por producto, artesano o categoría..."
+              placeholder="Busca un producto, categoría, artesano ..."
+              placeholderTextColor="#000"
               value={searchQuery}
               onChangeText={setSearchQuery}
               returnKeyType="search"

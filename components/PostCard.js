@@ -2,11 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 /**
  * Componente de tarjeta de publicación (estilo Facebook)
  */
 const PostCard = ({ post, onLike, currentUserId }) => {
+  const router = useRouter();
   const [liked, setLiked] = useState(post.liked_by_user);
   const [likesCount, setLikesCount] = useState(post.likes_count);
   const [isLiking, setIsLiking] = useState(false);
@@ -28,6 +30,24 @@ const PostCard = ({ post, onLike, currentUserId }) => {
     if (diffInSeconds < 86400) return `Hace ${Math.floor(diffInSeconds / 3600)}h`;
     if (diffInSeconds < 604800) return `Hace ${Math.floor(diffInSeconds / 86400)}d`;
     return postDate.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+  };
+
+  // Navegar al perfil del artesano
+  const handleNavigateToProfile = () => {
+    console.log('🔍 [PostCard] Intentando navegar al perfil...');
+    console.log('📊 [PostCard] Datos del post:', post);
+    console.log('👤 [PostCard] artesano.id:', post.artesano?.id);
+    console.log('👤 [PostCard] artesano:', post.artesano);
+    
+    if (post.artesano?.id) {
+      console.log('✅ [PostCard] Navegando con artesano.id:', post.artesano.id);
+      router.push({
+        pathname: '/ArtesanoProfile',
+        params: { userId: post.artesano.id.toString() }
+      });
+    } else {
+      console.log('❌ [PostCard] No se encontró artesano.id');
+    }
   };
 
   // Manejar like
@@ -70,10 +90,17 @@ const PostCard = ({ post, onLike, currentUserId }) => {
       {/* Header: Avatar + Nombre + Tiempo */}
       <View style={styles.header}>
         <View style={styles.avatarContainer}>
-          {post.artesano.foto ? (
+          {post.artesano?.avatar_url ? (
             <Image 
-              source={{ uri: post.artesano.foto }} 
+              source={{ uri: post.artesano.avatar_url }} 
               style={styles.avatar}
+              onError={(error) => {
+                console.error('❌ Error cargando avatar en PostCard:', error);
+                console.log('🔗 URL intentada:', post.artesano.avatar_url);
+              }}
+              onLoad={() => {
+                console.log('✅ Avatar cargado correctamente:', post.artesano.avatar_url);
+              }}
             />
           ) : (
             <View style={[styles.avatar, styles.avatarPlaceholder]}>
@@ -83,7 +110,9 @@ const PostCard = ({ post, onLike, currentUserId }) => {
         </View>
 
         <View style={styles.headerInfo}>
-          <Text style={styles.artesanoNombre}>{post.artesano.nombre}</Text>
+          <TouchableOpacity onPress={handleNavigateToProfile} activeOpacity={0.7}>
+            <Text style={styles.artesanoNombre}>{post.artesano.nombre}</Text>
+          </TouchableOpacity>
           <View style={styles.metaInfo}>
             {post.artesano.ubicacion && (
               <Text style={styles.metaText}>
@@ -183,7 +212,7 @@ const styles = StyleSheet.create({
   artesanoNombre: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#1a1a1a',
+    color: '#177eaaff',
     marginBottom: 2,
   },
   metaInfo: {
