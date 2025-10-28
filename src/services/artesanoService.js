@@ -1,22 +1,27 @@
 import { supabase } from '../supabase/client';
 
 export const artesanoService = {
-  // Obtener todos los artesanos desde la vista vista_detalle_artesanos
+  // Obtener todos los artesanos desde la tabla artesanos directamente
   async getArtesanos() {
     try {
+      console.log('🔍 [SERVICIO] Obteniendo lista de artesanos desde tabla "artesanos"...');
       const { data, error } = await supabase
-        .from('vista_detalle_artesanos')
+        .from('artesanos')
         .select('*')
-        .order('fecha_creacion_cuenta', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error al obtener artesanos:', error);
+        console.error('❌ [SERVICIO] Error al obtener artesanos:', error);
         throw error;
       }
 
+      console.log('✅ [SERVICIO] Artesanos obtenidos:', data?.length, 'registros');
+      if (data && data.length > 0) {
+        console.log('🖼️ [SERVICIO] Primer artesano avatar_url:', data[0]?.avatar_url);
+      }
       return data || [];
     } catch (error) {
-      console.error('Error en getArtesanos:', error);
+      console.error('❌ [SERVICIO] Error en getArtesanos:', error);
       throw error;
     }
   },
@@ -24,20 +29,26 @@ export const artesanoService = {
   // Obtener un artesano específico por ID con datos completos
   async getArtesanoById(userId) {
     try {
+      console.log('🔍 [SERVICIO] Obteniendo artesano con ID:', userId);
+      console.log('📋 [SERVICIO] Consultando tabla "artesanos" directamente...');
+      
       const { data, error } = await supabase
-        .from('vista_detalle_artesanos')
+        .from('artesanos')
         .select('*')
         .eq('user_id', userId)
         .single();
 
       if (error) {
-        console.error('Error al obtener artesano:', error);
+        console.error('❌ [SERVICIO] Error al obtener artesano:', error);
         throw error;
       }
 
+      console.log('📊 [SERVICIO] Datos del artesano obtenidos:', data);
+      console.log('🖼️ [SERVICIO] Avatar URL en datos:', data?.avatar_url);
+      
       return data;
     } catch (error) {
-      console.error('Error en getArtesanoById:', error);
+      console.error('❌ [SERVICIO] Error en getArtesanoById:', error);
       throw error;
     }
   },

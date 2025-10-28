@@ -32,8 +32,9 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
   const [showEditModal, setShowEditModal] = useState(false); // Establecer el estado del modal de edición
   const [showPasswordModal, setShowPasswordModal] = useState(false); // Establecer el estado del modal de cambio de contraseña
   const [showAvatarMenu, setShowAvatarMenu] = useState(false); // Establecer el estado del modal de cambio de foto de perfil
-  const [editData, setEditData] = useState({ nombre: '', telefono: '', ubicacion: '', descripcion: '' }); // Establecer el estado de los datos de edición
+  const [editData, setEditData] = useState({ nombre: '', telefono: '', ubicacion: '', descripcion: '', avatar_url: null }); // Establecer el estado de los datos de edición
   const [uploadingAvatar, setUploadingAvatar] = useState(false); // Establecer el estado de subida de foto de perfil
+  const [selectedImage, setSelectedImage] = useState(null); // Establecer el estado de la imagen seleccionada
   const isOwnProfile = session?.user?.id === userId; // Verificar si el usuario es el propio
   
   // Estados para eliminación de perfil con validación de contraseña
@@ -139,18 +140,32 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
 
   const loadArtesanoCompleto = async () => { // Función para cargar el perfil del artesano
     try {
+      console.log('🔄 Cargando perfil completo del artesano...');
       setLoading(true); // Establecer el estado de carga
       const data = await artesanoService.getArtesanoCompleto(userId); // Cargar el perfil del artesano
+      
+      console.log('📊 Datos del artesano recibidos:', data.artesano);
+      console.log('🖼️ Avatar URL en BD:', data.artesano?.avatar_url);
+      
       setArtesano(data.artesano); // Establecer el estado del artesano
       setPublicaciones(data.publicaciones); // Establecer el estado de las publicaciones
       setProductos(data.productos); // Establecer el estado de los productos
       
+      console.log('✅ Estado del artesano actualizado:', data.artesano?.avatar_url);
+      
       // Cargar datos para edición
       if (isOwnProfile && data.artesano) { // Si el usuario es el propio y hay datos del artesano
-        setEditData({ nombre: data.artesano.nombre || '', telefono: data.artesano.telefono || '', ubicacion: data.artesano.ubicacion || '', descripcion: data.artesano.descripcion || '' }); // Establecer el estado de los datos de edición
+        setEditData({ 
+          nombre: data.artesano.nombre || '', 
+          telefono: data.artesano.telefono || '', 
+          ubicacion: data.artesano.ubicacion || '', 
+          descripcion: data.artesano.descripcion || '',
+          avatar_url: data.artesano.avatar_url || null
+        }); // Establecer el estado de los datos de edición
+        console.log('📝 Datos de edición cargados. Avatar URL:', data.artesano.avatar_url);
       }
     } catch (error) { // Capturar el error
-      console.error('Error al cargar perfil:', error); // Mostrar el error en la consola
+      console.error('❌ Error al cargar perfil:', error); // Mostrar el error en la consola
       Alert.alert('Error', 'No se pudo cargar el perfil del artesano'); // Mostrar el error en la alerta
       router.back(); // Redirigir a la página anterior
     } finally { // Finalmente
@@ -160,6 +175,23 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
 
   const handleEditProfile = async () => { // Función para editar el perfil del artesano
     try {
+      // Primero subir el avatar si se seleccionó una nueva imagen
+      let avatarUrl = editData.avatar_url;
+      
+      if (selectedImage) {
+        setUploadingAvatar(true);
+        const uploadResult = await subirAvatarArtesano(userId, selectedImage);
+        
+        if (!uploadResult.success) {
+          setUploadingAvatar(false);
+          throw new Error(uploadResult.error);
+        }
+        
+        avatarUrl = uploadResult.avatar_url;
+        setUploadingAvatar(false);
+      }
+      
+      // Actualizar perfil con todos los datos incluyendo el nuevo avatar
       const result = await updatePerfilArtesano(userId, editData);
       
       if (!result.success) {
@@ -168,10 +200,12 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
 
       Alert.alert('Éxito', 'Perfil actualizado correctamente');
       setShowEditModal(false); // Establecer el estado del modal de edición
+      setSelectedImage(null); // Limpiar la imagen seleccionada
       await loadArtesanoCompleto(); // Cargar el perfil del artesano
     } catch (error) { // Capturar el error
       console.error('Error al editar perfil:', error); // Mostrar el error en la consola
       Alert.alert('Error', 'No se pudo actualizar el perfil'); // Mostrar el error en la alerta
+      setUploadingAvatar(false);
     }
   };
 
@@ -369,15 +403,16 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
 
   const selectAvatarImage = async () => { // Función para seleccionar la imagen de perfil
     try {
-      // Cerrar el modal
-      setShowAvatarMenu(false); // Establecer el estado del modal de cambio de foto de perfil
-      
-      // Pequeño delay para que el modal se cierre antes de abrir la galería
-      await new Promise(resolve => setTimeout(resolve, 300)); // Esperar 300ms
+      // Si el modal de avatar está abierto, cerrarlo primero (solo si viene del clic en el avatar del perfil)
+      if (showAvatarMenu) {
+        setShowAvatarMenu(false);
+        // Pequeño delay para que el modal se cierre antes de abrir la galería
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
       
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync(); // Solicitar permisos para acceder a la galería
       if (status !== 'granted') { // Si no hay permisos
-        Alert.alert('Permisos necesarios', 'Se requiere acceso a la galería para cambiar la foto de perfil'); // Mostrar el alert de permisos necesarios
+        Alert.alert('Permisos necesarios', 'Se requiere acceso a la galería para cambiar la foto de perfil');
         return;
       }
 
@@ -390,28 +425,78 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
       });
 
       if (!result.canceled && result.assets && result.assets[0]) { // Si no se canceló y hay assets y el primer asset
-        await uploadAvatarImage(result.assets[0]); // Subir la imagen de perfil
+        // Guardar la imagen seleccionada temporalmente (no subirla aún)
+        setSelectedImage(result.assets[0]);
+        setEditData(prev => ({
+          ...prev,
+          avatar_url: result.assets[0].uri // Mostrar vista previa
+        }));
       }
     } catch (error) { // Capturar el error
-      console.error('Error al seleccionar imagen:', error); // Mostrar el error en la consola
-      Alert.alert('Error', 'No se pudo seleccionar la imagen: ' + error.message); // Mostrar el error en la alerta
+      console.error('Error al seleccionar imagen:', error);
+      Alert.alert('Error', 'No se pudo seleccionar la imagen: ' + error.message);
+    }
+  };
+
+  const selectAvatarImageFromEdit = async () => { // Función para seleccionar imagen (desde perfil o modal de edición)
+    try {
+      // Solicitar permisos para acceder a la galería
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permisos necesarios', 'Se requiere acceso a la galería para cambiar la foto de perfil');
+        return;
+      }
+
+      // Abrir el selector de imágenes
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.5,
+        base64: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets[0]) {
+        // Si estamos en modal de edición, guardar temporalmente
+        if (showEditModal) {
+          setSelectedImage(result.assets[0]);
+          setEditData(prev => ({
+            ...prev,
+            avatar_url: result.assets[0].uri
+          }));
+        } else {
+          // Si estamos en el perfil, subir inmediatamente
+          await uploadAvatarImage(result.assets[0]);
+        }
+      }
+    } catch (error) {
+      console.error('Error al seleccionar imagen:', error);
+      Alert.alert('Error', 'No se pudo seleccionar la imagen: ' + error.message);
     }
   };
 
   const uploadAvatarImage = async (imageAsset) => { // Función para subir la imagen de perfil
     try {
+      console.log('📤 Iniciando subida de avatar...');
+      console.log('👤 User ID:', userId);
+      console.log('📸 Image Asset:', imageAsset);
+      
       setUploadingAvatar(true); // Establecer el estado de subida de foto de perfil
 
+      console.log('📤 Llamando a subirAvatarArtesano...');
       const result = await subirAvatarArtesano(userId, imageAsset);
+      console.log('✅ Resultado de subirAvatarArtesano:', result);
 
       if (!result.success) {
         throw new Error(result.error);
       }
 
+      console.log('🔄 Actualizando estado local con avatar_url:', result.avatar_url);
       setArtesano(prev => ({ ...prev, avatar_url: result.avatar_url })); // Establecer el estado del artesano
+      console.log('✅ Avatar actualizado correctamente');
       Alert.alert('Éxito', 'Foto de perfil actualizada correctamente');
     } catch (error) { // Capturar el error
-      console.error('Error al subir avatar:', error); // Mostrar el error en la consola
+      console.error('❌ Error al subir avatar:', error); // Mostrar el error en la consola
       Alert.alert('Error', 'No se pudo actualizar la foto de perfil'); // Mostrar el error en la alerta
     } finally { // Finalmente
       setUploadingAvatar(false); // Establecer el estado de subida de foto de perfil
@@ -442,7 +527,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         <View style={styles.avatarContainer}>
           {isOwnProfile ? (
             <TouchableOpacity
-              onPress={() => setShowAvatarMenu(true)}
+              onPress={selectAvatarImageFromEdit}
               disabled={uploadingAvatar}
             >
               {uploadingAvatar ? (
@@ -734,18 +819,60 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         visible={showEditModal}
         transparent={true}
         animationType="slide"
-        onRequestClose={() => setShowEditModal(false)}
+        onRequestClose={() => {
+          setShowEditModal(false);
+          setSelectedImage(null);
+          setEditData(prev => ({ ...prev, avatar_url: artesano?.avatar_url || null }));
+        }}
       >
         <View style={styles.editModalContainer}>
           <View style={styles.editModalContent}>
             <View style={styles.editModalHeader}>
               <Text style={styles.editModalTitle}>Editar Perfil</Text>
-              <TouchableOpacity onPress={() => setShowEditModal(false)}>
+              <TouchableOpacity onPress={() => {
+                setShowEditModal(false);
+                setSelectedImage(null);
+                setEditData(prev => ({ ...prev, avatar_url: artesano?.avatar_url || null }));
+              }}>
                 <MaterialCommunityIcons name="close" size={24} color="#333" />
               </TouchableOpacity>
             </View>
 
             <ScrollView style={styles.editModalBody}>
+              {/* Avatar Section */}
+              <View style={styles.avatarEditSection}>
+                <Text style={styles.inputLabel}>Foto de perfil</Text>
+                <TouchableOpacity
+                  style={styles.avatarButton}
+                  onPress={selectAvatarImageFromEdit}
+                  disabled={uploadingAvatar}
+                >
+                  {uploadingAvatar ? (
+                    <ActivityIndicator size="small" color="#666" />
+                  ) : editData.avatar_url && editData.avatar_url.startsWith('file://') ? (
+                    <Image source={{ uri: editData.avatar_url }} style={styles.avatarPreview} />
+                  ) : editData.avatar_url ? (
+                    <Image source={{ uri: editData.avatar_url }} style={styles.avatarPreview} />
+                  ) : artesano?.avatar_url ? (
+                    <Image source={{ uri: artesano.avatar_url }} style={styles.avatarPreview} />
+                  ) : (
+                    <View style={styles.avatarPlaceholder}>
+                      <MaterialCommunityIcons name="camera" size={30} color="#666" />
+                    </View>
+                  )}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.changeAvatarButton}
+                  onPress={selectAvatarImageFromEdit}
+                  disabled={uploadingAvatar}
+                >
+                  <MaterialCommunityIcons name="camera-plus" size={20} color="#177eaaff" />
+                  <Text style={styles.changeAvatarButtonText}>
+                    {uploadingAvatar ? 'Subiendo...' : 'Cambiar foto'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Nombre</Text>
                 <TextInput
@@ -819,7 +946,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
           <View style={styles.avatarMenu}>
             <TouchableOpacity
               style={styles.avatarMenuItem}
-              onPress={selectAvatarImage}
+              onPress={selectAvatarImageFromEdit}
             >
               <MaterialCommunityIcons name="camera" size={24} color="#333" />
               <Text style={styles.avatarMenuText}>Cambiar foto de perfil</Text>
@@ -1508,5 +1635,45 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     marginLeft: 8,
+  },
+  // Estilos para edición de avatar en modal
+  avatarEditSection: {
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  avatarButton: {
+    marginBottom: 12,
+  },
+  avatarPreview: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 3,
+    borderColor: '#177eaaff',
+  },
+  avatarPlaceholder: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#e0e0e0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#177eaaff',
+  },
+  changeAvatarButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f0f0f0',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  changeAvatarButtonText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#177eaaff',
+    fontWeight: '600',
   },
 });

@@ -19,7 +19,8 @@ export class FeedService {
       
       console.log('📱 Obteniendo feed - Página:', page, 'Límite:', limit);
 
-      // Consulta principal con JOIN a artesanos
+      // Consulta principal con JOIN a artesanos (tabla directa)
+      console.log('🔍 [FEED] Consultando publicaciones con JOIN a tabla artesanos...');
       const { data: publicaciones, error: feedError, count } = await supabase
         .from('publicaciones')
         .select(`
@@ -100,6 +101,12 @@ export class FeedService {
         likes_count: likesCount[pub.id] || 0,
         liked_by_user: userLikes[pub.id] || false,
       }));
+
+      // Log para verificar avatares
+      if (publicacionesConLikes.length > 0) {
+        console.log('🖼️ [FEED] Primer artesano en feed - Avatar URL:', publicacionesConLikes[0].artesano?.avatar_url);
+        console.log('🖼️ [FEED] Artesano completo:', publicacionesConLikes[0].artesano);
+      }
 
       console.log('✅ Feed obtenido:', publicacionesConLikes.length, 'publicaciones');
 

@@ -293,11 +293,18 @@ export async function eliminarPerfilArtesano(userId) {
  */
 export async function subirAvatarArtesano(userId, imageAsset) {
   try {
+    console.log('📤 [SERVICIO] Iniciando subida de avatar de artesano...');
+    console.log('👤 [SERVICIO] User ID:', userId);
+    console.log('📸 [SERVICIO] Image Asset URI:', imageAsset.uri);
+    
     const { decode } = require('base64-arraybuffer');
 
     const fileExt = imageAsset.uri.split('.').pop();
     const fileName = `avatar_${Date.now()}.${fileExt}`;
     const filePath = `${userId}/${fileName}`;
+    
+    console.log('📁 [SERVICIO] File Path:', filePath);
+    console.log('📦 [SERVICIO] Uploading to bucket: avatars');
 
     const { error: uploadError } = await supabase.storage
       .from('avatars')
@@ -305,20 +312,33 @@ export async function subirAvatarArtesano(userId, imageAsset) {
         contentType: imageAsset.mimeType ?? 'image/jpeg',
       });
 
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      console.error('❌ [SERVICIO] Error en storage upload:', uploadError);
+      throw uploadError;
+    }
+    
+    console.log('✅ [SERVICIO] Imagen subida correctamente a storage bucket "avatars"');
 
     const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
+    console.log('🔗 [SERVICIO] Public URL obtenida:', urlData.publicUrl);
     
+    console.log('📝 [SERVICIO] Actualizando tabla "artesanos" con user_id:', userId);
     const { error: updateError } = await supabase
       .from('artesanos')
       .update({ avatar_url: urlData.publicUrl })
       .eq('user_id', userId);
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      console.error('❌ [SERVICIO] Error actualizando tabla artesanos:', updateError);
+      throw updateError;
+    }
+    
+    console.log('✅ [SERVICIO] Avatar actualizado en tabla "artesanos" correctamente');
+    console.log('🎉 [SERVICIO] Subida completa exitosa');
 
     return { success: true, avatar_url: urlData.publicUrl };
   } catch (error) {
-    console.error('Error al subir avatar:', error);
+    console.error('❌ [SERVICIO] Error al subir avatar:', error);
     return { success: false, error: error.message };
   }
 }

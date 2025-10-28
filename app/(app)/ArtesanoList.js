@@ -146,7 +146,7 @@ export default function ArtesanoList() {
       
       <View style={styles.footer}>
         <Text style={styles.fecha}>
-          Registrado: {new Date(item.fecha_creacion_cuenta).toLocaleDateString('es-ES')}
+          Registrado: {new Date(item.created_at || item.fecha_creacion_cuenta).toLocaleDateString('es-ES')}
         </Text>
         <Text style={styles.tapHint}>
           Toca para ver perfil completo →
