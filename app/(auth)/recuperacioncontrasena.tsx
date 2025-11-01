@@ -8,7 +8,7 @@ import { Alert, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleS
 // ¡Importamos la función del servicio que contiene la lógica de Supabase!
 import { resetPasswordForEmail } from '../../src/services/authService'; 
 
-export default function recuperacioncontrasena() {
+export default function RecuperacionContrasena() {
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -125,7 +125,7 @@ export default function recuperacioncontrasena() {
 
                         <Link href="/auth" asChild>
                             <TouchableOpacity className='w-full items-center mt-4'>
-                                <Text className='text-black text-base font-semibold underline'>
+                                <Text className= 'text-base font-semibold underline' style={{color: '#9D046D'}}>
                                     Volver al inicio de sesión
                                 </Text>
                             </TouchableOpacity>

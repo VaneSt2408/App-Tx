@@ -1,6 +1,6 @@
 // En: src/pages/InviteArtesano.js
 import React, { useState } from 'react'; // Importa React y el hook 'useState' para manejar el estado del componente.
-import { View, TextInput, Button, Alert, StyleSheet, Text } from 'react-native'; // Importa componentes visuales básicos de React Native.
+import { View, TextInput, TouchableOpacity, Alert, StyleSheet, Text } from 'react-native'; // Importa componentes visuales básicos de React Native.
 import { sendArtesanoInvite } from '../../src/services/userService'; // Importa la función específica para enviar invitaciones desde un archivo de servicios.
 
 export default function InviteArtesano() { // Define y exporta el componente de la pantalla para invitar artesanos.
@@ -40,20 +40,26 @@ export default function InviteArtesano() { // Define y exporta el componente de 
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Invitar a un Nuevo Artesano</Text>
+      <Text className='top-1'style={styles.title}>Invitar a un Nuevo Artesano</Text>
       <TextInput
-        style={styles.input}
-        placeholder="Correo del nuevo artesano"
+        color="#050505"
+        style={styles.input }
+        placeholder="Ingresa el correo del nuevo artesano"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
+        
       />
-      <Button 
-        title={loading ? "Enviando..." : "Enviar Enlace de Registro"} 
-        onPress={handleSendInvite} 
-        disabled={loading} 
-      />
+      <TouchableOpacity
+        style={[styles.button, loading && styles.buttonDisabled]}
+        onPress={handleSendInvite}
+        disabled={loading}
+      >
+        <Text style={styles.buttonText}>
+          {loading ? "Enviando..." : "Enviar Enlace de Registro"}
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -62,4 +68,22 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, justifyContent: 'center' },
   title: { fontSize: 22, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
   input: { borderWidth: 1, borderColor: '#ccc', padding: 12, marginBottom: 20, borderRadius: 8 },
+  button: {
+    backgroundColor: '#9D046D',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 25, // Aumentamos el radio para hacerlo más redondeado
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 3,
+  },
+  buttonDisabled: {
+    backgroundColor: '#cccccc',
+    elevation: 0,
+  },
+  buttonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });

@@ -11,19 +11,9 @@ function ArtPage() {
     const [loading, setLoading] = useState(true); // Estado para manejar la carga
     const [showUploadModal, setShowUploadModal] = useState(false); // Estado para mostrar el modal de subir producto
 
-    // useEffect ahora solo obtiene los datos del usuario para mostrarlos
-    useEffect(() => {
-        const fetchUser = async () => { // Función para obtener los datos del usuario
-            const { data: { user } } = await supabase.auth.getUser(); // Obtiene el usuario actual
-            setUser(user); // Actualiza el estado del usuario
-            setLoading(false); // Actualiza el estado de carga
-        };
-        fetchUser(); // Llama a la función para obtener los datos del usuario
-    }, []);
-
-    const handleLogout = async () => { // Función para manejar el cierre de sesión
-        await signOut(); // Llama a la función signOut
-        // App.js se encarga de la redirección
+    // ✅ Función para navegar a crear publicación
+    const irACrearPublicacion = () => {
+        navigation.navigate('CreatePost');
     };
 
     const handleUploadProduct = () => { // Función para mostrar el modal de subir producto
@@ -33,6 +23,10 @@ function ArtPage() {
     const handleProductUploaded = () => { // Función que se ejecuta cuando se sube un producto exitosamente
         // Aquí puedes agregar lógica adicional como refrescar la lista de productos
         console.log('Producto subido exitosamente');
+    };
+
+    const handleLogout = async () => {
+        await signOut();
     };
 
     if (loading || !user) { // Muestra un indicador de carga mientras se obtienen los datos del usuario
@@ -47,6 +41,7 @@ function ArtPage() {
                     <MaterialCommunityIcons name="logout" size={28} color="#9D046D" />
                 </TouchableOpacity>
             </View>
+
             <Text style={styles.title}>Modo: Artesano</Text>
             
             <TouchableOpacity style={styles.uploadButton} onPress={handleUploadProduct}>
@@ -71,7 +66,6 @@ function ArtPage() {
     );
 }
 
-// ... (tus estilos aquí no cambian, solo asegúrate de no tener duplicados)
 const styles = StyleSheet.create({
     loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     container: { flex: 1, padding: 20, backgroundColor: '#f5f5f5' },

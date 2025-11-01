@@ -15,9 +15,8 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { artesanoService } from '../../src/services/artesanoService';
-
-const { width } = Dimensions.get('window');
-const imageSize = (width - 60) / 3; // Para grid de 3 columnas
+const { width, height } = Dimensions.get('window');
+const imageSize = (width - 10) / 3; // Para grid de 3 columnas
 
 export default function ArtesanoProfile() {
   const router = useRouter();
@@ -51,11 +50,18 @@ export default function ArtesanoProfile() {
     }
   };
 
+  const navigateToDetail = (item, type) => {
+    router.push({
+      pathname: './PostDetail',
+      params: { itemId: item.id, itemType: type }
+    });
+  };
+
   const renderHeader = () => (
     <View style={styles.header}>
       <View style={styles.headerTop}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
+          <MaterialCommunityIcons name="arrow-left" size={24} color="#9D046D" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Perfil</Text>
         <View style={styles.placeholder} />
@@ -133,7 +139,7 @@ export default function ArtesanoProfile() {
         <MaterialCommunityIcons 
           name="image-multiple" 
           size={20} 
-          color={activeTab === 'publicaciones' ? '#177eaaff' : '#666'} 
+          color={activeTab === 'publicaciones' ? '#9D046D' : '#666'} 
         />
         <Text style={[styles.tabText, activeTab === 'publicaciones' && styles.activeTabText]}>
           Publicaciones
@@ -147,7 +153,7 @@ export default function ArtesanoProfile() {
         <MaterialCommunityIcons 
           name="package-variant" 
           size={20} 
-          color={activeTab === 'productos' ? '#177eaaff' : '#666'} 
+          color={activeTab === 'productos' ? '#9D046D' : '#666'} 
         />
         <Text style={[styles.tabText, activeTab === 'productos' && styles.activeTabText]}>
           Productos
@@ -156,8 +162,12 @@ export default function ArtesanoProfile() {
     </View>
   );
 
-  const renderPublicacion = ({ item }) => (
-    <View style={styles.gridItem}>
+  const renderPublicacion = ({ item, index }) => (
+    <TouchableOpacity 
+      style={styles.gridItem} 
+      onPress={() => item.imagen_url && navigateToDetail(item, 'publicaciones')}
+      disabled={!item.imagen_url || loading}
+    >
       {item.imagen_url ? (
         <Image source={{ uri: item.imagen_url }} style={styles.gridImage} />
       ) : (
@@ -171,11 +181,15 @@ export default function ArtesanoProfile() {
           <Text style={styles.overlayText}>{item.likes_count || 0}</Text>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
-  const renderProducto = ({ item }) => (
-    <View style={styles.gridItem}>
+  const renderProducto = ({ item, index }) => (
+    <TouchableOpacity 
+      style={styles.gridItem} 
+      onPress={() => item.imagen_url && navigateToDetail(item, 'productos')}
+      disabled={!item.imagen_url || loading}
+    >
       {item.imagen_url ? (
         <Image source={{ uri: item.imagen_url }} style={styles.gridImage} />
       ) : (
@@ -189,7 +203,7 @@ export default function ArtesanoProfile() {
           <Text style={styles.overlayText}>{item.precio ? `$${item.precio}` : 'N/A'}</Text>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   const renderContent = () => {
@@ -235,7 +249,7 @@ export default function ArtesanoProfile() {
       <SafeAreaView style={styles.container}>
         {renderHeader()}
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#177eaaff" />
+          <ActivityIndicator size="large" color="#9D046D" />
           <Text style={styles.loadingText}>Cargando perfil...</Text>
         </View>
       </SafeAreaView>
@@ -404,7 +418,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   activeTab: {
-    borderBottomColor: '#177eaaff',
+    borderBottomColor: '#9D046D',
   },
   tabText: {
     fontSize: 14,
@@ -412,7 +426,7 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
   activeTabText: {
-    color: '#177eaaff',
+    color: '#9D046D',
     fontWeight: 'bold',
   },
   gridContainer: {
