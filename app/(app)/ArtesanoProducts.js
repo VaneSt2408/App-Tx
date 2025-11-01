@@ -21,6 +21,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import { artesanoService } from '../../src/services/artesanoService';
 import { supabase } from '../../src/supabase/client';
+import * as ImagePicker from 'expo-image-picker';
 
 const { width } = Dimensions.get('window');
 const imageSize = (width - 60) / 3; // Para grid de 3 columnas
@@ -37,7 +38,9 @@ export default function ArtesanoProducts() {
   const [selectedProductoIndex, setSelectedProductoIndex] = useState(0);
   const [showProductoModal, setShowProductoModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editData, setEditData] = useState({ nombre: '', precio: '', categoria: '', descripcion: '' });
+  const [editData, setEditData] = useState({ nombre: '', precio: '', categoria: '', descripcion: '', imagen_url: '' });
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const productoSliderAnim = React.useRef(new Animated.Value(0)).current;
 
@@ -144,15 +147,108 @@ export default function ArtesanoProducts() {
         nombre: selectedProducto.nombre || '', 
         precio: selectedProducto.precio?.toString() || '', 
         categoria: selectedProducto.categoria || '', 
-        descripcion: selectedProducto.descripcion || '' 
+        descripcion: selectedProducto.descripcion || '',
+        imagen_url: selectedProducto.imagen_url || ''
       });
+      setSelectedImage(null);
       setShowEditModal(true);
+    }
+  };
+
+  const selectProductImage = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permisos necesarios', 'Se requiere acceso a la galería para cambiar la imagen del producto');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+        base64: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets[0]) {
+        setSelectedImage(result.assets[0]);
+        setEditData(prev => ({
+          ...prev,
+          imagen_url: result.assets[0].uri
+        }));
+      }
+    } catch (error) {
+      console.error('Error al seleccionar imagen:', error);
+      Alert.alert('Error', 'No se pudo seleccionar la imagen: ' + error.message);
+    }
+  };
+
+  const uploadProductImage = async (imageAsset) => {
+    try {
+      setUploadingImage(true);
+      console.log('📤 [PRODUCTOS] Subiendo imagen del producto...');
+
+      if (!imageAsset.base64) {
+        throw new Error('No se encontró la imagen o los datos base64');
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('No se encontró la sesión del usuario');
+      }
+
+      const { decode } = require('base64-arraybuffer');
+      const fileExt = imageAsset.uri.split('.').pop();
+      const fileName = `producto_${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      // Eliminar imagen anterior si existe
+      if (selectedProducto?.imagen_url) {
+        try {
+          const urlParts = selectedProducto.imagen_url.split('/');
+          const oldFileName = urlParts[urlParts.length - 1];
+          const oldFilePath = `${user.id}/${oldFileName}`;
+          
+          await supabase.storage
+            .from('productos')
+            .remove([oldFilePath]);
+          
+          console.log('🗑️ [PRODUCTOS] Imagen anterior eliminada');
+        } catch (error) {
+          console.log('⚠️ [PRODUCTOS] No se pudo eliminar la imagen anterior:', error);
+        }
+      }
+
+      // Subir nueva imagen
+      const { error: uploadError } = await supabase.storage
+        .from('productos')
+        .upload(filePath, decode(imageAsset.base64), {
+          contentType: imageAsset.mimeType ?? 'image/jpeg',
+        });
+
+      if (uploadError) {
+        console.error('❌ [PRODUCTOS] Error al subir imagen:', uploadError);
+        throw new Error('Error al subir la imagen: ' + uploadError.message);
+      }
+
+      // Obtener URL pública
+      const { data: urlData } = supabase.storage.from('productos').getPublicUrl(filePath);
+      console.log('✅ [PRODUCTOS] Imagen subida correctamente:', urlData.publicUrl);
+      
+      return urlData.publicUrl;
+    } catch (error) {
+      console.error('❌ [PRODUCTOS] Error en uploadProductImage:', error);
+      throw error;
+    } finally {
+      setUploadingImage(false);
     }
   };
 
   const handleCloseEditModal = () => {
     setShowEditModal(false);
-    setEditData({ nombre: '', precio: '', categoria: '', descripcion: '' });
+    setEditData({ nombre: '', precio: '', categoria: '', descripcion: '', imagen_url: '' });
+    setSelectedImage(null);
   };
 
   const handleSaveEdit = async () => {
@@ -173,16 +269,28 @@ export default function ArtesanoProducts() {
     try {
       console.log('✏️ [PRODUCTOS] Editando producto:', selectedProducto.id);
       
-      const precioNumerico = parseFloat(editData.precio);
+      // Preparar objeto de actualización sin imagen_url inicialmente
+      const updateData = {
+        nombre: editData.nombre.trim(),
+        precio: parseFloat(editData.precio),
+        categoria: editData.categoria.trim() || null,
+        descripcion: editData.descripcion.trim() || null,
+      };
+      
+      // Solo actualizar imagen si hay una nueva imagen seleccionada
+      if (selectedImage) {
+        console.log('📤 [PRODUCTOS] Nueva imagen detectada, subiendo...');
+        const imagenUrl = await uploadProductImage(selectedImage);
+        updateData.imagen_url = imagenUrl;
+      } else {
+        // Si no hay nueva imagen, mantener la imagen actual del producto
+        console.log('📸 [PRODUCTOS] No hay nueva imagen, manteniendo imagen actual');
+        // No incluimos imagen_url en el update, así se mantiene la actual
+      }
       
       const { error } = await supabase
         .from('productos')
-        .update({ 
-          nombre: editData.nombre.trim(),
-          precio: precioNumerico,
-          categoria: editData.categoria.trim() || null,
-          descripcion: editData.descripcion.trim() || null
-        })
+        .update(updateData)
         .eq('id', selectedProducto.id);
 
       if (error) {
@@ -564,6 +672,45 @@ export default function ArtesanoProducts() {
             </View>
 
             <ScrollView style={styles.modalBody}>
+              {/* Sección de imagen */}
+              <View style={styles.imageEditSection}>
+                <Text style={styles.editLabel}>Imagen del producto</Text>
+                <TouchableOpacity
+                  style={styles.imageButton}
+                  onPress={selectProductImage}
+                  disabled={uploadingImage}
+                >
+                  {uploadingImage ? (
+                    <View style={styles.imagePreview}>
+                      <ActivityIndicator size="small" color="#666" />
+                      <Text style={styles.uploadingText}>Subiendo...</Text>
+                    </View>
+                  ) : (editData.imagen_url && editData.imagen_url.startsWith('file://')) || selectedImage ? (
+                    // Mostrar nueva imagen seleccionada (vista previa local)
+                    <Image source={{ uri: selectedImage?.uri || editData.imagen_url }} style={styles.imagePreview} />
+                  ) : selectedProducto?.imagen_url ? (
+                    // Mostrar imagen actual del producto
+                    <Image source={{ uri: selectedProducto.imagen_url }} style={styles.imagePreview} />
+                  ) : (
+                    // Sin imagen
+                    <View style={styles.imagePlaceholder}>
+                      <MaterialCommunityIcons name="camera" size={30} color="#666" />
+                      <Text style={styles.imagePlaceholderText}>Sin imagen</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.changeImageButton}
+                  onPress={selectProductImage}
+                  disabled={uploadingImage}
+                >
+                  <MaterialCommunityIcons name="camera-plus" size={20} color="#177eaaff" />
+                  <Text style={styles.changeImageButtonText}>
+                    {uploadingImage ? 'Subiendo...' : 'Cambiar imagen'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
               {/* Campo de nombre */}
               <View style={styles.editSection}>
                 <Text style={styles.editLabel}>Nombre *</Text>
@@ -617,14 +764,6 @@ export default function ArtesanoProducts() {
                 />
                 <Text style={styles.characterCount}>
                   {editData.descripcion.length}/500 caracteres
-                </Text>
-              </View>
-
-              {/* Nota sobre la imagen */}
-              <View style={styles.noteSection}>
-                <MaterialCommunityIcons name="information" size={20} color="#666" />
-                <Text style={styles.noteText}>
-                  Nota: La imagen no se puede editar. Si necesitas cambiar la imagen, elimina este producto y crea uno nuevo.
                 </Text>
               </View>
             </ScrollView>
@@ -1001,6 +1140,62 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     backgroundColor: '#6c757d',
+  },
+  // Estilos para edición de imagen
+  imageEditSection: {
+    padding: 20,
+    paddingBottom: 10,
+  },
+  imageButton: {
+    width: 150,
+    height: 150,
+    alignSelf: 'center',
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 10,
+  },
+  imagePreview: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+  },
+  imagePlaceholder: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    borderWidth: 2,
+    borderColor: '#ddd',
+    borderStyle: 'dashed',
+  },
+  imagePlaceholderText: {
+    marginTop: 8,
+    fontSize: 12,
+    color: '#666',
+  },
+  uploadingText: {
+    marginTop: 8,
+    fontSize: 12,
+    color: '#666',
+  },
+  changeImageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    backgroundColor: '#e3f2fd',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  changeImageButtonText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#177eaaff',
+    fontWeight: '600',
   },
 });
 
