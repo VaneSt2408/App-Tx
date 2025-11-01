@@ -1,3 +1,8 @@
+// En: app/(auth)/recuperacioncontrasena.tsx -> Archivo de recuperación de contraseña (Frontend)
+// Este archivo es el encargado de mostrar el formulario de recuperación de contraseña en la aplicación.
+// Permite recuperar la contraseña de un usuario mediante un correo electrónico.
+
+// Importaciones
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link, useRouter } from 'expo-router';
@@ -8,13 +13,14 @@ import { Alert, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleS
 // ¡Importamos la función del servicio que contiene la lógica de Supabase!
 import { resetPasswordForEmail } from '../../src/services/authService'; 
 
+// Componente principal
 export default function RecuperacionContrasena() {
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
     
-    // Función que llama a la lógica de backend
+    // Función para enviar el enlace de recuperación de contraseña
     const handlePasswordReset = async () => {
         if (!email.trim()) {
             Alert.alert('Error', 'Por favor, introduce tu correo electrónico.');

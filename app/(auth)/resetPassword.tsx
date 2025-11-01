@@ -1,3 +1,8 @@
+// En: app/(auth)/resetPassword.tsx -> Archivo de cambio de contraseña (Frontend)
+// Este archivo es el encargado de mostrar el formulario de cambio de contraseña en la aplicación.
+// Permite cambiar la contraseña de un usuario mediante un formulario de cambio de contraseña.
+
+// Importaciones
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -10,15 +15,16 @@ import { updatePassword } from '../../src/services/authService';
 import { supabase } from '../../src/supabase/client';
 import { useAuth } from '../../src/context/AuthContext';
 
+// Componente principal
 export default function ResetPasswordScreen() {
-    const router = useRouter();
-    const { resetPasswordRecoveryMode } = useAuth();
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-    const [currentPassword, setCurrentPassword] = useState('');
-    const [isCurrentPasswordVisible, setIsCurrentPasswordVisible] = useState(false);
+    const router = useRouter(); // Obtener el router
+    const { resetPasswordRecoveryMode } = useAuth(); // Obtener la función para resetear el modo de recuperación de contraseña
+    const [password, setPassword] = useState(''); // Establecer el estado de la contraseña
+    const [confirmPassword, setConfirmPassword] = useState(''); // Establecer el estado de la confirmación de la contraseña
+    const [isLoading, setIsLoading] = useState(false); // Establecer el estado de carga
+    const [isPasswordVisible, setIsPasswordVisible] = useState(false); // Establecer el estado de visibilidad de la contraseña
+    const [currentPassword, setCurrentPassword] = useState(''); // Establecer el estado de la contraseña actual
+    const [isCurrentPasswordVisible, setIsCurrentPasswordVisible] = useState(false); // Establecer el estado de visibilidad de la contraseña actual
 
     // NOTA: Esta pantalla se carga cuando el Deep Link trae al usuario.
     // En este punto, Supabase ya autenticó al usuario temporalmente.

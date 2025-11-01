@@ -125,6 +125,7 @@ export class MarketplaceService {
           precio,
           categoria,
           imagen_url,
+          estado,
           created_at,
           artesano_id,
           artesanos:artesano_id (
@@ -152,6 +153,7 @@ export class MarketplaceService {
         precio: parseFloat(producto.precio),
         categoria: producto.categoria,
         imagen_url: producto.imagen_url,
+        estado: producto.estado,
         created_at: producto.created_at,
         artesano: {
           id: producto.artesano_id,
@@ -276,6 +278,7 @@ export class MarketplaceService {
           nombre: prod.artesanos?.nombre || 'Artesano',
           ubicacion: prod.artesanos?.ubicacion || '',
           avatar_url: prod.artesanos?.avatar_url || null,
+          foto: prod.artesanos?.foto || null,
         },
       }));
 

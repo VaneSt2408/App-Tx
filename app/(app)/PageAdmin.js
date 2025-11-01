@@ -1,3 +1,7 @@
+// En: app/(app)/PageAdmin.js -> Archivo de la página de administración (Frontend)
+// Este archivo es el encargado de mostrar la página de administración en la aplicación.
+// Muestra la página de administración registrada en la base de datos y permite cerrar sesión, navegar a la página de invitación de enlace mágico, lista de artesanos, estadísticas, modificación/eliminación y configuración general.
+
 import React, { useEffect, useState } from 'react'; // En: src/pages/PageAdmin.js
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native'; // Asegúrate de importar TouchableOpacity
 import { useRouter } from 'expo-router'; // Importa useRouter para la navegación con Expo Router

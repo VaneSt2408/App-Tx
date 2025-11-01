@@ -56,3 +56,308 @@ export const createPost = async (userId, text, imageBase64, imageMimeType) => {
 
     return postData; // Devuelve la publicación creada
 };
+
+
+/**
+ * Crea una nueva publicación para el usuario actual
+ * Obtiene el usuario de la sesión y crea la publicación
+ * @param {string} text - Texto de la publicación
+ * @param {Object} imageAsset - Objeto de imagen de ImagePicker (opcional) con base64 y mimeType
+ * @returns {Promise<Object>} - Datos de la publicación creada
+ */
+export async function createPostForCurrentUser(text, imageAsset) {
+  try {
+    console.log('📝 [SERVICE] Creando publicación para usuario actual...');
+    
+    // Validar que haya texto o imagen
+    if (!text?.trim() && !imageAsset?.base64) {
+      throw new Error('Escribe algo o selecciona una imagen para publicar');
+    }
+
+    // Obtener el usuario actual
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      throw new Error('Usuario no autenticado');
+    }
+
+    console.log('👤 [SERVICE] Usuario obtenido:', user.id);
+
+    // Crear la publicación usando la función existente
+    const postData = await createPost(
+      user.id,
+      text || '',
+      imageAsset?.base64 || null,
+      imageAsset?.mimeType || null
+    );
+
+    console.log('✅ [SERVICE] Publicación creada exitosamente');
+    return postData;
+  } catch (error) {
+    console.error('❌ [SERVICE] Error en createPostForCurrentUser:', error);
+    throw error;
+  }
+}
+
+/**
+ * Obtener publicaciones de un artesano específico
+ * @param {string} artesanoUserId - ID del usuario artesano
+ * @param {number} limit - Límite de publicaciones por página
+ * @param {number} offset - Offset para paginación
+ * @returns {Promise<{success: boolean, data?: Array, hasMore?: boolean, totalCount?: number, error?: string}>}
+ */
+export async function getPublicacionesByArtesano(artesanoUserId, limit = 20, offset = 0) {
+  try {
+    console.log('📱 [PUBLICACIONES] Obteniendo publicaciones del artesano:', artesanoUserId);
+    console.log('📱 [PUBLICACIONES] Parámetros - Limit:', limit, 'Offset:', offset);
+
+    // Consulta principal con conteo de likes
+    const { data: publicaciones, error: feedError, count } = await supabase
+      .from('publicaciones')
+      .select(`
+        id,
+        artesano_user_id,
+        texto,
+        imagen_url,
+        created_at
+      `, { count: 'exact' })
+      .eq('artesano_user_id', artesanoUserId)
+      .order('created_at', { ascending: false })
+      .range(offset * limit, (offset + 1) * limit - 1);
+
+    if (feedError) {
+      console.error('❌ [PUBLICACIONES] Error al obtener publicaciones:', feedError);
+      return { success: false, error: feedError.message };
+    }
+
+    console.log('📱 [PUBLICACIONES] Publicaciones obtenidas:', publicaciones?.length || 0);
+    console.log('📱 [PUBLICACIONES] Total count:', count);
+
+    if (!publicaciones || publicaciones.length === 0) {
+      return {
+        success: true,
+        data: [],
+        hasMore: false,
+        totalCount: 0
+      };
+    }
+
+    // Obtener conteo de likes para cada publicación
+    const publicacionIds = publicaciones.map(pub => pub.id);
+    
+    const { data: likesData, error: likesError } = await supabase
+      .from('likes')
+      .select('publicacion_id')
+      .in('publicacion_id', publicacionIds);
+
+    if (likesError) {
+      console.error('❌ [PUBLICACIONES] Error al obtener likes:', likesError);
+      // Continuar sin likes si hay error
+    }
+
+    // Contar likes por publicación
+    const likesCount = {};
+    if (likesData) {
+      likesData.forEach(like => {
+        likesCount[like.publicacion_id] = (likesCount[like.publicacion_id] || 0) + 1;
+      });
+    }
+
+    // Combinar datos
+    const publicacionesConLikes = publicaciones.map(pub => ({
+      id: pub.id,
+      texto: pub.texto,
+      imagen_url: pub.imagen_url,
+      created_at: pub.created_at,
+      likes_count: likesCount[pub.id] || 0,
+    }));
+
+    console.log('✅ [PUBLICACIONES] Publicaciones procesadas:', publicacionesConLikes.length);
+
+    return {
+      success: true,
+      data: publicacionesConLikes,
+      hasMore: count ? (offset * limit + limit < count) : false,
+      totalCount: count || 0,
+    };
+
+  } catch (error) {
+    console.error('❌ [PUBLICACIONES] Error en getPublicacionesByArtesano:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Actualizar una publicación
+ * @param {string} publicacionId - ID de la publicación
+ * @param {Object} updateData - Datos a actualizar { texto }
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export async function updatePublication(publicacionId, updateData) {
+  try {
+    console.log('✏️ [SERVICE] Actualizando publicación:', publicacionId);
+    
+    // Validaciones
+    if (!updateData.texto || !updateData.texto.trim()) {
+      throw new Error('El texto de la publicación es requerido');
+    }
+
+    const { error } = await supabase
+      .from('publicaciones')
+      .update({ texto: updateData.texto.trim() })
+      .eq('id', publicacionId);
+
+    if (error) {
+      console.error('❌ [SERVICE] Error al actualizar publicación:', error);
+      throw new Error('No se pudo actualizar la publicación: ' + error.message);
+    }
+
+    console.log('✅ [SERVICE] Publicación actualizada correctamente');
+    return { success: true };
+  } catch (error) {
+    console.error('❌ [SERVICE] Error en updatePublication:', error);
+    throw error;
+  }
+}
+
+/**
+ * Eliminar una publicación
+ * @param {string} publicacionId - ID de la publicación
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export async function deletePublication(publicacionId) {
+  try {
+    console.log('🗑️ [PUBLICACIONES] Eliminando publicación:', publicacionId);
+
+    // Primero eliminar los likes asociados
+    const { error: likesError } = await supabase
+      .from('likes')
+      .delete()
+      .eq('publicacion_id', publicacionId);
+
+    if (likesError) {
+      console.error('❌ [PUBLICACIONES] Error al eliminar likes:', likesError);
+      return { success: false, error: 'Error al eliminar los likes de la publicación' };
+    }
+
+    // Eliminar la imagen del storage si existe
+    const { data: publicacion, error: fetchError } = await supabase
+      .from('publicaciones')
+      .select('imagen_url')
+      .eq('id', publicacionId)
+      .single();
+
+    if (!fetchError && publicacion?.imagen_url) {
+      try {
+        // Extraer el path del storage de la URL
+        const urlParts = publicacion.imagen_url.split('/');
+        const fileName = urlParts[urlParts.length - 1];
+        const filePath = `publicaciones/${fileName}`;
+
+        console.log('🗑️ [PUBLICACIONES] Eliminando imagen del storage:', filePath);
+        
+        const { error: storageError } = await supabase.storage
+          .from('imagenes-publicaciones')
+          .remove([filePath]);
+
+        if (storageError) {
+          console.error('❌ [PUBLICACIONES] Error al eliminar imagen del storage:', storageError);
+          // Continuar con la eliminación aunque falle el storage
+        } else {
+          console.log('✅ [PUBLICACIONES] Imagen eliminada del storage');
+        }
+      } catch (storageError) {
+        console.error('❌ [PUBLICACIONES] Error procesando eliminación de imagen:', storageError);
+      }
+    }
+
+    // Eliminar la publicación
+    const { error: deleteError } = await supabase
+      .from('publicaciones')
+      .delete()
+      .eq('id', publicacionId);
+
+    if (deleteError) {
+      console.error('❌ [PUBLICACIONES] Error al eliminar publicación:', deleteError);
+      return { success: false, error: deleteError.message };
+    }
+
+    console.log('✅ [PUBLICACIONES] Publicación eliminada correctamente');
+    return { success: true };
+
+  } catch (error) {
+    console.error('❌ [PUBLICACIONES] Error en deletePublication:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Obtener estadísticas de publicaciones de un artesano
+ * @param {string} artesanoUserId - ID del usuario artesano
+ * @returns {Promise<{success: boolean, data?: Object, error?: string}>}
+ */
+export async function getPublicacionesStats(artesanoUserId) {
+  try {
+    console.log('📊 [PUBLICACIONES] Obteniendo estadísticas del artesano:', artesanoUserId);
+
+    // Obtener conteo total de publicaciones
+    const { count: totalPublicaciones, error: countError } = await supabase
+      .from('publicaciones')
+      .select('*', { count: 'exact', head: true })
+      .eq('artesano_user_id', artesanoUserId);
+
+    if (countError) {
+      console.error('❌ [PUBLICACIONES] Error al obtener conteo:', countError);
+      return { success: false, error: countError.message };
+    }
+
+    // Obtener total de likes
+    const { data: publicaciones, error: pubError } = await supabase
+      .from('publicaciones')
+      .select('id')
+      .eq('artesano_user_id', artesanoUserId);
+
+    if (pubError) {
+      console.error('❌ [PUBLICACIONES] Error al obtener publicaciones:', pubError);
+      return { success: false, error: pubError.message };
+    }
+
+    let totalLikes = 0;
+    if (publicaciones && publicaciones.length > 0) {
+      const publicacionIds = publicaciones.map(pub => pub.id);
+      
+      const { count: likesCount, error: likesError } = await supabase
+        .from('likes')
+        .select('*', { count: 'exact', head: true })
+        .in('publicacion_id', publicacionIds);
+
+      if (!likesError) {
+        totalLikes = likesCount || 0;
+      }
+    }
+
+    const stats = {
+      total_publicaciones: totalPublicaciones || 0,
+      total_likes: totalLikes,
+    };
+
+    console.log('✅ [PUBLICACIONES] Estadísticas obtenidas:', stats);
+    return { success: true, data: stats };
+
+  } catch (error) {
+    console.error('❌ [PUBLICACIONES] Error en getPublicacionesStats:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Exportar como objeto para compatibilidad con el código existente
+const PublicacionService = {
+  createPost,
+  createPostForCurrentUser,
+  getPublicacionesByArtesano,
+  updatePublication,
+  deletePublication,
+  getPublicacionesStats
+};
+
+export default PublicacionService;

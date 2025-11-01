@@ -142,10 +142,11 @@ export default function AuthScreen() {
   };
 
   // Función para manejar el inicio de sesión con Google (solo UI/navegación)
-  const handleGoogleSignIn = () => {
-    console.log('Attempting Google Sign In');
-    // Aquí irá tu lógica de Google Sign-In.
-  }
+  // Funcion para manejar el inicio de sesión con Google
+  const handleGoogleSignIn = async () => { 
+    await signInWithGoogle(); // Llama al servicio de autenticación
+    //La redirección se maneja en App.js 
+  };
 
   const handlePickImage = async () => {
     // Pedir permiso para acceder a la galería

@@ -227,34 +227,32 @@ export const validateCurrentPassword = async (currentPassword) => {
     }
     
     // Validación básica de formato
-    if (!currentPassword || currentPassword.length < 6) {
-      return { data: false, error: 'Contraseña muy corta' };
+    if (!currentPassword || currentPassword.length < 8) {
+      return { data: false, error: 'Contraseña muy corta (mínimo 8 caracteres)' };
     }
     
-    // Validar la contraseña actual usando un enfoque más seguro
-    // En lugar de hacer login completo, usamos una validación alternativa
+    // Validar la contraseña usando Supabase Auth sin afectar la sesión actual
+    // Usamos una instancia temporal de Supabase para validar sin reiniciar sesión
     try {
-      // Crear una instancia temporal de Supabase para la validación
-      // Esto evita afectar la sesión actual
       const { createClient } = require('@supabase/supabase-js');
       const AsyncStorage = require('@react-native-async-storage/async-storage');
       
-      // Usar la misma configuración pero con una instancia separada
+      // Crear instancia temporal que NO afecta la sesión actual
       const tempSupabase = createClient(
-        'https://wjgnktfkbdvofzdotkdn.supabase.co',
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqZ25rdGZrYmR2b2Z6ZG90a2RuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkwMTEwODYsImV4cCI6MjA3NDU4NzA4Nn0.y4zqWisgouwsnkIN7-tRQ_8R7sWA0tdlz-6LeFWcQ78',
+        process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://wjgnktfkbdvofzdotkdn.supabase.co',
+        process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqZ25rdGZrYmR2b2Z6ZG90a2RuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkwMTEwODYsImV4cCI6MjA3NDU4NzA4Nn0.y4zqWisgouwsnkIN7-tRQ_8R7sWA0tdlz-6LeFWcQ78',
         {
           auth: {
             storage: AsyncStorage,
-            autoRefreshToken: false, // Deshabilitar refresh automático
-            persistSession: false, // No persistir la sesión temporal
+            autoRefreshToken: false,
+            persistSession: false,
             detectSessionInUrl: false,
           },
         }
       );
       
-      // Intentar login con la instancia temporal
-      const { data: loginData, error: loginError } = await tempSupabase.auth.signInWithPassword({
+      // Intentar login con instancia temporal (NO afecta sesión actual)
+      const { error: loginError } = await tempSupabase.auth.signInWithPassword({
         email: user.email,
         password: currentPassword
       });
@@ -265,7 +263,6 @@ export const validateCurrentPassword = async (currentPassword) => {
       }
       
       // Si llegamos aquí, la contraseña es correcta
-      // No necesitamos restaurar nada porque usamos una instancia temporal
       console.log('Contraseña actual validada correctamente');
       return { data: true, error: null };
       

@@ -1,16 +1,14 @@
-// En: app/completeProfile.tsx -> Archivo de perfil del cliente (Frontend)
-// Este archivo es el encargado de mostrar el formulario de perfil del cliente en la aplicación.
-// Permite completar el perfil del cliente mediante un formulario de perfil.
+  // En: app/completeArtesanoProfile.tsx -> Archivo de perfil del artesano (Frontend)
+  // Este archivo es el encargado de mostrar el formulario de perfil del artesano en la aplicación.
+  // Permite completar el perfil del artesano mediante un formulario de perfil.
 
 // Importaciones
 import React, { useState } from 'react';
-import {View,Text,TextInput,TouchableOpacity,StyleSheet,Alert,ActivityIndicator,ScrollView,KeyboardAvoidingView,Platform,Image,} from 'react-native';
+import {View,Text,TextInput,TouchableOpacity,StyleSheet,Alert,ActivityIndicator,ScrollView,KeyboardAvoidingView,Platform ,Image,} from 'react-native';
 import { useAuth } from '../src/context/AuthContext';
 import { useRouter } from 'expo-router';
-import { createClientProfile } from '../src/services/authService';
-import { supabase } from '../src/supabase/client';
 import * as ImagePicker from 'expo-image-picker';
-import { decode } from 'base64-arraybuffer';
+import { completeArtesanoProfile } from '../src/services/userService';
 import 'react-native-get-random-values';
 
 // --- Componente reutilizable para mostrar y seleccionar el avatar ---
@@ -29,12 +27,11 @@ const Avatar = ({ url, onUpload, loading }: { url: string | null; onUpload: () =
 };
 
 // Componente principal
-export default function CompleteProfilePage() {
+export default function CompleteArtesanoProfilePage() {
   const { session, refreshProfile } = useAuth(); // Obtener el contexto de autenticación
   const router = useRouter(); // Obtener el router
   const [formData, setFormData] = useState({ // Establecer el estado del formulario
-    fullName: '', // Establecer el estado del nombre completo
-    phone: '', // Establecer el estado del teléfono
+    descripcion: '', // Establecer el estado de la descripción
   });
   const [selectedImage, setSelectedImage] = useState<any>(null); // Establecer el estado de la imagen seleccionada
   const [loading, setLoading] = useState(false); // Establecer el estado de carga
@@ -61,7 +58,7 @@ export default function CompleteProfilePage() {
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.5,
-        base64: true, // ¡Crucial! Pedimos la imagen en formato base64 para poder subirla
+        base64: true,
       });
 
       if (!result.canceled && result.assets[0]) {
@@ -74,67 +71,42 @@ export default function CompleteProfilePage() {
 
   // Función para manejar el envío del formulario
   const handleSubmit = async () => {
-    // Validar campos requeridos
-    if (!formData.fullName.trim()) {
-      Alert.alert('Error', 'El nombre completo es requerido');
-      return;
-    }
-
     setLoading(true);
     try {
-      // Obtenemos el ID del usuario que ya tiene una sesión activa
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        Alert.alert('Error', 'No se encontró la sesión del usuario');
-        return;
-      }
+      console.log('📝 [CompleteArtesanoProfile] Iniciando handleSubmit...');
+      
+      const result = await completeArtesanoProfile(
+        { descripcion: formData.descripcion },
+        selectedImage || null
+      );
 
-      let avatarUrl = null;
-
-      // --- Subida de la imagen (si se seleccionó una) ---
-      if (selectedImage) {
-        const fileExt = selectedImage.uri.split('.').pop();
-        const fileName = `${Date.now()}.${fileExt}`;
-        const filePath = `${user.id}/${fileName}`; // Guardamos la imagen en una carpeta con el ID del usuario
+      if (result.success) {
+        console.log('✅ [CompleteArtesanoProfile] Perfil completado exitosamente');
         
-        // Subimos la imagen decodificada al bucket 'avatars'
-        const { error: uploadError } = await supabase.storage
-          .from('avatars')
-          .upload(filePath, decode(selectedImage.base64), {
-            contentType: selectedImage.mimeType ?? 'image/jpeg',
-          });
+        // Esperar un momento para que Supabase procese los cambios
+        await new Promise(resolve => setTimeout(resolve, 500));
 
-        if (uploadError) {
-          Alert.alert('Error', 'No se pudo subir la imagen: ' + uploadError.message);
-          return;
-        }
+        // Refrescar el perfil ANTES de mostrar el alert para asegurar que los datos estén actualizados
+        console.log('🔄 [CompleteArtesanoProfile] Refrescando perfil en contexto...');
+        await refreshProfile();
+        console.log('✅ [CompleteArtesanoProfile] refreshProfile() completado');
 
-        // Si la subida fue exitosa, obtenemos la URL pública de la imagen
-        const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
-        avatarUrl = urlData.publicUrl;
-      }
-
-      // --- Guardado del perfil en la tabla 'clientes' ---
-      const { error: profileError } = await createClientProfile(user.id, formData.fullName, formData.phone, avatarUrl);
-      if (profileError) {
-        Alert.alert('Error', 'No se pudo completar el perfil: ' + profileError.message);
-        return;
-      }
-
-      Alert.alert('¡Éxito!', 'Tu perfil ha sido completado.', [
-        {
-          text: 'Continuar',
-          onPress: async () => {
-            // Refrescar el perfil en el contexto
-            await refreshProfile();
-            // La lógica de navegación en _layout.tsx se encargará de redirigir
+        Alert.alert('¡Éxito!', 'Tu perfil ha sido completado.', [
+          {
+            text: 'Continuar',
+            onPress: () => {
+              // La lógica de navegación en _layout.tsx se encargará de redirigir
+              console.log('✅ [CompleteArtesanoProfile] Usuario presionó continuar');
+            }
           }
-        }
-      ]);
+        ]);
+      }
     } catch (error) {
-      Alert.alert('Error', 'No se pudo guardar tu perfil. Inténtalo de nuevo. ' + (error as Error).message);
+      console.error('❌ [CompleteArtesanoProfile] Error general:', error);
+      Alert.alert('Error', error.message || 'No se pudo guardar tu perfil. Inténtalo de nuevo.');
     } finally {
       setLoading(false);
+      console.log('🏁 [CompleteArtesanoProfile] handleSubmit finalizado');
     }
   };
 
@@ -147,7 +119,7 @@ export default function CompleteProfilePage() {
         <View style={styles.header}>
           <Text style={styles.title}>Completa tu Perfil</Text>
           <Text style={styles.subtitle}>
-            Necesitamos algunos datos adicionales para personalizar tu experiencia
+            Agrega información adicional para mejorar tu presencia en la plataforma
           </Text>
         </View>
 
@@ -164,26 +136,23 @@ export default function CompleteProfilePage() {
 
           {/* Formulario */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Nombre Completo *</Text>
+            <Text style={styles.label}>Descripción (Opcional)</Text>
+            <Text style={styles.hint}>
+              Cuéntanos sobre ti, tu trabajo y tus productos. Esto ayudará a los clientes a conocerte mejor.
+            </Text>
             <TextInput
-              style={styles.input}
-              value={formData.fullName}
-              onChangeText={(value) => handleInputChange('fullName', value)}
-              placeholder="Ej: Juan Pérez García"
+              style={styles.textArea}
+              value={formData.descripcion}
+              onChangeText={(value) => handleInputChange('descripcion', value)}
+              placeholder="Ej: Artesano especializado en cerámica tradicional, con más de 10 años de experiencia..."
+              multiline
+              numberOfLines={6}
+              maxLength={500}
               editable={!loading}
             />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Teléfono (Opcional)</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.phone}
-              onChangeText={(value) => handleInputChange('phone', value)}
-              placeholder="Ej: 555-123-4567"
-              keyboardType="phone-pad"
-              editable={!loading}
-            />
+            <Text style={styles.characterCount}>
+              {formData.descripcion.length}/500 caracteres
+            </Text>
           </View>
         </View>
       </ScrollView>
@@ -243,31 +212,6 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 15,
   },
-  imageSelector: {
-    borderWidth: 2,
-    borderColor: '#ddd',
-    borderStyle: 'dashed',
-    borderRadius: 10,
-    height: 120,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fafafa',
-  },
-  imagePreview: {
-    alignItems: 'center',
-  },
-  imagePreviewText: {
-    color: '#2575fc',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  imagePlaceholder: {
-    alignItems: 'center',
-  },
-  imagePlaceholderText: {
-    color: '#999',
-    fontSize: 14,
-  },
   inputGroup: {
     marginBottom: 20,
   },
@@ -277,6 +221,12 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 8,
   },
+  hint: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 8,
+    fontStyle: 'italic',
+  },
   input: {
     borderWidth: 1,
     borderColor: '#ddd',
@@ -285,6 +235,23 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     backgroundColor: '#fff',
+  },
+  textArea: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    fontSize: 16,
+    backgroundColor: '#fff',
+    minHeight: 120,
+    textAlignVertical: 'top',
+  },
+  characterCount: {
+    fontSize: 12,
+    color: '#999',
+    textAlign: 'right',
+    marginTop: 4,
   },
   footer: {
     padding: 20,
@@ -332,3 +299,4 @@ const styles = StyleSheet.create({
     color: '#555',
   },
 });
+

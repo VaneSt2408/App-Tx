@@ -1,41 +1,34 @@
+// En: app/(app)/ArtesanoList.js -> Archivo de la lista de artesanos (Frontend)
+// Este archivo es el encargado de mostrar la lista de artesanos en la aplicación.
+// Muestra la lista de artesanos registrados en la base de datos y permite buscarlos por nombre, folio, categoría o ubicación.
+// También permite navegar al perfil del artesano y ver su información completa.
+
+
+// Importaciones
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  FlatList, 
-  Image, 
-  ActivityIndicator, 
-  Alert,
-  TouchableOpacity,
-  SafeAreaView,
-  TextInput
-} from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image, ActivityIndicator, Alert,TouchableOpacity,SafeAreaView,TextInput} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { artesanoService } from '../../src/services/artesanoService';
 import { useRouter } from 'expo-router';
 
-export default function ArtesanoList() {
-  const router = useRouter();
-  const [artesanos, setArtesanos] = useState([]);
-  const [filteredArtesanos, setFilteredArtesanos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
 
+// Componente principal
+export default function ArtesanoList() {
+  const router = useRouter(); // Router de expo-router para navegar entre pantallas
+  const [artesanos, setArtesanos] = useState([]); // Estado para guardar la lista de artesanos
+  const [filteredArtesanos, setFilteredArtesanos] = useState([]); // Estado para guardar la lista de artesanos filtrados
+  const [loading, setLoading] = useState(true); // Estado para guardar el estado de carga
+  const [error, setError] = useState(null); // Estado para guardar el estado de error
+  const [searchQuery, setSearchQuery] = useState(''); // Estado para guardar la consulta de búsqueda
+
+  
+  // Efecto para cargar la lista de artesanos
   useEffect(() => {
     loadArtesanos();
   }, []);
+  
 
-  // Efecto con debounce para filtrar artesanos cuando cambia la búsqueda
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      filterArtesanos();
-    }, 300); // Debounce de 300ms
-
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery, artesanos]);
-
+  // Función para cargar la lista de artesanos
   const loadArtesanos = async () => {
     try {
       setLoading(true);
@@ -58,6 +51,7 @@ export default function ArtesanoList() {
       return;
     }
 
+    // Filtro para buscar artesanos por nombre, folio, categoría o ubicación
     const query = searchQuery.toLowerCase().trim();
     const filtered = artesanos.filter(artesano => {
       const nombre = (artesano.nombre || '').toLowerCase();
@@ -71,6 +65,8 @@ export default function ArtesanoList() {
              ubicacion.includes(query);
     });
 
+
+    // Actualizar el estado con la lista de artesanos filtrados
     setFilteredArtesanos(filtered);
   }, [searchQuery, artesanos]);
 
@@ -82,11 +78,12 @@ export default function ArtesanoList() {
   // Función para navegar al perfil del artesano
   const navigateToProfile = (userId) => {
     router.push({
-      pathname: './ArtesanoProfile',
+      pathname: '/ArtesanoProfile',
       params: { userId: userId.toString() }
     });
   };
 
+  // Función para renderizar cada artesano en la lista
   const renderArtesano = ({ item }) => (
     <TouchableOpacity 
       style={styles.card} 
@@ -147,7 +144,7 @@ export default function ArtesanoList() {
       
       <View style={styles.footer}>
         <Text style={styles.fecha}>
-          Registrado: {new Date(item.fecha_creacion_cuenta).toLocaleDateString('es-ES')}
+          Registrado: {new Date(item.created_at || item.fecha_creacion_cuenta).toLocaleDateString('es-ES')}
         </Text>
         <Text style={styles.tapHint}>
           Toca para ver perfil completo →
