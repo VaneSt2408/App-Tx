@@ -1,23 +1,24 @@
+// En: app/(app)/ClientSettings.js -> Archivo de ajustes del cliente (Frontend)
+// Este archivo es el encargado de mostrar los ajustes del cliente en la aplicación.
+// Permite cerrar sesión, navegar al perfil del cliente, ver sus publicaciones y productos.
+
+// Importaciones
 import React from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TouchableOpacity,
-  Alert
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity,Alert} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { signOut } from '../../src/services/authService';
 
+// Componente principal
 export default function ClientSettings() {
-  const router = useRouter();
+  const router = useRouter(); // Obtener el router
 
+  // Función para cerrar sesión
   const handleLogout = async () => {
     await signOut();
   };
 
+  // Opciones de ajustes
   const settingsOptions = [
     {
       id: 'profile',

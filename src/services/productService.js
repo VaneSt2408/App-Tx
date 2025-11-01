@@ -200,3 +200,179 @@ export const getArtesanoProducts = async () => {
     throw error;
   }
 };
+
+// --- Función para subir imagen de producto para edición ---
+export const uploadProductImageForEdit = async (imageAsset, oldImageUrl) => {
+  try {
+    console.log('📤 [SERVICE] Subiendo imagen del producto para edición...');
+
+    if (!imageAsset.base64) {
+      throw new Error('No se encontró la imagen o los datos base64');
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('No se encontró la sesión del usuario');
+    }
+
+    const { decode } = require('base64-arraybuffer');
+    const fileExt = imageAsset.uri.split('.').pop();
+    const fileName = `producto_${Date.now()}.${fileExt}`;
+    const filePath = `${user.id}/${fileName}`;
+
+    // Eliminar imagen anterior si existe
+    if (oldImageUrl) {
+      try {
+        const urlParts = oldImageUrl.split('/');
+        const oldFileName = urlParts[urlParts.length - 1];
+        const oldFilePath = `${user.id}/${oldFileName}`;
+        
+        await supabase.storage
+          .from('productos')
+          .remove([oldFilePath]);
+        
+        console.log('🗑️ [SERVICE] Imagen anterior eliminada');
+      } catch (error) {
+        console.log('⚠️ [SERVICE] No se pudo eliminar la imagen anterior:', error);
+      }
+    }
+
+    // Subir nueva imagen
+    const { error: uploadError } = await supabase.storage
+      .from('productos')
+      .upload(filePath, decode(imageAsset.base64), {
+        contentType: imageAsset.mimeType ?? 'image/jpeg',
+      });
+
+    if (uploadError) {
+      console.error('❌ [SERVICE] Error al subir imagen:', uploadError);
+      throw new Error('Error al subir la imagen: ' + uploadError.message);
+    }
+
+    // Obtener URL pública
+    const { data: urlData } = supabase.storage.from('productos').getPublicUrl(filePath);
+    console.log('✅ [SERVICE] Imagen subida correctamente:', urlData.publicUrl);
+    
+    return urlData.publicUrl;
+  } catch (error) {
+    console.error('❌ [SERVICE] Error en uploadProductImageForEdit:', error);
+    throw error;
+  }
+};
+
+// --- Función para actualizar un producto ---
+export const updateProduct = async (productId, updateData, newImageAsset) => {
+  try {
+    console.log('✏️ [SERVICE] Actualizando producto:', productId);
+    
+    // Validaciones
+    if (!updateData.nombre || !updateData.nombre.trim()) {
+      throw new Error('El nombre del producto es requerido');
+    }
+
+    if (!updateData.precio || parseFloat(updateData.precio) <= 0) {
+      throw new Error('El precio debe ser mayor a 0');
+    }
+
+    // Preparar objeto de actualización
+    const dataToUpdate = {
+      nombre: updateData.nombre.trim(),
+      precio: parseFloat(updateData.precio),
+      categoria: updateData.categoria?.trim() || null,
+      descripcion: updateData.descripcion?.trim() || null,
+    };
+    
+    // Solo actualizar imagen si hay una nueva imagen seleccionada
+    if (newImageAsset) {
+      // Obtener la imagen actual del producto primero
+      const { data: currentProduct } = await supabase
+        .from('productos')
+        .select('imagen_url')
+        .eq('id', productId)
+        .single();
+
+      console.log('📤 [SERVICE] Nueva imagen detectada, subiendo...');
+      const imagenUrl = await uploadProductImageForEdit(newImageAsset, currentProduct?.imagen_url);
+      dataToUpdate.imagen_url = imagenUrl;
+    }
+    
+    const { error } = await supabase
+      .from('productos')
+      .update(dataToUpdate)
+      .eq('id', productId);
+
+    if (error) {
+      console.error('❌ [SERVICE] Error al actualizar producto:', error);
+      throw new Error('No se pudo actualizar el producto: ' + error.message);
+    }
+
+    console.log('✅ [SERVICE] Producto actualizado correctamente');
+    return { success: true };
+  } catch (error) {
+    console.error('❌ [SERVICE] Error en updateProduct:', error);
+    throw error;
+  }
+};
+
+// --- Función para eliminar un producto ---
+export const deleteProduct = async (productId) => {
+  try {
+    console.log('🗑️ [SERVICE] Eliminando producto:', productId);
+    
+    // Obtener datos del producto para eliminar la imagen
+    const { data: producto, error: fetchError } = await supabase
+      .from('productos')
+      .select('imagen_url')
+      .eq('id', productId)
+      .single();
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      console.error('❌ [SERVICE] Error al obtener producto:', fetchError);
+      throw new Error('No se pudo obtener el producto: ' + fetchError.message);
+    }
+
+    // Eliminar imagen del storage si existe
+    if (producto?.imagen_url) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          // Extraer el path del storage de la URL
+          const urlParts = producto.imagen_url.split('/');
+          const fileName = urlParts[urlParts.length - 1];
+          const filePath = `${user.id}/${fileName}`;
+
+          console.log('🗑️ [SERVICE] Eliminando imagen del storage:', filePath);
+          
+          const { error: storageError } = await supabase.storage
+            .from('productos')
+            .remove([filePath]);
+
+          if (storageError) {
+            console.error('❌ [SERVICE] Error al eliminar imagen del storage:', storageError);
+          } else {
+            console.log('✅ [SERVICE] Imagen eliminada del storage');
+          }
+        }
+      } catch (storageError) {
+        console.error('❌ [SERVICE] Error procesando eliminación de imagen:', storageError);
+      }
+    }
+
+    // Eliminar el producto
+    const { error: deleteError } = await supabase
+      .from('productos')
+      .delete()
+      .eq('id', productId);
+
+    if (deleteError) {
+      console.error('❌ [SERVICE] Error al eliminar producto:', deleteError);
+      throw new Error('No se pudo eliminar el producto: ' + deleteError.message);
+    }
+
+    console.log('✅ [SERVICE] Producto eliminado correctamente');
+    return { success: true };
+  } catch (error) {
+    console.error('❌ [SERVICE] Error en deleteProduct:', error);
+    throw error;
+  }
+};

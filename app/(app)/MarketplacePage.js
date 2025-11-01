@@ -1,29 +1,27 @@
+// En: app/(app)/MarketplacePage.js -> Archivo de marketplace (Frontend)
+// Este archivo es el encargado de mostrar el marketplace en la aplicación.
+// Muestra los productos del marketplace registrados en la base de datos y permite buscarlos por nombre, categoría o ubicación.
+// También permite navegar al perfil del artesano y ver su información completa.
+
+// Importaciones
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  Image,
-  TouchableOpacity,
-  StyleSheet,
-  TextInput,
-  ActivityIndicator,
-  RefreshControl,
-} from 'react-native';
+import {View,Text,FlatList,Image,TouchableOpacity,StyleSheet,TextInput,ActivityIndicator,RefreshControl,} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import MarketplaceService from '../../src/services/MarketplaceService';
 
+// Componente principal
 export default function MarketplacePage() {
-  const router = useRouter();
-  const [productos, setProductos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filteredProductos, setFilteredProductos] = useState([]);
+  const router = useRouter(); // Obtener el router
+  const [productos, setProductos] = useState([]); // Establecer el estado de los productos
+  const [loading, setLoading] = useState(true); // Establecer el estado de carga
+  const [refreshing, setRefreshing] = useState(false); // Establecer el estado de refresco
+  const [currentPage, setCurrentPage] = useState(0); // Establecer el estado de la página actual
+  const [hasMore, setHasMore] = useState(true); // Establecer el estado de si hay más productos
+  const [searchQuery, setSearchQuery] = useState(''); // Establecer el estado de la consulta de búsqueda
+  const [filteredProductos, setFilteredProductos] = useState([]); // Establecer el estado de los productos filtrados
 
+  // Cargar productos inicial
   useEffect(() => {
     loadProductos();
   }, []);
@@ -33,12 +31,14 @@ export default function MarketplacePage() {
     filterProductos();
   }, [searchQuery, productos]);
 
+  // Función para filtrar los productos
   const filterProductos = () => {
     if (!searchQuery.trim()) {
       setFilteredProductos(productos);
       return;
     }
 
+    // Filtrar los productos
     const query = searchQuery.toLowerCase().trim();
     const filtered = productos.filter(producto => {
       const nombre = (producto.nombre || '').toLowerCase();
@@ -57,6 +57,7 @@ export default function MarketplacePage() {
     setFilteredProductos(filtered);
   };
 
+  // Función para cargar los productos
   const loadProductos = async (page = 0) => {
     try {
       if (page === 0) {
@@ -84,17 +85,20 @@ export default function MarketplacePage() {
     }
   };
 
+  // Función para refrescar los productos
   const onRefresh = () => {
     setRefreshing(true);
     loadProductos(0);
   };
 
+  // Función para cargar más productos
   const loadMore = () => {
     if (hasMore && !loading) {
       loadProductos(currentPage + 1);
     }
   };
 
+  // Función para formatear el precio
   const formatPrice = (price) => {
     return new Intl.NumberFormat('es-MX', {
       style: 'currency',
@@ -103,6 +107,7 @@ export default function MarketplacePage() {
     }).format(price);
   };
 
+  // Función para navegar al detalle del producto
   const navigateToProduct = (productId) => {
     router.push({
       pathname: '/ProductDetailPage',

@@ -1,59 +1,54 @@
+// En: app/(app)/ArtesanoProducts.js -> Archivo de los productos del artesano (Frontend)
+// Este archivo es el encargado de mostrar los productos del artesano en la aplicación.
+// Muestra los productos del artesano registrados en la base de datos y permite buscarlos por nombre, categoría o ubicación.
+// También permite navegar al perfil del artesano y ver su información completa.
+
+// Importaciones
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  Image,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-  Dimensions,
-  Modal,
-  ScrollView,
-  PanResponder,
-  Animated,
-  TextInput,
-} from 'react-native';
+import {View,Text,FlatList,Image,TouchableOpacity,StyleSheet,ActivityIndicator,RefreshControl,Alert,Dimensions,Modal,ScrollView,PanResponder,Animated,TextInput,} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import { artesanoService } from '../../src/services/artesanoService';
+import { updateProduct, deleteProduct } from '../../src/services/productService';
 import { supabase } from '../../src/supabase/client';
 import * as ImagePicker from 'expo-image-picker';
 import UploadProductModal from '../../components/UploadProductModal';
 
-const { width } = Dimensions.get('window');
+
+// Constantes
+const { width } = Dimensions.get('window'); // Obtener el ancho de la ventana
 const imageSize = (width - 60) / 3; // Para grid de 3 columnas
 
+// Componente principal
 export default function ArtesanoProducts() {
-  const router = useRouter();
-  const { userId } = useLocalSearchParams();
-  const { session } = useAuth();
+  const router = useRouter(); // Router de expo-router para navegar entre pantallas
+  const { userId } = useLocalSearchParams(); // Obtener el id del usuario
+  const { session } = useAuth(); // Obtener la sesión
   
-  const [productos, setProductos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [selectedProducto, setSelectedProducto] = useState(null);
-  const [selectedProductoIndex, setSelectedProductoIndex] = useState(0);
-  const [showProductoModal, setShowProductoModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editData, setEditData] = useState({ nombre: '', precio: '', categoria: '', descripcion: '', imagen_url: '' });
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [editLoading, setEditLoading] = useState(false);
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const productoSliderAnim = React.useRef(new Animated.Value(0)).current;
+  const [productos, setProductos] = useState([]); // Estado para guardar los productos
+  const [loading, setLoading] = useState(true); // Estado para guardar el estado de carga
+  const [refreshing, setRefreshing] = useState(false); // Estado para guardar el estado de refresco
+  const [selectedProducto, setSelectedProducto] = useState(null); // Estado para guardar el producto seleccionado
+  const [selectedProductoIndex, setSelectedProductoIndex] = useState(0); // Estado para guardar el índice del producto seleccionado
+  const [showProductoModal, setShowProductoModal] = useState(false); // Estado para guardar el estado del modal de producto
+  const [showEditModal, setShowEditModal] = useState(false); // Estado para guardar el estado del modal de edición
+  const [editData, setEditData] = useState({ nombre: '', precio: '', categoria: '', descripcion: '', imagen_url: '' }); // Estado para guardar los datos de edición
+  const [selectedImage, setSelectedImage] = useState(null); // Estado para guardar la imagen seleccionada
+  const [editLoading, setEditLoading] = useState(false); // Estado para guardar el estado de carga de edición
+  const [showUploadModal, setShowUploadModal] = useState(false); // Estado para guardar el estado del modal de subida de producto
+  const productoSliderAnim = React.useRef(new Animated.Value(0)).current; // Referencia para la animación del slider de productos
 
-  const isOwnProfile = session?.user?.id === userId;
+  const isOwnProfile = session?.user?.id === userId; // Verificar si el usuario es el propio
 
+  // Efecto para cargar los productos
   useEffect(() => {
     if (userId) {
       loadProductos();
     }
   }, [userId]);
 
+  // Función para cargar los productos
   const loadProductos = async () => {
     try {
       setLoading(true);
@@ -77,17 +72,21 @@ export default function ArtesanoProducts() {
     }
   };
 
+
+  // Función para refrescar los productos
   const onRefresh = () => {
     setRefreshing(true);
     loadProductos();
   };
 
+  // Función para seleccionar un producto
   const handleSelectProducto = (producto, index) => {
     setSelectedProducto(producto);
     setSelectedProductoIndex(index);
     setShowProductoModal(true);
   };
 
+  // Función para cerrar el modal de producto
   const handleCloseProductoModal = () => {
     setShowProductoModal(false);
     setSelectedProducto(null);
@@ -95,6 +94,7 @@ export default function ArtesanoProducts() {
     productoSliderAnim.setValue(0);
   };
 
+  // Función para navegar al siguiente producto
   const handleNextProducto = () => {
     if (selectedProductoIndex < productos.length - 1) {
       const nextIndex = selectedProductoIndex + 1;
@@ -104,6 +104,7 @@ export default function ArtesanoProducts() {
     }
   };
 
+  // Función para navegar al anterior producto
   const handlePreviousProducto = () => {
     if (selectedProductoIndex > 0) {
       const prevIndex = selectedProductoIndex - 1;
@@ -113,7 +114,7 @@ export default function ArtesanoProducts() {
     }
   };
 
-  // PanResponder para gestos de deslizamiento
+  // PanResponder para gestos de deslizamiento de productos
   const productoPanResponder = React.useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (evt, gestureState) => {
@@ -143,6 +144,8 @@ export default function ArtesanoProducts() {
     })
   ).current;
 
+
+  // Función para editar un producto
   const handleEditProducto = () => {
     if (selectedProducto) {
       setEditData({ 
@@ -157,6 +160,7 @@ export default function ArtesanoProducts() {
     }
   };
 
+  // Función para seleccionar una imagen de producto
   const selectProductImage = async () => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -186,120 +190,30 @@ export default function ArtesanoProducts() {
     }
   };
 
-  const uploadProductImage = async (imageAsset) => {
-    try {
-      setUploadingImage(true);
-      console.log('📤 [PRODUCTOS] Subiendo imagen del producto...');
 
-      if (!imageAsset.base64) {
-        throw new Error('No se encontró la imagen o los datos base64');
-      }
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('No se encontró la sesión del usuario');
-      }
-
-      const { decode } = require('base64-arraybuffer');
-      const fileExt = imageAsset.uri.split('.').pop();
-      const fileName = `producto_${Date.now()}.${fileExt}`;
-      const filePath = `${user.id}/${fileName}`;
-
-      // Eliminar imagen anterior si existe
-      if (selectedProducto?.imagen_url) {
-        try {
-          const urlParts = selectedProducto.imagen_url.split('/');
-          const oldFileName = urlParts[urlParts.length - 1];
-          const oldFilePath = `${user.id}/${oldFileName}`;
-          
-          await supabase.storage
-            .from('productos')
-            .remove([oldFilePath]);
-          
-          console.log('🗑️ [PRODUCTOS] Imagen anterior eliminada');
-        } catch (error) {
-          console.log('⚠️ [PRODUCTOS] No se pudo eliminar la imagen anterior:', error);
-        }
-      }
-
-      // Subir nueva imagen
-      const { error: uploadError } = await supabase.storage
-        .from('productos')
-        .upload(filePath, decode(imageAsset.base64), {
-          contentType: imageAsset.mimeType ?? 'image/jpeg',
-        });
-
-      if (uploadError) {
-        console.error('❌ [PRODUCTOS] Error al subir imagen:', uploadError);
-        throw new Error('Error al subir la imagen: ' + uploadError.message);
-      }
-
-      // Obtener URL pública
-      const { data: urlData } = supabase.storage.from('productos').getPublicUrl(filePath);
-      console.log('✅ [PRODUCTOS] Imagen subida correctamente:', urlData.publicUrl);
-      
-      return urlData.publicUrl;
-    } catch (error) {
-      console.error('❌ [PRODUCTOS] Error en uploadProductImage:', error);
-      throw error;
-    } finally {
-      setUploadingImage(false);
-    }
-  };
-
+  // Función para cerrar el modal de edición
   const handleCloseEditModal = () => {
     setShowEditModal(false);
     setEditData({ nombre: '', precio: '', categoria: '', descripcion: '', imagen_url: '' });
     setSelectedImage(null);
   };
 
+  // Función para guardar la edición del producto
   const handleSaveEdit = async () => {
     if (!selectedProducto) return;
-
-    // Validaciones
-    if (!editData.nombre.trim()) {
-      Alert.alert('Error', 'El nombre del producto es requerido');
-      return;
-    }
-
-    if (!editData.precio || parseFloat(editData.precio) <= 0) {
-      Alert.alert('Error', 'El precio debe ser mayor a 0');
-      return;
-    }
 
     setEditLoading(true);
     try {
       console.log('✏️ [PRODUCTOS] Editando producto:', selectedProducto.id);
       
-      // Preparar objeto de actualización sin imagen_url inicialmente
       const updateData = {
-        nombre: editData.nombre.trim(),
-        precio: parseFloat(editData.precio),
-        categoria: editData.categoria.trim() || null,
-        descripcion: editData.descripcion.trim() || null,
+        nombre: editData.nombre,
+        precio: editData.precio,
+        categoria: editData.categoria,
+        descripcion: editData.descripcion,
       };
-      
-      // Solo actualizar imagen si hay una nueva imagen seleccionada
-      if (selectedImage) {
-        console.log('📤 [PRODUCTOS] Nueva imagen detectada, subiendo...');
-        const imagenUrl = await uploadProductImage(selectedImage);
-        updateData.imagen_url = imagenUrl;
-      } else {
-        // Si no hay nueva imagen, mantener la imagen actual del producto
-        console.log('📸 [PRODUCTOS] No hay nueva imagen, manteniendo imagen actual');
-        // No incluimos imagen_url en el update, así se mantiene la actual
-      }
-      
-      const { error } = await supabase
-        .from('productos')
-        .update(updateData)
-        .eq('id', selectedProducto.id);
 
-      if (error) {
-        console.error('❌ [PRODUCTOS] Error al editar:', error);
-        Alert.alert('Error', 'No se pudo editar el producto: ' + error.message);
-        return;
-      }
+      await updateProduct(selectedProducto.id, updateData, selectedImage);
 
       Alert.alert('Éxito', 'Producto editado correctamente');
       handleCloseEditModal();
@@ -309,12 +223,13 @@ export default function ArtesanoProducts() {
       
     } catch (error) {
       console.error('❌ [PRODUCTOS] Error en handleSaveEdit:', error);
-      Alert.alert('Error', 'Ocurrió un error al editar el producto');
+      Alert.alert('Error', error.message || 'Ocurrió un error al editar el producto');
     } finally {
       setEditLoading(false);
     }
   };
 
+  // Función para eliminar un producto
   const handleDeleteProducto = async (productoId) => {
     Alert.alert(
       'Eliminar Producto',
@@ -331,47 +246,7 @@ export default function ArtesanoProducts() {
             try {
               console.log('🗑️ [PRODUCTOS] Eliminando producto:', productoId);
               
-              // Eliminar imagen del storage si existe
-              const { data: producto, error: fetchError } = await supabase
-                .from('productos')
-                .select('imagen_url')
-                .eq('id', productoId)
-                .single();
-
-              if (!fetchError && producto?.imagen_url) {
-                try {
-                  // Extraer el path del storage de la URL
-                  const urlParts = producto.imagen_url.split('/');
-                  const fileName = urlParts[urlParts.length - 1];
-                  const filePath = `productos/${fileName}`;
-
-                  console.log('🗑️ [PRODUCTOS] Eliminando imagen del storage:', filePath);
-                  
-                  const { error: storageError } = await supabase.storage
-                    .from('productos')
-                    .remove([filePath]);
-
-                  if (storageError) {
-                    console.error('❌ [PRODUCTOS] Error al eliminar imagen del storage:', storageError);
-                  } else {
-                    console.log('✅ [PRODUCTOS] Imagen eliminada del storage');
-                  }
-                } catch (storageError) {
-                  console.error('❌ [PRODUCTOS] Error procesando eliminación de imagen:', storageError);
-                }
-              }
-
-              // Eliminar el producto
-              const { error: deleteError } = await supabase
-                .from('productos')
-                .delete()
-                .eq('id', productoId);
-
-              if (deleteError) {
-                console.error('❌ [PRODUCTOS] Error al eliminar producto:', deleteError);
-                Alert.alert('Error', deleteError.message || 'No se pudo eliminar el producto');
-                return;
-              }
+              await deleteProduct(productoId);
 
               Alert.alert('Éxito', 'Producto eliminado correctamente');
               handleCloseProductoModal();
@@ -380,7 +255,7 @@ export default function ArtesanoProducts() {
               
             } catch (error) {
               console.error('❌ [PRODUCTOS] Error al eliminar:', error);
-              Alert.alert('Error', 'Ocurrió un error al eliminar el producto');
+              Alert.alert('Error', error.message || 'Ocurrió un error al eliminar el producto');
             }
           }
         }
@@ -388,6 +263,7 @@ export default function ArtesanoProducts() {
     );
   };
 
+  // Función para formatear el precio
   const formatPrice = (price) => {
     return new Intl.NumberFormat('es-MX', {
       style: 'currency',
@@ -407,6 +283,7 @@ export default function ArtesanoProducts() {
     });
   };
 
+  // Función para renderizar un producto en la lista
   const renderProducto = ({ item, index }) => (
     <TouchableOpacity
       style={styles.gridItem}
@@ -697,12 +574,12 @@ export default function ArtesanoProducts() {
                 <TouchableOpacity
                   style={styles.imageButton}
                   onPress={selectProductImage}
-                  disabled={uploadingImage}
+                  disabled={editLoading}
                 >
-                  {uploadingImage ? (
+                  {editLoading ? (
                     <View style={styles.imagePreview}>
                       <ActivityIndicator size="small" color="#666" />
-                      <Text style={styles.uploadingText}>Subiendo...</Text>
+                      <Text style={styles.uploadingText}>Procesando...</Text>
                     </View>
                   ) : (editData.imagen_url && editData.imagen_url.startsWith('file://')) || selectedImage ? (
                     // Mostrar nueva imagen seleccionada (vista previa local)
@@ -721,11 +598,11 @@ export default function ArtesanoProducts() {
                 <TouchableOpacity
                   style={styles.changeImageButton}
                   onPress={selectProductImage}
-                  disabled={uploadingImage}
+                  disabled={editLoading}
                 >
                   <MaterialCommunityIcons name="camera-plus" size={20} color="#177eaaff" />
                   <Text style={styles.changeImageButtonText}>
-                    {uploadingImage ? 'Subiendo...' : 'Cambiar imagen'}
+                    {editLoading ? 'Procesando...' : 'Cambiar imagen'}
                   </Text>
                 </TouchableOpacity>
               </View>

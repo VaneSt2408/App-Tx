@@ -1,5 +1,8 @@
-// En: src/pages/ClientPage.js
+// En: app/(app)/ClientPage.js -> Archivo de la página del cliente (Frontend)
+// Este archivo es el encargado de mostrar la página del cliente en la aplicación.
+// Muestra la página del cliente registrada en la base de datos y permite navegar a la página de inicio, marketplace y perfil.
 
+// Importaciones
 import React from 'react';
 import { StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -9,9 +12,11 @@ import MarketplacePage from './MarketplacePage';
 import ArtesanoList from './ArtesanoList';
 import ClientProfile from './clientProfile';
 
-const Tab = createBottomTabNavigator();
+const Tab = createBottomTabNavigator(); // Crear el tab navigator
 
+// Componente principal
 function ClientPage() {
+    // Renderizado
     return (
         <Tab.Navigator
             screenOptions={({ route }) => ({

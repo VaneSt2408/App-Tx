@@ -1,4 +1,9 @@
-// En: src/pages/ArtPage.js
+// En: app/(app)/ArtPage.js -> Archivo de la página del artesano (Frontend)
+// Este archivo es el encargado de mostrar la página del artesano en la aplicación.
+// Muestra la página del artesano registrada en la base de datos y permite navegar a la página de inicio, marketplace y ajustes.
+
+
+// Importaciones
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -7,10 +12,12 @@ import FeedPage from './FeedPage';
 import MarketplacePage from './MarketplacePage';
 import ArtesanoSettings from './ArtesanoSettings';
 
-const Tab = createBottomTabNavigator();
+const Tab = createBottomTabNavigator(); // Crear el tab navigator
 
+// Componente principal
 function ArtPage() {
     return (
+        // Renderizado
         <Tab.Navigator
             screenOptions={({ route }) => ({
                 tabBarIcon: ({ focused, color, size }) => {

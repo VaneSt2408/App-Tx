@@ -1,8 +1,13 @@
-// En: src/pages/InviteArtesano.js
+// En: app/(app)/MagicLink.js -> Archivo de invitación de enlace mágico (Frontend)
+// Este archivo es el encargado de mostrar el formulario de invitación de enlace mágico en la aplicación.
+// Permite invitar a un nuevo artesano a la aplicación mediante un correo electrónico.
+
+// Importaciones
 import React, { useState } from 'react'; // Importa React y el hook 'useState' para manejar el estado del componente.
 import { View, TextInput, Button, Alert, StyleSheet, Text } from 'react-native'; // Importa componentes visuales básicos de React Native.
 import { sendArtesanoInvite } from '../../src/services/userService'; // Importa la función específica para enviar invitaciones desde un archivo de servicios.
 
+// Componente principal
 export default function InviteArtesano() { // Define y exporta el componente de la pantalla para invitar artesanos.
   const [email, setEmail] = useState(''); // Crea un estado para almacenar el correo electrónico que el usuario escribe en el campo de texto.
   const [loading, setLoading] = useState(false); // Crea un estado para gestionar la visualización de un indicador de carga mientras se envía la invitación.

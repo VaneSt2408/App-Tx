@@ -1,7 +1,7 @@
 //Backend / En: src/services/userService.js
 import { supabase } from '../supabase/client'; // Importa la instancia del cliente de Supabase.
-import { Alert } from 'react-native'; // Importa el componente Alert de React Native.
 import { makeRedirectUri } from 'expo-auth-session'; // Importa la función de Expo para crear URIs de redirección.
+import { decode } from 'base64-arraybuffer'; // Para decodificar imágenes
 
 // --- Función utilitaria para generar URIs de redirección ---
 /**
@@ -121,5 +121,116 @@ export const completeArtesanoRegistration = async (registrationData) => {
     console.error("[userService] ❌ ERROR GENERAL ATRAPADO:", error);
     // Devuelve un objeto indicando que la operación falló y el mensaje de error.
     return { success: false, error: error.message || error };
+  }
+};
+
+/**
+ * Completa el perfil inicial del artesano (avatar y descripción)
+ * Obtiene el usuario de la sesión automáticamente
+ * @param {Object} profileData - Datos del perfil { descripcion: string }
+ * @param {Object} imageAsset - Objeto de imagen de ImagePicker (opcional) con base64, uri, mimeType
+ * @returns {Promise<{success: boolean, data?: object, error?: string}>}
+ */
+export const completeArtesanoProfile = async (profileData, imageAsset = null) => {
+  try {
+    console.log('📝 [SERVICE] Iniciando completeArtesanoProfile...');
+    console.log('📋 [SERVICE] Datos recibidos:', {
+      descripcion: profileData.descripcion ? `${profileData.descripcion.substring(0, 50)}...` : 'vacía',
+      tieneImagen: !!imageAsset
+    });
+
+    // Obtener el usuario actual de la sesión
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      console.error('❌ [SERVICE] No se encontró usuario:', userError);
+      throw new Error('No se encontró la sesión del usuario');
+    }
+    console.log('✅ [SERVICE] Usuario obtenido:', user.id);
+
+    let avatarUrl = null;
+
+    // Subir imagen si se proporciona
+    if (imageAsset && imageAsset.base64) {
+      console.log('📤 [SERVICE] Iniciando subida de imagen...');
+      const fileExt = imageAsset.uri?.split('.').pop() || 'jpg';
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+      console.log('📁 [SERVICE] Ruta del archivo:', filePath);
+      
+      // Subir la imagen decodificada al bucket 'avatars'
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, decode(imageAsset.base64), {
+          contentType: imageAsset.mimeType ?? 'image/jpeg',
+        });
+
+      if (uploadError) {
+        console.error('❌ [SERVICE] Error al subir imagen:', uploadError);
+        throw new Error('No se pudo subir la imagen: ' + uploadError.message);
+      }
+
+      // Obtener la URL pública de la imagen subida
+      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      avatarUrl = urlData.publicUrl;
+      console.log('✅ [SERVICE] Imagen subida exitosamente:', avatarUrl);
+    } else {
+      console.log('ℹ️ [SERVICE] No se seleccionó imagen');
+    }
+
+    // Preparar datos de actualización
+    const updateData = {
+      descripcion: profileData.descripcion?.trim() || ''
+    };
+
+    // Si hay avatar, agregarlo a los datos de actualización
+    if (avatarUrl) {
+      updateData.avatar_url = avatarUrl;
+      console.log('🔄 [SERVICE] Actualizando avatar en tabla artesanos...');
+    }
+
+    // Actualizar descripción (y avatar si existe) en la tabla artesanos
+    console.log('🔄 [SERVICE] Actualizando perfil en tabla artesanos...');
+    const { data: updatedData, error: updateError } = await supabase
+      .from('artesanos')
+      .update(updateData)
+      .eq('user_id', user.id)
+      .select();
+
+    if (updateError) {
+      console.error('❌ [SERVICE] Error actualizando perfil:', updateError);
+      throw new Error('No se pudo actualizar el perfil: ' + updateError.message);
+    }
+    console.log('✅ [SERVICE] Perfil actualizado exitosamente:', updatedData);
+
+    // Esperar un momento para que Supabase procese los cambios
+    console.log('⏳ [SERVICE] Esperando 500ms para que Supabase procese los cambios...');
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Verificar que los datos se guardaron correctamente
+    console.log('🔍 [SERVICE] Verificando que los datos se guardaron...');
+    const { data: verifyData, error: verifyError } = await supabase
+      .from('artesanos')
+      .select('descripcion, avatar_url')
+      .eq('user_id', user.id)
+      .single();
+
+    if (verifyError) {
+      console.warn('⚠️ [SERVICE] Error al verificar datos:', verifyError);
+    } else {
+      console.log('📊 [SERVICE] Verificación post-guardado:', {
+        tiene_descripcion: !!verifyData?.descripcion,
+        tiene_avatar: !!verifyData?.avatar_url
+      });
+    }
+
+    console.log('✅ [SERVICE] Perfil completado exitosamente');
+    return { 
+      success: true, 
+      data: verifyData || updatedData 
+    };
+  } catch (error) {
+    console.error('❌ [SERVICE] Error en completeArtesanoProfile:', error);
+    throw error;
   }
 };

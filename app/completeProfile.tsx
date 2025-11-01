@@ -1,18 +1,10 @@
-// app/completeProfile.tsx
+// En: app/completeProfile.tsx -> Archivo de perfil del cliente (Frontend)
+// Este archivo es el encargado de mostrar el formulario de perfil del cliente en la aplicación.
+// Permite completar el perfil del cliente mediante un formulario de perfil.
+
+// Importaciones
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  Image,
-} from 'react-native';
+import {View,Text,TextInput,TouchableOpacity,StyleSheet,Alert,ActivityIndicator,ScrollView,KeyboardAvoidingView,Platform,Image,} from 'react-native';
 import { useAuth } from '../src/context/AuthContext';
 import { useRouter } from 'expo-router';
 import { createClientProfile } from '../src/services/authService';
@@ -36,16 +28,18 @@ const Avatar = ({ url, onUpload, loading }: { url: string | null; onUpload: () =
   );
 };
 
+// Componente principal
 export default function CompleteProfilePage() {
-  const { session, refreshProfile } = useAuth();
-  const router = useRouter();
-  const [formData, setFormData] = useState({
-    fullName: '',
-    phone: '',
+  const { session, refreshProfile } = useAuth(); // Obtener el contexto de autenticación
+  const router = useRouter(); // Obtener el router
+  const [formData, setFormData] = useState({ // Establecer el estado del formulario
+    fullName: '', // Establecer el estado del nombre completo
+    phone: '', // Establecer el estado del teléfono
   });
-  const [selectedImage, setSelectedImage] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<any>(null); // Establecer el estado de la imagen seleccionada
+  const [loading, setLoading] = useState(false); // Establecer el estado de carga
 
+  // Función para manejar el cambio de input
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -53,6 +47,7 @@ export default function CompleteProfilePage() {
     }));
   };
 
+  // Función para seleccionar la imagen
   const handleSelectImage = async () => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -77,6 +72,7 @@ export default function CompleteProfilePage() {
     }
   };
 
+  // Función para manejar el envío del formulario
   const handleSubmit = async () => {
     // Validar campos requeridos
     if (!formData.fullName.trim()) {

@@ -1,46 +1,30 @@
-// src/pages/FeedPage.js
+// En: app/(app)/FeedPage.js -> Archivo de feed (Frontend)
+// Este archivo es el encargado de mostrar el feed de publicaciones en la aplicación.
+// Muestra las publicaciones del feed registradas en la base de datos y permite dar like a las publicaciones.
+
+
+// Importaciones
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  FlatList,
-  RefreshControl,
-  ActivityIndicator,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-} from 'react-native';
-import { supabase } from '../../src/supabase/client';
+import {View,FlatList,RefreshControl,ActivityIndicator,StyleSheet,Text,TouchableOpacity,} from 'react-native';
 import FeedService from '../../src/services/FeedService';
 import PostCard from '../../components/PostCard';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
-
+// Componente principal
 const FeedPage = () => {
-  const navigation = useNavigation();
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-  const [currentUserId, setCurrentUserId] = useState(null);
-
-  // Obtener usuario actual
-  useEffect(() => {
-    const getCurrentUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setCurrentUserId(user.id);
-      }
-    };
-    getCurrentUser();
-  }, []);
+  const navigation = useNavigation(); // Obtener el navigation
+  const [posts, setPosts] = useState([]); // Establecer el estado de las publicaciones
+  const [loading, setLoading] = useState(true); // Establecer el estado de carga
+  const [refreshing, setRefreshing] = useState(false); // Establecer el estado de refresco
+  const [loadingMore, setLoadingMore] = useState(false); // Establecer el estado de carga de más publicaciones
+  const [currentPage, setCurrentPage] = useState(0); // Establecer el estado de la página actual
+  const [hasMore, setHasMore] = useState(true); // Establecer el estado de si hay más publicaciones
 
   // Cargar feed inicial
   useEffect(() => {
     loadFeed();
-  }, [currentUserId]);
+  }, []);
 
   // Función para cargar el feed
   const loadFeed = async (page = 0) => {
@@ -49,7 +33,7 @@ const FeedPage = () => {
         setLoading(true);
       }
 
-      const result = await FeedService.getFeed(10, page, currentUserId);
+      const result = await FeedService.getFeedForCurrentUser(10, page);
 
       if (result.success) {
         if (page === 0) {
@@ -71,13 +55,13 @@ const FeedPage = () => {
     }
   };
 
-  // Pull to refresh
+  // Función para refrescar el feed
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     loadFeed(0);
-  }, [currentUserId]);
+  }, []);
 
-  // Cargar más publicaciones (infinite scroll)
+  // Función para cargar más publicaciones
   const loadMore = () => {
     if (!loadingMore && hasMore && !loading) {
       setLoadingMore(true);
@@ -85,22 +69,17 @@ const FeedPage = () => {
     }
   };
 
-  // Manejar like
+  // Función para manejar el like
   const handleLike = async (postId) => {
-    if (!currentUserId) {
-      return { success: false, error: 'Debes iniciar sesión para dar like' };
-    }
-
-    const result = await FeedService.toggleLike(postId, currentUserId);
+    const result = await FeedService.toggleLikeForCurrentUser(postId);
     return result;
   };
 
-  // Renderizar cada publicación
+  // Función para renderizar cada publicación
   const renderPost = ({ item }) => (
     <PostCard 
       post={item} 
       onLike={handleLike}
-      currentUserId={currentUserId}
     />
   );
 

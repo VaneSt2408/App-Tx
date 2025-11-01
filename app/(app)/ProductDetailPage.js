@@ -1,29 +1,28 @@
+// En: app/(app)/ProductDetailPage.js -> Archivo de detalle de producto (Frontend)
+// Este archivo es el encargado de mostrar el detalle de un producto en la aplicación.
+// Muestra el detalle de un producto registrado en la base de datos y permite guardar el producto, contactar al artesano y compartir el producto.
+
+// Importaciones
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  Image,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
+import {View,Text,Image,ScrollView,TouchableOpacity,StyleSheet,ActivityIndicator,Alert,} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import MarketplaceService from '../../src/services/MarketplaceService';
 
+// Componente principal
 export default function ProductDetailPage() {
-  const router = useRouter();
-  const { productId } = useLocalSearchParams();
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [saved, setSaved] = useState(false);
+  const router = useRouter(); // Obtener el router
+  const { productId } = useLocalSearchParams(); // Obtener el id del producto
+  const [product, setProduct] = useState(null); // Establecer el estado del producto
+  const [loading, setLoading] = useState(true); // Establecer el estado de carga
+  const [saved, setSaved] = useState(false); // Establecer el estado de guardado
 
+  // Cargar el detalle del producto
   useEffect(() => {
     loadProductDetail();
   }, [productId]);
 
+  // Función para cargar el detalle del producto
   const loadProductDetail = async () => {
     try {
       setLoading(true);
@@ -66,6 +65,7 @@ export default function ProductDetailPage() {
     );
   };
 
+  // Función para contactar al artesano
   const handleContact = () => {
     Alert.alert(
       'Contactar Artesano',
@@ -74,6 +74,7 @@ export default function ProductDetailPage() {
     );
   };
 
+  // Función para compartir el producto
   const handleShare = () => {
     Alert.alert(
       'Compartir Producto',
@@ -82,6 +83,7 @@ export default function ProductDetailPage() {
     );
   };
 
+  // Función para navegar al perfil del artesano
   const handleArtesanoPress = () => {
     if (product?.artesano?.id) {
       router.push({
@@ -91,6 +93,7 @@ export default function ProductDetailPage() {
     }
   };
 
+  // Renderizar el componente
   if (loading) {
     return (
       <View style={styles.loadingContainer}>

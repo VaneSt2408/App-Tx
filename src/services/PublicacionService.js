@@ -54,6 +54,47 @@ export const createPost = async (userId, text, imageBase64, imageMimeType) => {
 };
 
 /**
+ * Crea una nueva publicación para el usuario actual
+ * Obtiene el usuario de la sesión y crea la publicación
+ * @param {string} text - Texto de la publicación
+ * @param {Object} imageAsset - Objeto de imagen de ImagePicker (opcional) con base64 y mimeType
+ * @returns {Promise<Object>} - Datos de la publicación creada
+ */
+export async function createPostForCurrentUser(text, imageAsset) {
+  try {
+    console.log('📝 [SERVICE] Creando publicación para usuario actual...');
+    
+    // Validar que haya texto o imagen
+    if (!text?.trim() && !imageAsset?.base64) {
+      throw new Error('Escribe algo o selecciona una imagen para publicar');
+    }
+
+    // Obtener el usuario actual
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      throw new Error('Usuario no autenticado');
+    }
+
+    console.log('👤 [SERVICE] Usuario obtenido:', user.id);
+
+    // Crear la publicación usando la función existente
+    const postData = await createPost(
+      user.id,
+      text || '',
+      imageAsset?.base64 || null,
+      imageAsset?.mimeType || null
+    );
+
+    console.log('✅ [SERVICE] Publicación creada exitosamente');
+    return postData;
+  } catch (error) {
+    console.error('❌ [SERVICE] Error en createPostForCurrentUser:', error);
+    throw error;
+  }
+}
+
+/**
  * Obtener publicaciones de un artesano específico
  * @param {string} artesanoUserId - ID del usuario artesano
  * @param {number} limit - Límite de publicaciones por página
@@ -138,6 +179,39 @@ export async function getPublicacionesByArtesano(artesanoUserId, limit = 20, off
   } catch (error) {
     console.error('❌ [PUBLICACIONES] Error en getPublicacionesByArtesano:', error);
     return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Actualizar una publicación
+ * @param {string} publicacionId - ID de la publicación
+ * @param {Object} updateData - Datos a actualizar { texto }
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export async function updatePublication(publicacionId, updateData) {
+  try {
+    console.log('✏️ [SERVICE] Actualizando publicación:', publicacionId);
+    
+    // Validaciones
+    if (!updateData.texto || !updateData.texto.trim()) {
+      throw new Error('El texto de la publicación es requerido');
+    }
+
+    const { error } = await supabase
+      .from('publicaciones')
+      .update({ texto: updateData.texto.trim() })
+      .eq('id', publicacionId);
+
+    if (error) {
+      console.error('❌ [SERVICE] Error al actualizar publicación:', error);
+      throw new Error('No se pudo actualizar la publicación: ' + error.message);
+    }
+
+    console.log('✅ [SERVICE] Publicación actualizada correctamente');
+    return { success: true };
+  } catch (error) {
+    console.error('❌ [SERVICE] Error en updatePublication:', error);
+    throw error;
   }
 }
 
@@ -274,7 +348,9 @@ export async function getPublicacionesStats(artesanoUserId) {
 // Exportar como objeto para compatibilidad con el código existente
 const PublicacionService = {
   createPost,
+  createPostForCurrentUser,
   getPublicacionesByArtesano,
+  updatePublication,
   deletePublication,
   getPublicacionesStats
 };

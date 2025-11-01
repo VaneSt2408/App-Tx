@@ -7,6 +7,41 @@ import { supabase } from '../supabase/client';
 export class FeedService {
   
   /**
+   * Obtiene el usuario actual de la sesión
+   * @returns {Promise<{userId: string|null, error?: string}>}
+   */
+  static async getCurrentUserId() {
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) {
+        console.error('❌ [SERVICE] Error al obtener usuario:', error);
+        return { userId: null };
+      }
+      return { userId: user?.id || null };
+    } catch (error) {
+      console.error('❌ [SERVICE] Error en getCurrentUserId:', error);
+      return { userId: null };
+    }
+  }
+
+  /**
+   * Obtiene las publicaciones del feed con paginación para el usuario actual
+   * Obtiene el usuario de la sesión automáticamente
+   * @param {number} limit - Cantidad de publicaciones por página (default: 10)
+   * @param {number} page - Número de página (default: 0)
+   * @returns {Promise<{success: boolean, data?: array, error?: string, hasMore?: boolean}>}
+   */
+  static async getFeedForCurrentUser(limit = 10, page = 0) {
+    try {
+      const { userId } = await this.getCurrentUserId();
+      return await this.getFeed(limit, page, userId);
+    } catch (error) {
+      console.error('❌ [SERVICE] Error en getFeedForCurrentUser:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
    * Obtiene las publicaciones del feed con paginación
    * @param {number} limit - Cantidad de publicaciones por página (default: 10)
    * @param {number} page - Número de página (default: 0)
@@ -119,6 +154,27 @@ export class FeedService {
 
     } catch (error) {
       console.error('❌ Error en getFeed:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Da o quita like a una publicación para el usuario actual (toggle)
+   * Obtiene el usuario de la sesión automáticamente
+   * @param {string} publicacionId - ID de la publicación
+   * @returns {Promise<{success: boolean, liked?: boolean, likes_count?: number, error?: string}>}
+   */
+  static async toggleLikeForCurrentUser(publicacionId) {
+    try {
+      const { userId } = await this.getCurrentUserId();
+      
+      if (!userId) {
+        return { success: false, error: 'Debes iniciar sesión para dar like' };
+      }
+
+      return await this.toggleLike(publicacionId, userId);
+    } catch (error) {
+      console.error('❌ [SERVICE] Error en toggleLikeForCurrentUser:', error);
       return { success: false, error: error.message };
     }
   }

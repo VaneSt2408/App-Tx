@@ -1,57 +1,50 @@
+// En: app/(app)/ArtesanoPublications.js -> Archivo de las publicaciones del artesano (Frontend)
+// Este archivo es el encargado de mostrar las publicaciones del artesano en la aplicación.
+// Muestra las publicaciones del artesano registradas en la base de datos y permite buscarlas por texto, fecha o categoría.
+// También permite navegar al perfil del artesano y ver su información completa.
+
+
+// Importaciones
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  Image,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-  Dimensions,
-  Modal,
-  ScrollView,
-  TextInput,
-  PanResponder,
-  Animated,
-} from 'react-native';
+import {View,Text,FlatList,Image,TouchableOpacity,StyleSheet,ActivityIndicator,RefreshControl,Alert,Dimensions,Modal,ScrollView,TextInput,PanResponder,Animated } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
-import { getPublicacionesByArtesano, deletePublication } from '../../src/services/PublicacionService';
-import { supabase } from '../../src/supabase/client';
+import { getPublicacionesByArtesano, deletePublication, updatePublication } from '../../src/services/PublicacionService';
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get('window'); // Obtener el ancho de la ventana
 const imageSize = (width - 60) / 3; // Para grid de 3 columnas
 
+// Componente principal
 export default function ArtesanoPublications() {
-  const router = useRouter();
-  const { userId } = useLocalSearchParams();
-  const { session } = useAuth();
+  const router = useRouter(); // Obtener el router
+  const { userId } = useLocalSearchParams(); // Obtener el id del usuario
+  const { session } = useAuth(); // Obtener la sesión
   
-  const [publicaciones, setPublicaciones] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-  const [totalCount, setTotalCount] = useState(0);
-  const [selectedPublication, setSelectedPublication] = useState(null);
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [showPublicationModal, setShowPublicationModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editData, setEditData] = useState({ texto: '' });
-  const [editLoading, setEditLoading] = useState(false);
-  const swipeAnim = React.useRef(new Animated.Value(0)).current;
+  const [publicaciones, setPublicaciones] = useState([]); // Establecer el estado de las publicaciones
+  const [loading, setLoading] = useState(true); // Establecer el estado de carga
+  const [refreshing, setRefreshing] = useState(false); // Establecer el estado de refresco
+  const [currentPage, setCurrentPage] = useState(0); // Establecer el estado de la página actual
+  const [hasMore, setHasMore] = useState(true); // Establecer el estado de si hay más publicaciones
+  const [totalCount, setTotalCount] = useState(0); // Establecer el estado del total de publicaciones
+  const [selectedPublication, setSelectedPublication] = useState(null); // Establecer el estado de la publicación seleccionada
+  const [selectedIndex, setSelectedIndex] = useState(0); // Establecer el estado del índice de la publicación seleccionada
+  const [showPublicationModal, setShowPublicationModal] = useState(false); // Establecer el estado de la publicación modal
+  const [showEditModal, setShowEditModal] = useState(false); // Establecer el estado de la modal de edición
+  const [editData, setEditData] = useState({ texto: '' }); // Establecer el estado de los datos de edición
+  const [editLoading, setEditLoading] = useState(false); // Establecer el estado de carga de edición
+  const swipeAnim = React.useRef(new Animated.Value(0)).current; // Referencia para la animación del swipe
 
-  const isOwnProfile = session?.user?.id === userId;
+  const isOwnProfile = session?.user?.id === userId; // Verificar si el usuario es el propio
 
+  // Efecto para cargar las publicaciones
   useEffect(() => {
     if (userId) {
       loadPublicaciones();
     }
   }, [userId]);
 
+  // Función para cargar las publicaciones
   const loadPublicaciones = async (page = 0) => {
     try {
       if (page === 0) {
@@ -84,23 +77,27 @@ export default function ArtesanoPublications() {
     }
   };
 
+  // Función para refrescar las publicaciones
   const onRefresh = () => {
     setRefreshing(true);
     loadPublicaciones(0);
   };
 
+  // Función para cargar más publicaciones
   const loadMore = () => {
     if (hasMore && !loading) {
       loadPublicaciones(currentPage + 1);
     }
   };
 
+  // Función para seleccionar una publicación
   const handleSelectPublication = (publication, index) => {
     setSelectedPublication(publication);
     setSelectedIndex(index);
     setShowPublicationModal(true);
   };
 
+  // Función para cerrar el modal de publicación
   const handleCloseModal = () => {
     setShowPublicationModal(false);
     setSelectedPublication(null);
@@ -108,6 +105,7 @@ export default function ArtesanoPublications() {
     swipeAnim.setValue(0);
   };
 
+  // Función para navegar a la siguiente publicación
   const handleNextPublication = () => {
     if (selectedIndex < publicaciones.length - 1) {
       const nextIndex = selectedIndex + 1;
@@ -117,6 +115,7 @@ export default function ArtesanoPublications() {
     }
   };
 
+  // Función para navegar a la publicación anterior
   const handlePreviousPublication = () => {
     if (selectedIndex > 0) {
       const prevIndex = selectedIndex - 1;
@@ -156,6 +155,7 @@ export default function ArtesanoPublications() {
     })
   ).current;
 
+  // Función para eliminar una publicación
   const handleDeletePublication = async (publicacionId) => {
     Alert.alert(
       'Eliminar Publicación',
@@ -191,6 +191,7 @@ export default function ArtesanoPublications() {
     );
   };
 
+  // Función para editar una publicación
   const handleEditPublication = () => {
     console.log('✏️ [EDITAR] Botón editar presionado');
     console.log('✏️ [EDITAR] selectedPublication:', selectedPublication);
@@ -206,11 +207,13 @@ export default function ArtesanoPublications() {
     }
   };
 
+  // Función para cerrar el modal de edición
   const handleCloseEditModal = () => {
     setShowEditModal(false);
     setEditData({ texto: '' });
   };
 
+  // Función para guardar la edición de una publicación
   const handleSaveEdit = async () => {
     if (!selectedPublication) return;
 
@@ -218,16 +221,7 @@ export default function ArtesanoPublications() {
     try {
       console.log('✏️ [PUBLICACIONES] Editando publicación:', selectedPublication.id);
       
-      const { error } = await supabase
-        .from('publicaciones')
-        .update({ texto: editData.texto })
-        .eq('id', selectedPublication.id);
-
-      if (error) {
-        console.error('❌ [PUBLICACIONES] Error al editar:', error);
-        Alert.alert('Error', 'No se pudo editar la publicación: ' + error.message);
-        return;
-      }
+      await updatePublication(selectedPublication.id, { texto: editData.texto });
 
       Alert.alert('Éxito', 'Publicación editada correctamente');
       handleCloseEditModal();
@@ -237,12 +231,13 @@ export default function ArtesanoPublications() {
       
     } catch (error) {
       console.error('❌ [PUBLICACIONES] Error en handleSaveEdit:', error);
-      Alert.alert('Error', 'Ocurrió un error al editar la publicación');
+      Alert.alert('Error', error.message || 'Ocurrió un error al editar la publicación');
     } finally {
       setEditLoading(false);
     }
   };
 
+  // Función para formatear la fecha de una publicación
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', {
@@ -254,6 +249,7 @@ export default function ArtesanoPublications() {
     });
   };
 
+  // Función para renderizar una publicación
   const renderPublication = ({ item, index }) => (
     <TouchableOpacity
       style={styles.gridItem}
@@ -278,6 +274,7 @@ export default function ArtesanoPublications() {
     </TouchableOpacity>
   );
 
+  // Función para renderizar el footer
   const renderFooter = () => {
     if (!hasMore) return null;
     return (
@@ -287,6 +284,7 @@ export default function ArtesanoPublications() {
     );
   };
 
+  // Función para renderizar el contenido vacío
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
       <MaterialCommunityIcons name="image-multiple-outline" size={80} color="#ccc" />

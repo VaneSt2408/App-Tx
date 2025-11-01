@@ -1,25 +1,27 @@
+// En: app/(app)/ArtesanoSettings.js -> Archivo de ajustes del artesano (Frontend)
+// Este archivo es el encargado de mostrar los ajustes del artesano en la aplicación.
+// Permite cerrar sesión, navegar al perfil del artesano, ver sus publicaciones y productos.
+
+
+// Importaciones
 import React from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TouchableOpacity,
-  Alert
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity,Alert} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { signOut } from '../../src/services/authService';
 import { useAuth } from '../../src/context/AuthContext';
 
+// Componente principal
 export default function ArtesanoSettings() {
-  const router = useRouter();
-  const { session } = useAuth();
+  const router = useRouter(); // Obtener el router
+  const { session } = useAuth(); // Obtener la sesión
 
+  // Función para cerrar sesión
   const handleLogout = async () => {
     await signOut();
   };
 
+  // Opciones de ajustes
   const settingsOptions = [
     {
       id: 'profile',
@@ -62,6 +64,7 @@ export default function ArtesanoSettings() {
     },
   ];
 
+  // Renderizado
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>

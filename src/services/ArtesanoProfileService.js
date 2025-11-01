@@ -39,6 +39,67 @@ export async function updatePerfilArtesano(userId, data) {
 }
 
 /**
+ * Actualiza el perfil completo del artesano incluyendo avatar si se proporciona
+ * @param {string} userId - ID del usuario
+ * @param {Object} data - Datos a actualizar { nombre, telefono, ubicacion, descripcion, avatar_url }
+ * @param {Object} newImageAsset - Objeto de imagen de ImagePicker (opcional)
+ * @returns {Promise<{success: boolean, avatar_url?: string, error?: string}>}
+ */
+export async function updatePerfilArtesanoCompleto(userId, data, newImageAsset) {
+  try {
+    console.log('🔄 [SERVICE] Actualizando perfil completo del artesano...');
+    
+    let avatarUrl = data.avatar_url;
+    
+    // Si hay una nueva imagen, subirla primero
+    if (newImageAsset) {
+      console.log('📤 [SERVICE] Nueva imagen detectada, subiendo avatar...');
+      const uploadResult = await subirAvatarArtesano(userId, newImageAsset);
+      
+      if (!uploadResult.success) {
+        throw new Error(uploadResult.error);
+      }
+      
+      avatarUrl = uploadResult.avatar_url;
+      console.log('✅ [SERVICE] Avatar subido exitosamente:', avatarUrl);
+    }
+    
+    // Actualizar tabla artesanos (nombre, ubicacion, descripcion, avatar_url si cambió)
+    const updateData = {
+      nombre: data.nombre, 
+      ubicacion: data.ubicacion,
+      descripcion: data.descripcion 
+    };
+    
+    // Solo actualizar avatar_url si hay una nueva imagen
+    if (avatarUrl && avatarUrl !== data.avatar_url) {
+      updateData.avatar_url = avatarUrl;
+    }
+    
+    const { error: artesanosError } = await supabase
+      .from('artesanos')
+      .update(updateData)
+      .eq('user_id', userId);
+
+    if (artesanosError) throw artesanosError;
+
+    // Actualizar tabla perfiles (telefono)
+    const { error: perfilesError } = await supabase
+      .from('perfiles')
+      .update({ telefono: data.telefono })
+      .eq('id', userId);
+
+    if (perfilesError) throw perfilesError;
+
+    console.log('✅ [SERVICE] Perfil actualizado exitosamente');
+    return { success: true, avatar_url: avatarUrl };
+  } catch (error) {
+    console.error('❌ [SERVICE] Error al actualizar perfil completo:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
  * Elimina el perfil del artesano y todos sus datos relacionados
  * @param {string} userId - ID del usuario
  * @returns {Promise<{success: boolean, error?: string}>}

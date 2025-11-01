@@ -1,9 +1,10 @@
-// En: src/pages/RegisterArtesano.js
+// En: app/(app)/RegisterArtesano.js -> Archivo de registro de artesano (Frontend)
+// Este archivo es el encargado de mostrar el formulario de registro de artesano en la aplicación.
+// Permite registrar un nuevo artesano en la aplicación mediante un formulario de registro.
+
+// Importaciones
 import React, { useState, useEffect } from 'react'; // Importa React y los hooks 'useState' y 'useEffect'.
-import { 
-  View, TextInput, Button, Alert, StyleSheet, TouchableOpacity, Text, 
-  ScrollView, ActivityIndicator 
-} from 'react-native'; // Importa varios componentes de UI de React Native.
+import { View, TextInput, Button, Alert, StyleSheet, TouchableOpacity, Text, ScrollView, ActivityIndicator } from 'react-native'; // Importa varios componentes de UI de React Native.
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Importa una librería de íconos.
 import { useNavigation } from '@react-navigation/native'; // Importa el hook para manejar la navegación entre pantallas.
 import { supabase } from '../../src/supabase/client'; // Importa el cliente de Supabase.

@@ -1,4 +1,8 @@
-// En: src/pages/NotFoundPage.js
+// En: app/(app)/NotFoundPage.js -> Archivo de error de permisos (Frontend)
+// Este archivo es el encargado de mostrar el error de permisos en la aplicación.
+// Muestra un mensaje de error de permisos y permite cerrar sesión.
+
+// Importaciones
 import React from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
 import { supabase } from '../../src/supabase/client';

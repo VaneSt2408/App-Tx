@@ -1,4 +1,8 @@
-// En: src/pages/ChangePassword.js
+// En: app/(app)/ChangePassword.js -> Archivo de cambio de contraseña (Frontend)
+// Este archivo es el encargado de mostrar el formulario de cambio de contraseña en la aplicación.
+// Permite cambiar la contraseña del usuario registrado en la base de datos.
+
+// Importaciones
 import React, { useState } from 'react'; // Importa la librería React y el hook 'useState' para manejar el estado del componente.
 import { View, TextInput, Button, Alert, StyleSheet, Text } from 'react-native'; // Importa componentes de UI básicos de React Native.
 import { supabase } from '../../src/supabase/client'; // Importa el cliente de Supabase para interactuar con la base de datos y la autenticación.
@@ -12,51 +16,41 @@ export default function ChangePassword() { // Define y exporta el componente fun
 
   // Define la función asíncrona que se ejecutará al presionar el botón de cambiar contraseña.
   const handleChangePassword = async () => {
-    // Valida si alguno de los dos campos de contraseña está vacío.
     if (!newPassword || !confirmPassword) {
-      // Si están vacíos, muestra una alerta al usuario y detiene la ejecución.
       return Alert.alert('Campos vacíos', 'Por favor completa ambos campos.');
     }
 
     // Valida si las contraseñas escritas en ambos campos no coinciden.
     if (newPassword !== confirmPassword) {
-      // Si no coinciden, muestra una alerta de error y detiene la ejecución.
       return Alert.alert('Error', 'Las contraseñas no coinciden.');
     }
 
-    // Inicia un bloque 'try...catch' para manejar posibles errores durante la llamada a Supabase.
     try {
-      setLoading(true); // Pone el estado de 'loading' en 'true' para indicar que el proceso comenzó.
-      console.log('[ChangePassword] 🔐 Intentando actualizar contraseña...'); // Imprime un mensaje en la consola para depuración.
+      setLoading(true);
+      console.log('[ChangePassword] 🔐 Intentando actualizar contraseña...');
 
-      // Llama a la función de Supabase para actualizar los datos del usuario actual, pasándole la nueva contraseña.
       const { error } = await supabase.auth.updateUser({ password: newPassword });
 
-      // Comprueba si la respuesta de Supabase contiene un objeto de error.
       if (error) {
-        console.error('[ChangePassword] ❌ Error al actualizar:', error); // Si hay un error, lo muestra en la consola.
-        Alert.alert('Error', 'No se pudo actualizar la contraseña.'); // Muestra una alerta genérica al usuario.
-        return; // Detiene la ejecución de la función.
+        console.error('[ChangePassword] ❌ Error al actualizar:', error); 
+        Alert.alert('Error', 'No se pudo actualizar la contraseña.'); 
+        return; 
       }
 
-      console.log('[ChangePassword] ✅ Contraseña actualizada en Supabase.'); // Imprime un mensaje de éxito en la consola.
+      console.log('[ChangePassword] ✅ Contraseña actualizada en Supabase.'); 
       
-      // Refrescar el perfil después de cambiar la contraseña
       await refreshProfile();
       
-      // Muestra una alerta al usuario indicando que la operación fue exitosa.
-      // La lógica de navegación en _layout.tsx se encargará de redirigir automáticamente
-      // si el perfil necesita ser completado (tanto para clientes como artesanos)
       Alert.alert(
-        '¡Éxito!', // Título de la alerta.
-        'Tu contraseña ha sido actualizada. Serás redirigido en un momento.' // Mensaje de la alerta.
+        '¡Éxito!', 
+        'Tu contraseña ha sido actualizada. Serás redirigido en un momento.' 
       );
 
-    } catch (error) { // Si ocurre un error inesperado en el bloque 'try', se ejecuta este bloque 'catch'.
-      console.error('[ChangePassword] ❌ Error inesperado:', error); // Muestra el error inesperado en la consola.
-      Alert.alert('Error', 'Ocurrió un problema inesperado.'); // Informa al usuario del error.
-    } finally { // Este bloque se ejecuta siempre, haya habido éxito o error.
-      setLoading(false); // Regresa el estado de 'loading' a 'false' para indicar que el proceso terminó.
+    } catch (error) { 
+      console.error('[ChangePassword] ❌ Error inesperado:', error); 
+      Alert.alert('Error', 'Ocurrió un problema inesperado.'); 
+    } finally { 
+      setLoading(false); 
     }
   };
 

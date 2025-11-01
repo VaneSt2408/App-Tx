@@ -1,16 +1,21 @@
+// En: app/(app)/CreatePostPage.js -> Archivo de creación de publicación (Frontend)
+// Este archivo es el encargado de mostrar el formulario de creación de publicación en la aplicación.
+// Permite crear una nueva publicación con texto y una imagen.
+
+// Importaciones
 import React, { useState } from 'react';
 import { View, TextInput, Button, Image, StyleSheet, Alert, ActivityIndicator, ScrollView, Text, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
-import { supabase } from '../../src/supabase/client';
-import { createPost } from '../../src/services/PublicacionService'; // Importamos la función individual
+import { createPostForCurrentUser } from '../../src/services/PublicacionService';
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Para el icono de imagen
 
+// Componente principal
 export default function CreatePostPage() {
-    const navigation = useNavigation();
-    const [text, setText] = useState('');
+    const navigation = useNavigation(); // Obtener el navigation
+    const [text, setText] = useState(''); // Establecer el estado del texto
     const [image, setImage] = useState(null); // Guardará el objeto de imagen seleccionado
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(false); // Establecer el estado de carga
 
     // Función para seleccionar imagen de la galería
     const pickImage = async () => {
@@ -35,29 +40,16 @@ export default function CreatePostPage() {
 
     // Función para manejar la publicación
     const handlePublish = async () => {
-        if (!text && !image) {
-            Alert.alert('Vacío', 'Escribe algo o selecciona una imagen para publicar.');
-            return;
-        }
-
         setLoading(true);
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error('Usuario no autenticado');
-
-            await createPost(
-                user.id,
-                text,
-                image?.base64, // Pasa el base64 si existe
-                image?.mimeType // Pasa el tipo mime si existe
-            );
+            await createPostForCurrentUser(text, image);
 
             Alert.alert('Éxito', 'Publicación creada correctamente.');
             navigation.goBack(); // Regresa a la pantalla anterior
 
         } catch (error) {
             console.error("Error en handlePublish:", error);
-            Alert.alert('Error', 'No se pudo crear la publicación: ' + error.message);
+            Alert.alert('Error', error.message || 'No se pudo crear la publicación');
         } finally {
             setLoading(false);
         }

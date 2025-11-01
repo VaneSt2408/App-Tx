@@ -1,23 +1,14 @@
-// app/completeArtesanoProfile.tsx
+  // En: app/completeArtesanoProfile.tsx -> Archivo de perfil del artesano (Frontend)
+  // Este archivo es el encargado de mostrar el formulario de perfil del artesano en la aplicación.
+  // Permite completar el perfil del artesano mediante un formulario de perfil.
+
+// Importaciones
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  Image,
-} from 'react-native';
+import {View,Text,TextInput,TouchableOpacity,StyleSheet,Alert,ActivityIndicator,ScrollView,KeyboardAvoidingView,Platform ,Image,} from 'react-native';
 import { useAuth } from '../src/context/AuthContext';
 import { useRouter } from 'expo-router';
-import { supabase } from '../src/supabase/client';
 import * as ImagePicker from 'expo-image-picker';
-import { decode } from 'base64-arraybuffer';
+import { completeArtesanoProfile } from '../src/services/userService';
 import 'react-native-get-random-values';
 
 // --- Componente reutilizable para mostrar y seleccionar el avatar ---
@@ -35,15 +26,17 @@ const Avatar = ({ url, onUpload, loading }: { url: string | null; onUpload: () =
   );
 };
 
+// Componente principal
 export default function CompleteArtesanoProfilePage() {
-  const { session, refreshProfile } = useAuth();
-  const router = useRouter();
-  const [formData, setFormData] = useState({
-    descripcion: '',
+  const { session, refreshProfile } = useAuth(); // Obtener el contexto de autenticación
+  const router = useRouter(); // Obtener el router
+  const [formData, setFormData] = useState({ // Establecer el estado del formulario
+    descripcion: '', // Establecer el estado de la descripción
   });
-  const [selectedImage, setSelectedImage] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<any>(null); // Establecer el estado de la imagen seleccionada
+  const [loading, setLoading] = useState(false); // Establecer el estado de carga
 
+  // Función para manejar el cambio de input
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -51,6 +44,7 @@ export default function CompleteArtesanoProfilePage() {
     }));
   };
 
+  // Función para seleccionar la imagen
   const handleSelectImage = async () => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -75,133 +69,41 @@ export default function CompleteArtesanoProfilePage() {
     }
   };
 
+  // Función para manejar el envío del formulario
   const handleSubmit = async () => {
-    console.log('📝 [CompleteArtesanoProfile] Iniciando handleSubmit...');
-    console.log('📋 [CompleteArtesanoProfile] Datos del formulario:', {
-      descripcion: formData.descripcion ? `${formData.descripcion.substring(0, 50)}...` : 'vacío',
-      tieneImagen: !!selectedImage
-    });
-
     setLoading(true);
     try {
-      // Obtenemos el ID del usuario que ya tiene una sesión activa
-      console.log('👤 [CompleteArtesanoProfile] Obteniendo usuario actual...');
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.error('❌ [CompleteArtesanoProfile] No se encontró usuario');
-        Alert.alert('Error', 'No se encontró la sesión del usuario');
-        return;
-      }
-      console.log('✅ [CompleteArtesanoProfile] Usuario obtenido:', user.id);
+      console.log('📝 [CompleteArtesanoProfile] Iniciando handleSubmit...');
+      
+      const result = await completeArtesanoProfile(
+        { descripcion: formData.descripcion },
+        selectedImage || null
+      );
 
-      let avatarUrl = null;
-
-      // --- Subida de la imagen (si se seleccionó una) ---
-      if (selectedImage) {
-        console.log('📤 [CompleteArtesanoProfile] Iniciando subida de imagen...');
-        const fileExt = selectedImage.uri.split('.').pop();
-        const fileName = `${Date.now()}.${fileExt}`;
-        const filePath = `${user.id}/${fileName}`;
-        console.log('📁 [CompleteArtesanoProfile] Ruta del archivo:', filePath);
+      if (result.success) {
+        console.log('✅ [CompleteArtesanoProfile] Perfil completado exitosamente');
         
-        // Subimos la imagen decodificada al bucket 'avatars'
-        const { error: uploadError } = await supabase.storage
-          .from('avatars')
-          .upload(filePath, decode(selectedImage.base64), {
-            contentType: selectedImage.mimeType ?? 'image/jpeg',
-          });
+        // Esperar un momento para que Supabase procese los cambios
+        await new Promise(resolve => setTimeout(resolve, 500));
 
-        if (uploadError) {
-          console.error('❌ [CompleteArtesanoProfile] Error al subir imagen:', uploadError);
-          Alert.alert('Error', 'No se pudo subir la imagen: ' + uploadError.message);
-          return;
-        }
+        // Refrescar el perfil ANTES de mostrar el alert para asegurar que los datos estén actualizados
+        console.log('🔄 [CompleteArtesanoProfile] Refrescando perfil en contexto...');
+        await refreshProfile();
+        console.log('✅ [CompleteArtesanoProfile] refreshProfile() completado');
 
-        // Si la subida fue exitosa, obtenemos la URL pública de la imagen
-        const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
-        avatarUrl = urlData.publicUrl;
-        console.log('✅ [CompleteArtesanoProfile] Imagen subida exitosamente:', avatarUrl);
-      } else {
-        console.log('ℹ️ [CompleteArtesanoProfile] No se seleccionó imagen');
-      }
-
-      // --- Actualizar el perfil del artesano ---
-      // Primero actualizamos el avatar en la tabla artesanos si existe
-      if (avatarUrl) {
-        console.log('🔄 [CompleteArtesanoProfile] Actualizando avatar en tabla artesanos...');
-        console.log('📊 [CompleteArtesanoProfile] user_id:', user.id, 'avatar_url:', avatarUrl);
-        const { error: avatarError } = await supabase
-          .from('artesanos')
-          .update({ avatar_url: avatarUrl })
-          .eq('user_id', user.id);
-
-        if (avatarError) {
-          console.error('❌ [CompleteArtesanoProfile] Error actualizando avatar:', avatarError);
-          Alert.alert('Error', 'No se pudo actualizar la foto de perfil: ' + avatarError.message);
-          return;
-        }
-        console.log('✅ [CompleteArtesanoProfile] Avatar actualizado en artesanos');
-      }
-
-      // Actualizamos la descripción en la tabla artesanos (siempre, aunque esté vacía)
-      console.log('🔄 [CompleteArtesanoProfile] Procesando descripción...');
-      const descripcionValue = formData.descripcion.trim() || '';
-      console.log('📝 [CompleteArtesanoProfile] Descripción a guardar:', descripcionValue ? `${descripcionValue.substring(0, 100)}...` : '(vacía)');
-      
-      // Actualizamos la descripción en la tabla artesanos
-      console.log('🔄 [CompleteArtesanoProfile] Actualizando descripción en tabla artesanos...');
-      const { data: updatedData, error: updateError } = await supabase
-        .from('artesanos')
-        .update({ descripcion: descripcionValue })
-        .eq('user_id', user.id)
-        .select();
-
-      if (updateError) {
-        console.error('❌ [CompleteArtesanoProfile] Error actualizando descripción:', updateError);
-        console.error('❌ [CompleteArtesanoProfile] Detalles del error:', JSON.stringify(updateError, null, 2));
-        Alert.alert('Error', 'No se pudo actualizar la descripción: ' + updateError.message);
-        return;
-      }
-      console.log('✅ [CompleteArtesanoProfile] Descripción actualizada exitosamente en artesanos:', updatedData);
-
-      console.log('✅ [CompleteArtesanoProfile] Perfil completado exitosamente');
-      console.log('🔄 [CompleteArtesanoProfile] Refrescando perfil en contexto...');
-      
-      // Esperar un momento para que Supabase procese los cambios
-      console.log('⏳ [CompleteArtesanoProfile] Esperando 500ms para que Supabase procese los cambios...');
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Refrescar el perfil ANTES de mostrar el alert para asegurar que los datos estén actualizados
-      console.log('🔄 [CompleteArtesanoProfile] Llamando a refreshProfile() antes del alert...');
-      await refreshProfile();
-      console.log('✅ [CompleteArtesanoProfile] refreshProfile() completado');
-
-      // Verificar que los datos se guardaron correctamente
-      console.log('🔍 [CompleteArtesanoProfile] Verificando que los datos se guardaron...');
-      const { data: verifyData, error: verifyError } = await supabase
-        .from('artesanos')
-        .select('descripcion')
-        .eq('user_id', user.id)
-        .single();
-
-      console.log('📊 [CompleteArtesanoProfile] Verificación post-guardado:', {
-        tiene_descripcion: !!verifyData?.descripcion,
-        descripcion: verifyData?.descripcion ? `${verifyData.descripcion.substring(0, 50)}...` : 'null',
-        error: verifyError?.code
-      });
-
-      Alert.alert('¡Éxito!', 'Tu perfil ha sido completado.', [
-        {
-          text: 'Continuar',
-          onPress: () => {
-            // La lógica de navegación en _layout.tsx se encargará de redirigir
-            console.log('✅ [CompleteArtesanoProfile] Usuario presionó continuar');
+        Alert.alert('¡Éxito!', 'Tu perfil ha sido completado.', [
+          {
+            text: 'Continuar',
+            onPress: () => {
+              // La lógica de navegación en _layout.tsx se encargará de redirigir
+              console.log('✅ [CompleteArtesanoProfile] Usuario presionó continuar');
+            }
           }
-        }
-      ]);
+        ]);
+      }
     } catch (error) {
       console.error('❌ [CompleteArtesanoProfile] Error general:', error);
-      Alert.alert('Error', 'No se pudo guardar tu perfil. Inténtalo de nuevo. ' + (error as Error).message);
+      Alert.alert('Error', error.message || 'No se pudo guardar tu perfil. Inténtalo de nuevo.');
     } finally {
       setLoading(false);
       console.log('🏁 [CompleteArtesanoProfile] handleSubmit finalizado');

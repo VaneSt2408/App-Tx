@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 /**
  * Componente de tarjeta de publicación (estilo Facebook)
  */
-const PostCard = ({ post, onLike, currentUserId }) => {
+const PostCard = ({ post, onLike }) => {
   const router = useRouter();
   const [liked, setLiked] = useState(post.liked_by_user);
   const [likesCount, setLikesCount] = useState(post.likes_count);
@@ -52,7 +52,7 @@ const PostCard = ({ post, onLike, currentUserId }) => {
 
   // Manejar like
   const handleLike = async () => {
-    if (isLiking || !currentUserId) return;
+    if (isLiking) return;
 
     setIsLiking(true);
 
@@ -149,7 +149,7 @@ const PostCard = ({ post, onLike, currentUserId }) => {
         <TouchableOpacity 
           style={styles.likeButton}
           onPress={handleLike}
-          disabled={isLiking || !currentUserId}
+          disabled={isLiking}
           activeOpacity={0.7}
         >
           <MaterialCommunityIcons 
