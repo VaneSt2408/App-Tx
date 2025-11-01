@@ -2,8 +2,10 @@
 import React, { useState } from 'react'; // Importa la librería React y el hook 'useState' para manejar el estado del componente.
 import { View, TextInput, Button, Alert, StyleSheet, Text } from 'react-native'; // Importa componentes de UI básicos de React Native.
 import { supabase } from '../../src/supabase/client'; // Importa el cliente de Supabase para interactuar con la base de datos y la autenticación.
+import { useAuth } from '../../src/context/AuthContext'; // Importa el contexto de autenticación.
 
 export default function ChangePassword() { // Define y exporta el componente funcional 'ChangePassword'.
+  const { refreshProfile } = useAuth(); // Obtiene la función para refrescar el perfil.
   const [newPassword, setNewPassword] = useState(''); // Crea un estado para guardar la nueva contraseña que escribe el usuario.
   const [confirmPassword, setConfirmPassword] = useState(''); // Crea un estado para guardar la confirmación de la contraseña.
   const [loading, setLoading] = useState(false); // Crea un estado para saber si una operación está en curso (ej. para mostrar un spinner).
@@ -39,7 +41,12 @@ export default function ChangePassword() { // Define y exporta el componente fun
 
       console.log('[ChangePassword] ✅ Contraseña actualizada en Supabase.'); // Imprime un mensaje de éxito en la consola.
       
+      // Refrescar el perfil después de cambiar la contraseña
+      await refreshProfile();
+      
       // Muestra una alerta al usuario indicando que la operación fue exitosa.
+      // La lógica de navegación en _layout.tsx se encargará de redirigir automáticamente
+      // si el perfil necesita ser completado (tanto para clientes como artesanos)
       Alert.alert(
         '¡Éxito!', // Título de la alerta.
         'Tu contraseña ha sido actualizada. Serás redirigido en un momento.' // Mensaje de la alerta.

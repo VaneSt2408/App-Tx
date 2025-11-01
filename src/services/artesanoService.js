@@ -32,21 +32,43 @@ export const artesanoService = {
       console.log('🔍 [SERVICIO] Obteniendo artesano con ID:', userId);
       console.log('📋 [SERVICIO] Consultando tabla "artesanos" directamente...');
       
-      const { data, error } = await supabase
+      // Obtener datos de la tabla artesanos (incluye descripcion ahora)
+      const { data: artesanoData, error: artesanoError } = await supabase
         .from('artesanos')
         .select('*')
         .eq('user_id', userId)
         .single();
 
-      if (error) {
-        console.error('❌ [SERVICIO] Error al obtener artesano:', error);
-        throw error;
+      if (artesanoError) {
+        console.error('❌ [SERVICIO] Error al obtener artesano:', artesanoError);
+        throw artesanoError;
       }
 
-      console.log('📊 [SERVICIO] Datos del artesano obtenidos:', data);
-      console.log('🖼️ [SERVICIO] Avatar URL en datos:', data?.avatar_url);
+      // Obtener telefono de la tabla perfiles
+      const { data: perfil, error: perfilError } = await supabase
+        .from('perfiles')
+        .select('telefono')
+        .eq('id', userId)
+        .single();
+
+      if (perfilError && perfilError.code !== 'PGRST116') {
+        console.error('❌ [SERVICIO] Error al obtener perfil:', perfilError);
+      }
+
+      // Combinar todos los datos (la descripcion ahora viene de artesanos)
+      const artesanoCompleto = {
+        ...artesanoData,
+        descripcion: artesanoData?.descripcion || null,
+        nombre: artesanoData?.nombre || null,
+        telefono: perfil?.telefono || null
+      };
+
+      console.log('📊 [SERVICIO] Datos del artesano obtenidos:', artesanoCompleto);
+      console.log('🖼️ [SERVICIO] Avatar URL en datos:', artesanoCompleto?.avatar_url);
+      console.log('📝 [SERVICIO] Descripción:', artesanoCompleto?.descripcion ? `${artesanoCompleto.descripcion.substring(0, 50)}...` : 'null');
+      console.log('📞 [SERVICIO] Teléfono:', artesanoCompleto?.telefono || 'null');
       
-      return data;
+      return artesanoCompleto;
     } catch (error) {
       console.error('❌ [SERVICIO] Error en getArtesanoById:', error);
       throw error;

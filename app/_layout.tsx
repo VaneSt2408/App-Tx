@@ -36,6 +36,7 @@ function RootLayoutNav() {
 
     const inAuthGroup = segments[0] === '(auth)';
     const inCompleteProfile = segments[0] === 'completeProfile';
+    const inCompleteArtesanoProfile = segments[0] === 'completeArtesanoProfile';
 
     // Si estamos en modo de recuperación de contraseña, no redirigir automáticamente
     if (isPasswordRecovery) {
@@ -68,6 +69,51 @@ function RootLayoutNav() {
         return;
       }
 
+      // Verificar si es un artesano que necesita completar su perfil
+      // (falta descripcion o avatar_url)
+      if (role === 'artesano' && profile) {
+        const tieneDescripcion = !!profile.descripcion;
+        const tieneAvatar = !!profile.avatar_url;
+        const perfilCompleto = tieneDescripcion && tieneAvatar;
+        
+        console.log('🎨 [Layout] Verificando perfil de artesano:', {
+          role,
+          tiene_descripcion: tieneDescripcion,
+          tiene_avatar: tieneAvatar,
+          perfil_completo: perfilCompleto,
+          descripcion_preview: profile.descripcion ? `${profile.descripcion.substring(0, 30)}...` : 'null',
+          avatar_url: profile.avatar_url || 'null',
+          inCompleteArtesanoProfile
+        });
+
+        if (!perfilCompleto) {
+          console.log('⚠️ [Layout] Artesano necesita completar perfil - redirigiendo a completeArtesanoProfile');
+          if (!inCompleteArtesanoProfile) {
+            router.replace('/completeArtesanoProfile' as Href);
+          }
+          return;
+        }
+      }
+
+      // Si estamos en completeArtesanoProfile pero ya no necesitamos completar el perfil
+      if (inCompleteArtesanoProfile && role === 'artesano' && profile) {
+        const tieneDescripcion = !!profile.descripcion;
+        const tieneAvatar = !!profile.avatar_url;
+        const perfilCompleto = tieneDescripcion && tieneAvatar;
+        
+        console.log('🔄 [Layout] Verificando si salir de completeArtesanoProfile:', {
+          perfil_completo: perfilCompleto,
+          tiene_descripcion: tieneDescripcion,
+          tiene_avatar: tieneAvatar
+        });
+
+        if (perfilCompleto) {
+          console.log('✅ [Layout] Perfil de artesano completo - redirigiendo a app principal');
+          router.replace('/(app)' as Href);
+          return;
+        }
+      }
+
       // Si estamos en el grupo de autenticación (ej. en la pantalla de login),
       // redirigimos al grupo principal de la app.
       if (inAuthGroup) {
@@ -76,7 +122,7 @@ function RootLayoutNav() {
         router.replace('/(app)' as Href); 
       }
     }
-  }, [session, role, profile, authLoading, segments, isPasswordRecovery]); // Dependemos de los estados clave incluyendo profile.
+  }, [session, role, profile, authLoading, segments, isPasswordRecovery, router]); // Dependemos de los estados clave incluyendo profile.
 
   // Mientras carga la sesión, mostramos el indicador.
   if (authLoading) {

@@ -975,6 +975,16 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
               </View>
 
               <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Correo electrónico</Text>
+                <TextInput
+                  style={[styles.input, styles.inputDisabled]}
+                  value={session?.user?.email || ''}
+                  editable={false}
+                  placeholder="correo@ejemplo.com"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Teléfono</Text>
                 <TextInput
                   style={styles.input}
@@ -1605,6 +1615,11 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     backgroundColor: '#f9f9f9',
+  },
+  inputDisabled: {
+    backgroundColor: '#f0f0f0',
+    color: '#666',
+    opacity: 0.7,
   },
   textArea: {
     minHeight: 100,

@@ -11,10 +11,14 @@ import { supabase } from '../supabase/client';
  */
 export async function updatePerfilArtesano(userId, data) {
   try {
-    // Actualizar tabla artesanos
+    // Actualizar tabla artesanos (nombre, ubicacion, descripcion)
     const { error: artesanosError } = await supabase
       .from('artesanos')
-      .update({ nombre: data.nombre, ubicacion: data.ubicacion })
+      .update({ 
+        nombre: data.nombre, 
+        ubicacion: data.ubicacion,
+        descripcion: data.descripcion 
+      })
       .eq('user_id', userId);
 
     if (artesanosError) throw artesanosError;
@@ -26,14 +30,6 @@ export async function updatePerfilArtesano(userId, data) {
       .eq('id', userId);
 
     if (perfilesError) throw perfilesError;
-
-    // Actualizar tabla infousuario (descripcion)
-    const { error: infousuarioError } = await supabase
-      .from('infousuario')
-      .update({ descripcion: data.descripcion })
-      .eq('user_id', userId);
-
-    if (infousuarioError) throw infousuarioError;
 
     return { success: true };
   } catch (error) {

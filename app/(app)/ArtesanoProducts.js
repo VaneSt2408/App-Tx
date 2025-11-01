@@ -22,6 +22,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import { artesanoService } from '../../src/services/artesanoService';
 import { supabase } from '../../src/supabase/client';
 import * as ImagePicker from 'expo-image-picker';
+import UploadProductModal from '../../components/UploadProductModal';
 
 const { width } = Dimensions.get('window');
 const imageSize = (width - 60) / 3; // Para grid de 3 columnas
@@ -42,6 +43,7 @@ export default function ArtesanoProducts() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const productoSliderAnim = React.useRef(new Animated.Value(0)).current;
 
   const isOwnProfile = session?.user?.id === userId;
@@ -441,6 +443,15 @@ export default function ArtesanoProducts() {
           : 'Este artesano aún no ha agregado productos'
         }
       </Text>
+      {isOwnProfile && (
+        <TouchableOpacity
+          style={styles.createButton}
+          onPress={() => setShowUploadModal(true)}
+        >
+          <MaterialCommunityIcons name="plus" size={20} color="#fff" />
+          <Text style={styles.createButtonText}>Agregar Producto</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 
@@ -470,6 +481,14 @@ export default function ArtesanoProducts() {
             {productos.length} {productos.length === 1 ? 'producto' : 'productos'}
           </Text>
         </View>
+        {isOwnProfile && (
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => setShowUploadModal(true)}
+          >
+            <MaterialCommunityIcons name="plus" size={24} color="#2575fc" />
+          </TouchableOpacity>
+        )}
       </View>
 
       <FlatList
@@ -795,6 +814,16 @@ export default function ArtesanoProducts() {
           </View>
         </View>
       </Modal>
+
+      {/* Modal de subir producto */}
+      <UploadProductModal
+        visible={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        onProductUploaded={() => {
+          setShowUploadModal(false);
+          loadProductos();
+        }}
+      />
     </View>
   );
 }
@@ -841,6 +870,9 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 2,
   },
+  addButton: {
+    padding: 8,
+  },
   list: {
     padding: 8,
     paddingTop: 0,
@@ -868,6 +900,22 @@ const styles = StyleSheet.create({
     color: '#999',
     marginTop: 8,
     textAlign: 'center',
+    marginBottom: 20,
+  },
+  createButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2575fc',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 25,
+    marginTop: 20,
+  },
+  createButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
   },
   gridItem: {
     width: imageSize,
