@@ -96,10 +96,6 @@ export default function ArtesanoList() {
             <Image 
               source={{ uri: item.avatar_url }} 
               style={styles.avatar}
-<<<<<<< HEAD
-=======
-              defaultSource={require('../../assets/images/Logotemp.png')}
->>>>>>> 0944f5e7c0761bb475dd36b398ae1b0869f56b67
             />
           ) : (
             <View style={styles.defaultAvatar}>

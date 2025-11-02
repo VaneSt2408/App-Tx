@@ -705,11 +705,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-<<<<<<< HEAD
-  deleteButton: {
-=======
+
   thumbnailDeleteButton: {
->>>>>>> 0944f5e7c0761bb475dd36b398ae1b0869f56b67
     position: 'absolute',
     top: 8,
     right: 8,

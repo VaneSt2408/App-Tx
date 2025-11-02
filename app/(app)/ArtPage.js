@@ -11,25 +11,15 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import FeedPage from './FeedPage';
 import MarketplacePage from './MarketplacePage';
 import ArtesanoSettings from './ArtesanoSettings';
-<<<<<<< HEAD
-=======
+
 // Update the import path below to the actual location of your authentication module
 import { signOut } from '../(auth)'; // Example: adjust '../auth/auth' as needed
->>>>>>> 0944f5e7c0761bb475dd36b398ae1b0869f56b67
+
 
 const Tab = createBottomTabNavigator(); // Crear el tab navigator
 
 // Componente principal
 function ArtPage() {
-<<<<<<< HEAD
-    return (
-        // Renderizado
-        <Tab.Navigator
-            screenOptions={({ route }) => ({
-                tabBarIcon: ({ focused, color, size }) => {
-                    let iconName;
-
-=======
     const [user, setUser] = useState(null); // Estado para almacenar los datos del usuario
     const [loading, setLoading] = useState(true); // Estado para manejar la carga
     const [showUploadModal, setShowUploadModal] = useState(false); // Estado para mostrar el modal de subir producto
@@ -75,7 +65,6 @@ function ArtPage() {
             <Tab.Navigator
                 screenOptions={({ route, focused, color, size }) => {
                     let iconName;
->>>>>>> 0944f5e7c0761bb475dd36b398ae1b0869f56b67
                     if (route.name === 'Feed') {
                         iconName = focused ? 'home' : 'home-outline';
                     } else if (route.name === 'Marketplace') {
@@ -83,50 +72,6 @@ function ArtPage() {
                     } else if (route.name === 'Settings') {
                         iconName = focused ? 'account-circle' : 'account-circle-outline';
                     }
-<<<<<<< HEAD
-
-                    return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
-                },
-                tabBarActiveTintColor: '#2575fc',
-                tabBarInactiveTintColor: '#666',
-                tabBarStyle: {
-                    backgroundColor: '#fff',
-                    borderTopWidth: 1,
-                    borderTopColor: '#e1e8ed',
-                    height: 60,
-                    paddingBottom: 8,
-                    paddingTop: 8,
-                },
-                tabBarLabelStyle: {
-                    fontSize: 12,
-                    fontWeight: '500',
-                },
-                headerShown: false,
-            })}
-        >
-            <Tab.Screen 
-                name="Feed" 
-                component={FeedPage}
-                options={{
-                    tabBarLabel: 'Inicio',
-                }}
-            />
-            <Tab.Screen 
-                name="Marketplace" 
-                component={MarketplacePage}
-                options={{
-                    tabBarLabel: 'Marketplace',
-                }}
-            />
-            <Tab.Screen 
-                name="Settings" 
-                component={ArtesanoSettings}
-                options={{
-                    tabBarLabel: 'Ajustes',
-                }}
-            />
-        </Tab.Navigator>
-=======
                     return {
                         tabBarIcon: ({ focused, color, size }) => (
                             <MaterialCommunityIcons name={iconName} size={size} color={color} />
@@ -172,7 +117,6 @@ function ArtPage() {
                 />
             </Tab.Navigator>
         </View>
->>>>>>> 0944f5e7c0761bb475dd36b398ae1b0869f56b67
     );
 }
 

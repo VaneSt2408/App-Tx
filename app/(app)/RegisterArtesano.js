@@ -4,15 +4,12 @@
 
 // Importaciones
 import React, { useState, useEffect } from 'react'; // Importa React y los hooks 'useState' y 'useEffect'.
-<<<<<<< HEAD
-import { View, TextInput, Button, Alert, StyleSheet, TouchableOpacity, Text, ScrollView, ActivityIndicator } from 'react-native'; // Importa varios componentes de UI de React Native.
-=======
+
 import { 
   View, TextInput, Alert, StyleSheet, TouchableOpacity, Text, 
   ScrollView, ActivityIndicator, SafeAreaView, KeyboardAvoidingView, Platform
 } from 'react-native'; // Importa varios componentes de UI de React Native.
 // duplicate import removed (consolidated above)
->>>>>>> 0944f5e7c0761bb475dd36b398ae1b0869f56b67
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Importa una librería de íconos.
 import { useRouter } from 'expo-router'; // Usamos useRouter para la navegación con Expo Router
 import { supabase } from '../../src/supabase/client'; // Importa el cliente de Supabase.

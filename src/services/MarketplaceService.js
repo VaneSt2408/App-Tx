@@ -277,10 +277,8 @@ export class MarketplaceService {
           id: prod.artesano_id,
           nombre: prod.artesanos?.nombre || 'Artesano',
           ubicacion: prod.artesanos?.ubicacion || '',
-<<<<<<< HEAD
-=======
+
           avatar_url: prod.artesanos?.avatar_url || null,
->>>>>>> 0944f5e7c0761bb475dd36b398ae1b0869f56b67
           foto: prod.artesanos?.foto || null,
         },
       }));

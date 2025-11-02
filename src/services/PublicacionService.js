@@ -1,60 +1,5 @@
 import { supabase } from '../supabase/client';
 import { decode } from 'base64-arraybuffer';
-<<<<<<< HEAD
-
-// Función para crear una nueva publicación
-export const createPost = async (userId, text, imageBase64, imageMimeType) => {
-  let imageUrl = null;
-
-  // 1. Si hay una imagen, subirla a Supabase Storage
-  if (imageBase64) {
-    try {
-      const fileExt = imageMimeType ? imageMimeType.split('/')[1] : 'jpg';
-      const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `${userId}/${fileName}`;
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('imagenes-publicaciones')
-        .upload(filePath, decode(imageBase64), {
-          contentType: imageMimeType ?? 'image/jpeg',
-          upsert: false
-        });
-
-      if (uploadError) {
-        console.error("Error uploading image:", uploadError);
-        throw new Error('Error al subir la imagen: ' + uploadError.message);
-      }
-
-      // Obtener la URL pública de la imagen subida
-      const { data: urlData } = supabase.storage.from('imagenes-publicaciones').getPublicUrl(filePath);
-      imageUrl = urlData.publicUrl;
-
-    } catch (error) {
-      console.error("Catch block - Error uploading image:", error);
-      throw error;
-    }
-  }
-
-  // 2. Insertar los datos de la publicación en la tabla 'publicaciones'
-  const { data: postData, error: insertError } = await supabase
-    .from('publicaciones')
-    .insert({
-      artesano_user_id: userId,
-      texto: text,
-      imagen_url: imageUrl
-    })
-    .select()
-    .single();
-
-  if (insertError) {
-    console.error("Error inserting post:", insertError);
-    throw new Error('Error al guardar la publicación: ' + insertError.message);
-  }
-
-  return postData;
-};
-
-=======
 import 'react-native-get-random-values'; // Para generar nombres de archivo únicos si es necesario
 import { Alert } from 'react-native'; // <-- ¡NUEVA IMPORTACIÓN!
 
@@ -112,8 +57,6 @@ export const createPost = async (userId, text, imageBase64, imageMimeType) => {
     return postData; // Devuelve la publicación creada
 };
 
-
->>>>>>> 0944f5e7c0761bb475dd36b398ae1b0869f56b67
 /**
  * Crea una nueva publicación para el usuario actual
  * Obtiene el usuario de la sesión y crea la publicación
@@ -416,8 +359,5 @@ const PublicacionService = {
   getPublicacionesStats
 };
 
-<<<<<<< HEAD
+
 export default PublicacionService;
-=======
-export default PublicacionService;
->>>>>>> 0944f5e7c0761bb475dd36b398ae1b0869f56b67

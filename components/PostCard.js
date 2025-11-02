@@ -209,17 +209,11 @@ const styles = StyleSheet.create({
   headerInfo: {
     flex: 1,
   },
-<<<<<<< HEAD
-  artesanoNombre: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#177eaaff',
-=======
+
   artesanoNombre: {   //AQUI SE PUEDE ENCONTRAR EL COLOR DEL NOMBRE DENTRO DE LAS PUBLICACIONES QUE APARECEN ESTILO INSTAGRAM
     fontSize: 15,
     fontWeight: '600',
     color: '#9D046D',
->>>>>>> 0944f5e7c0761bb475dd36b398ae1b0869f56b67
     marginBottom: 2,
   },
   metaInfo: {
