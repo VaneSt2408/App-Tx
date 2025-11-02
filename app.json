@@ -4,7 +4,7 @@
     "slug": "TxApp",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/LogoSV.png",
     "scheme": "txapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -24,7 +24,7 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png",
+      "favicon": "./assets/images/LogoSV.png",
       "bundler": "metro"
     },
     "plugins": [

@@ -107,36 +107,24 @@ const styles = StyleSheet.create({
         shadowRadius: 2,
         elevation: 2,
     },
-        userInfo: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center', // Esto es importante para alinear el ícono
-        // ...
-    },
     logoutButton: {
         padding: 8, // Añade un poco de espacio para que sea más fácil de presionar
     },
     // Estilos para el contenedor del botón
   botonPersonalizado: {
-    backgroundColor: '#177eaaff', // Color de fondo
+    backgroundColor: '#690DB5', // Color de fondo
     paddingVertical: 10,       // Relleno vertical
     paddingHorizontal: 20,   // Relleno horizontal
     borderRadius: 8,           // Bordes redondeados
     borderWidth: 2,            // Ancho del borde
-    borderColor: '#177eaaff',    // Color del borde
+    borderColor: '#fff',    // Color del borde
     top: 10, 
 
     // Para centrar el texto (opcional)
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // Estilos para el texto dentro del botón
-  textoDelBoton: {
-    color: 'white',            // Color del texto
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  
+
     botonPersonalizado2: {
     backgroundColor: '#9D046D', // Color de fondo
     paddingVertical: 10,       // Relleno vertical
@@ -149,12 +137,6 @@ const styles = StyleSheet.create({
     // Para centrar el texto (opcional)
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  // Estilos para el texto dentro del botón
-  textoDelBoton: {
-    color: 'white',            // Color del texto
-    fontSize: 16,
-    fontWeight: 'bold',
   },
 
     botonPersonalizado3: {
@@ -170,12 +152,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // Estilos para el texto dentro del botón
-  textoDelBoton: {
-    color: 'white',            // Color del texto
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
     
     botonPersonalizado4: {
     backgroundColor: '#9D046D', // Color de fondo
@@ -189,12 +165,6 @@ const styles = StyleSheet.create({
     // Para centrar el texto (opcional)
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  // Estilos para el texto dentro del botón
-  textoDelBoton: {
-    color: 'white',            // Color del texto
-    fontSize: 16,
-    fontWeight: 'bold',
   },
 
     botonPersonalizado5: {
@@ -210,7 +180,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // Estilos para el texto dentro del botón
+  // Estilos para el texto dentro del botón (único, reutilizable)
   textoDelBoton: {
     color: 'white',            // Color del texto
     fontSize: 16,

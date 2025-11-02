@@ -1368,7 +1368,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  errorText: {
+  emptyErrorText: {
     marginTop: 10,
     fontSize: 16,
     color: '#666',
@@ -1858,6 +1858,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+<<<<<<< HEAD
   deleteConfirmButton: {
     backgroundColor: '#dc3545',
     flexDirection: 'row',
@@ -2012,3 +2013,26 @@ const styles = StyleSheet.create({
     color: '#ccc',
   },
 });
+=======
+    deleteConfirmButton: {
+      flex: 2,
+      backgroundColor: '#dc3545',
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: 8,
+    },
+    deleteConfirmButtonDisabled: {
+      backgroundColor: '#dc3545',
+      opacity: 0.6,
+    },
+    deleteConfirmButtonText: {
+      color: '#fff',
+      fontSize: 16,
+      fontWeight: 'bold',
+      marginLeft: 8,
+    }
+  });
+>>>>>>> 0944f5e7c0761bb475dd36b398ae1b0869f56b67

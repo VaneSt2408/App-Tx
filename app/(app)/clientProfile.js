@@ -1196,10 +1196,10 @@ export default function ClientProfile() { // Exportar la función ClientProfile
                 )}
                 
                 {deletePasswordAttempts > 0 && !deletePasswordValidated && (
-                  <Text style={styles.errorText}>
-                    Contraseña incorrecta. Intentos restantes: {3 - deletePasswordAttempts}
-                  </Text>
-                )}
+                    <Text style={styles.errorTextSmall}>
+                      Contraseña incorrecta. Intentos restantes: {3 - deletePasswordAttempts}
+                    </Text>
+                  )}
               </View>
             </View>
             
@@ -1643,7 +1643,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
   },
-  errorText: {
+  errorTextSmall: {
     color: '#dc3545',
     fontSize: 12,
     marginTop: 4,

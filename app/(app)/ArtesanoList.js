@@ -96,6 +96,10 @@ export default function ArtesanoList() {
             <Image 
               source={{ uri: item.avatar_url }} 
               style={styles.avatar}
+<<<<<<< HEAD
+=======
+              defaultSource={require('../../assets/images/Logotemp.png')}
+>>>>>>> 0944f5e7c0761bb475dd36b398ae1b0869f56b67
             />
           ) : (
             <View style={styles.defaultAvatar}>
@@ -129,7 +133,7 @@ export default function ArtesanoList() {
           style={styles.arrowButton}
           onPress={() => navigateToProfile(item.user_id)}
         >
-          <MaterialCommunityIcons name="chevron-right" size={24} color="#177eaaff" />
+          <MaterialCommunityIcons name="chevron-right" size={24} color="#DC5BA2" />
         </TouchableOpacity>
       </View>
       
@@ -185,7 +189,7 @@ export default function ArtesanoList() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#177eaaff" />
+          <ActivityIndicator size="large" color="#9D046D" />
           <Text style={styles.loadingText}>Cargando artesanos...</Text>
         </View>
       </SafeAreaView>
@@ -197,7 +201,7 @@ export default function ArtesanoList() {
       <View style={styles.headerContainer}>
         <Text style={styles.title}>Lista de Artesanos</Text>
         <TouchableOpacity onPress={loadArtesanos} style={styles.refreshIcon}>
-          <MaterialCommunityIcons name="refresh" size={24} color="#177eaaff" />
+          <MaterialCommunityIcons name="refresh" size={24} color="#9D046D" />
         </TouchableOpacity>
       </View>
       
@@ -388,7 +392,7 @@ const styles = StyleSheet.create({
   },
   tapHint: {
     fontSize: 12,
-    color: '#177eaaff',
+    color: '#9D046D',
     fontStyle: 'italic',
     marginTop: 4,
   },
@@ -405,7 +409,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   refreshButton: {
-    backgroundColor: '#177eaaff',
+    backgroundColor: '#9D046D',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,

@@ -165,5 +165,29 @@ export const artesanoService = {
       console.error('❌ [SERVICIO] Error en getArtesanoCompleto:', error);
       throw error;
     }
+  },
+
+  // Nueva función para obtener un item por ID
+  getItemById: async (itemId, itemType) => {
+    const tableName = itemType === 'publicaciones' ? 'publicaciones' : 'productos';
+    
+    const { data, error } = await supabase
+      .from(tableName)
+      .select(`
+        *,
+        artesanos (
+          nombre,
+          avatar_url
+        )
+      `)
+      .eq('id', itemId)
+      .single();
+
+    if (error) {
+      console.error(`Error fetching item from ${tableName}:`, error);
+      throw new Error(`No se pudo obtener el detalle del item.`);
+    }
+
+    return data;
   }
 };

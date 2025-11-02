@@ -54,6 +54,10 @@ export class FeedService {
       
       console.log('📱 Obteniendo feed - Página:', page, 'Límite:', limit);
 
+<<<<<<< HEAD
+=======
+      // Consulta principal con JOIN a artesanos
+>>>>>>> 0944f5e7c0761bb475dd36b398ae1b0869f56b67
       // Consulta principal con JOIN a artesanos (tabla directa)
       console.log('🔍 [FEED] Consultando publicaciones con JOIN a tabla artesanos...');
       const { data: publicaciones, error: feedError, count } = await supabase

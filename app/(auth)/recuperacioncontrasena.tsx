@@ -14,11 +14,19 @@ import { Alert, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleS
 import { resetPasswordForEmail } from '../../src/services/authService'; 
 
 // Componente principal
+<<<<<<< HEAD
 export default function recuperacioncontrasena() {
     const router = useRouter(); // Obtener el router
     const [email, setEmail] = useState(''); // Establecer el estado del correo electrónico
     const [isLoading, setIsLoading] = useState(false); // Establecer el estado de carga
     const [isFocused, setIsFocused] = useState(false); // Establecer el estado de foco
+=======
+export default function RecuperacionContrasena() {
+    const router = useRouter();
+    const [email, setEmail] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [isFocused, setIsFocused] = useState(false);
+>>>>>>> 0944f5e7c0761bb475dd36b398ae1b0869f56b67
     
     // Función para enviar el enlace de recuperación de contraseña
     const handlePasswordReset = async () => {
@@ -131,7 +139,7 @@ export default function recuperacioncontrasena() {
 
                         <Link href="/auth" asChild>
                             <TouchableOpacity className='w-full items-center mt-4'>
-                                <Text className='text-black text-base font-semibold underline'>
+                                <Text className= 'text-base font-semibold underline' style={{color: '#9D046D'}}>
                                     Volver al inicio de sesión
                                 </Text>
                             </TouchableOpacity>

@@ -1,23 +1,15 @@
 // src/components/PostCard.js
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 
 /**
  * Componente de tarjeta de publicación (estilo Facebook)
  */
-const PostCard = ({ post, onLike }) => {
-  const router = useRouter();
+const PostCard = ({ post, onLike, currentUserId }) => {
   const [liked, setLiked] = useState(post.liked_by_user);
   const [likesCount, setLikesCount] = useState(post.likes_count);
   const [isLiking, setIsLiking] = useState(false);
-
-  // Sincronizar estado cuando cambia el post (útil al recargar)
-  useEffect(() => {
-    setLiked(post.liked_by_user);
-    setLikesCount(post.likes_count);
-  }, [post.id, post.liked_by_user, post.likes_count]);
 
   // Formatear fecha relativa
   const getTimeAgo = (dateString) => {
@@ -32,27 +24,9 @@ const PostCard = ({ post, onLike }) => {
     return postDate.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
   };
 
-  // Navegar al perfil del artesano
-  const handleNavigateToProfile = () => {
-    console.log('🔍 [PostCard] Intentando navegar al perfil...');
-    console.log('📊 [PostCard] Datos del post:', post);
-    console.log('👤 [PostCard] artesano.id:', post.artesano?.id);
-    console.log('👤 [PostCard] artesano:', post.artesano);
-    
-    if (post.artesano?.id) {
-      console.log('✅ [PostCard] Navegando con artesano.id:', post.artesano.id);
-      router.push({
-        pathname: '/ArtesanoProfile',
-        params: { userId: post.artesano.id.toString() }
-      });
-    } else {
-      console.log('❌ [PostCard] No se encontró artesano.id');
-    }
-  };
-
   // Manejar like
   const handleLike = async () => {
-    if (isLiking) return;
+    if (isLiking || !currentUserId) return;
 
     setIsLiking(true);
 
@@ -90,17 +64,10 @@ const PostCard = ({ post, onLike }) => {
       {/* Header: Avatar + Nombre + Tiempo */}
       <View style={styles.header}>
         <View style={styles.avatarContainer}>
-          {post.artesano?.avatar_url ? (
+          {post.artesano.foto ? (
             <Image 
-              source={{ uri: post.artesano.avatar_url }} 
+              source={{ uri: post.artesano.foto }} 
               style={styles.avatar}
-              onError={(error) => {
-                console.error('❌ Error cargando avatar en PostCard:', error);
-                console.log('🔗 URL intentada:', post.artesano.avatar_url);
-              }}
-              onLoad={() => {
-                console.log('✅ Avatar cargado correctamente:', post.artesano.avatar_url);
-              }}
             />
           ) : (
             <View style={[styles.avatar, styles.avatarPlaceholder]}>
@@ -110,9 +77,7 @@ const PostCard = ({ post, onLike }) => {
         </View>
 
         <View style={styles.headerInfo}>
-          <TouchableOpacity onPress={handleNavigateToProfile} activeOpacity={0.7}>
-            <Text style={styles.artesanoNombre}>{post.artesano.nombre}</Text>
-          </TouchableOpacity>
+          <Text style={styles.artesanoNombre}>{post.artesano.nombre}</Text>
           <View style={styles.metaInfo}>
             {post.artesano.ubicacion && (
               <Text style={styles.metaText}>
@@ -149,7 +114,7 @@ const PostCard = ({ post, onLike }) => {
         <TouchableOpacity 
           style={styles.likeButton}
           onPress={handleLike}
-          disabled={isLiking}
+          disabled={isLiking || !currentUserId}
           activeOpacity={0.7}
         >
           <MaterialCommunityIcons 
@@ -209,17 +174,10 @@ const styles = StyleSheet.create({
   headerInfo: {
     flex: 1,
   },
-<<<<<<< HEAD
   artesanoNombre: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#177eaaff',
-=======
-  artesanoNombre: {   //AQUI SE PUEDE ENCONTRAR EL COLOR DEL NOMBRE DENTRO DE LAS PUBLICACIONES QUE APARECEN ESTILO INSTAGRAM
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#9D046D',
->>>>>>> 0944f5e7c0761bb475dd36b398ae1b0869f56b67
+    color: '#1a1a1a',
     marginBottom: 2,
   },
   metaInfo: {
