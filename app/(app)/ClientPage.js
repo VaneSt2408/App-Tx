@@ -35,7 +35,7 @@ function ClientPage() {
 
                     return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
                 },
-                tabBarActiveTintColor: '#2575fc',
+                tabBarActiveTintColor: '#9D046D',
                 tabBarInactiveTintColor: '#666',
                 tabBarStyle: {
                     backgroundColor: '#fff',

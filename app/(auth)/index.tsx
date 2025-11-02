@@ -128,7 +128,7 @@ export default function Index() {
           <Link href="/auth" asChild replace>
             <TouchableOpacity className="w-11/12 bg-white/20 p-5 rounded-3xl items-center mb-8 border border-white/30">
               <Text className="text-white text-2xl font-semibold">
-                Empieza aquí →
+                BIENVENIDO DE VUELTA →
               </Text>
             </TouchableOpacity>
           </Link>

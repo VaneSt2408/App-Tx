@@ -335,7 +335,7 @@ export default function ArtesanoProducts() {
   if (loading && productos.length === 0) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2575fc" />
+        <ActivityIndicator size="large" color="#9D046D" />
         <Text style={styles.loadingText}>Cargando productos...</Text>
       </View>
     );
@@ -363,7 +363,7 @@ export default function ArtesanoProducts() {
             style={styles.addButton}
             onPress={() => setShowUploadModal(true)}
           >
-            <MaterialCommunityIcons name="plus" size={24} color="#2575fc" />
+            <MaterialCommunityIcons name="plus" size={24} color="#9D046D" />
           </TouchableOpacity>
         )}
       </View>
@@ -380,8 +380,8 @@ export default function ArtesanoProducts() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#2575fc']}
-            tintColor="#2575fc"
+            colors={['#9D046D']}
+            tintColor="#9D046D"
           />
         }
       />

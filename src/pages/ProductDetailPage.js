@@ -95,7 +95,7 @@ const ProductDetailPage = ({ route, navigation }) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2575fc" />
+        <ActivityIndicator size="large" color="#9D046D" />
         <Text style={styles.loadingText}>Cargando producto...</Text>
       </View>
     );

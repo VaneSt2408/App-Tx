@@ -109,7 +109,7 @@ const FeedPage = () => {
     if (!loadingMore) return null;
     return (
       <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color="#2575fc" />
+        <ActivityIndicator size="small" color="#9D046D" />
       </View>
     );
   };
@@ -137,7 +137,7 @@ const FeedPage = () => {
   if (loading && posts.length === 0) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2575fc" />
+        <ActivityIndicator size="large" color="#9D046D" />
         <Text style={styles.loadingText}>Cargando publicaciones...</Text>
       </View>
     );
@@ -154,8 +154,8 @@ const FeedPage = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#2575fc']}
-            tintColor="#2575fc"
+            colors={['#9D046D']}
+            tintColor="#9D046D"
           />
         }
 
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         right: 30, // Distancia desde la derecha
         bottom: 30, // Distancia desde abajo
-        backgroundColor: '#2575fc',
+        backgroundColor: '#9D046D',
         borderRadius: 30, // Círculo perfecto
         elevation: 8, // Sombra en Android
         shadowColor: '#000', // Sombra en iOS

@@ -41,7 +41,7 @@ function ArtPage() {
     };
 
     if (loading || !user) { // Muestra un indicador de carga mientras se obtienen los datos del usuario
-        return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#2575fc" /></View>;
+        return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#9D046D" /></View>;
     }
 
     return (
@@ -74,7 +74,7 @@ function ArtPage() {
                         tabBarIcon: ({ focused, color, size }) => (
                             <MaterialCommunityIcons name={iconName} size={size} color={color} />
                         ),
-                        tabBarActiveTintColor: '#2575fc',
+                        tabBarActiveTintColor: '#9D046D',
                         tabBarInactiveTintColor: '#666',
                         tabBarStyle: {
                             backgroundColor: '#fff',

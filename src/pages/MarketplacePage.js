@@ -142,7 +142,7 @@ const MarketplacePage = ({ navigation }) => {
     if (!loadingMore) return null;
     return (
       <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color="#2575fc" />
+        <ActivityIndicator size="small" color="#9D046D" />
         <Text style={styles.footerLoaderText}>Cargando más productos...</Text>
       </View>
     );
@@ -177,7 +177,7 @@ const MarketplacePage = ({ navigation }) => {
           <MaterialCommunityIcons 
             name={showSearch ? "close" : "magnify"} 
             size={24} 
-            color="#2575fc" 
+            color="#9D046D" 
           />
         </TouchableOpacity>
       </View>
@@ -220,7 +220,7 @@ const MarketplacePage = ({ navigation }) => {
   if (loading && products.length === 0) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2575fc" />
+        <ActivityIndicator size="large" color="#9D046D" />
         <Text style={styles.loadingText}>Cargando productos...</Text>
       </View>
     );
@@ -238,8 +238,8 @@ const MarketplacePage = ({ navigation }) => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#2575fc']}
-            tintColor="#2575fc"
+            colors={['#9D046D']}
+            tintColor="#9D046D"
           />
         }
         onEndReached={loadMore}
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
   },
   searchButton: {
-    backgroundColor: '#2575fc',
+    backgroundColor: '#9D046D',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
