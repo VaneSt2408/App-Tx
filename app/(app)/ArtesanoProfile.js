@@ -18,36 +18,6 @@ import { validateCurrentPassword } from '../../src/services/profileInfo'; // Imp
 const { width } = Dimensions.get('window'); // Obtener el ancho de la ventana
 const imageSize = (width - 60) / 3; // Para grid de 3 columnas
 
-// Helper para formatear precios (ej. 1234.5 -> "$1.234,50" en locale es-ES con USD o ajustar currency)
-const formatPrice = (value) => {
-  if (value == null || value === '') return 'N/A';
-  const number = Number(value);
-  if (Number.isNaN(number)) return 'N/A';
-  try {
-    // Usar Intl si está disponible; en RN moderno suele estar presente o mediante polyfill
-    return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'USD' }).format(number);
-  } catch (e) {
-    // Fallback simple
-    return '$' + number.toFixed(2);
-  }
-};
-
-// Helper para formatear fechas ISO a formato local (dd/mm/yyyy)
-const formatDate = (isoString) => {
-  if (!isoString) return '';
-  const date = new Date(isoString);
-  if (isNaN(date.getTime())) return isoString;
-  try {
-    return date.toLocaleDateString('es-ES');
-  } catch (e) {
-    // Fallback básico
-    const d = date.getDate().toString().padStart(2, '0');
-    const m = (date.getMonth() + 1).toString().padStart(2, '0');
-    const y = date.getFullYear();
-    return `${d}/${m}/${y}`;
-  }
-};
-
 export default function ArtesanoProfile() { // Exportar la función ArtesanoProfile
   const router = useRouter(); // Obtener el router
   const { userId, tab } = useLocalSearchParams(); // Obtener el id del usuario y la tab
@@ -87,69 +57,6 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
   const [selectedProductoIndex, setSelectedProductoIndex] = useState(0);
   const [showProductoModal, setShowProductoModal] = useState(false);
   const productoSliderAnim = React.useRef(new Animated.Value(0)).current;
-
-  // Handler for navigating to the next product in the modal
-  const handleNextProducto = () => {
-    if (selectedProductoIndex < productos.length - 1) {
-      setSelectedProductoIndex(selectedProductoIndex + 1);
-      setSelectedProducto(productos[selectedProductoIndex + 1]);
-      Animated.spring(productoSliderAnim, {
-        toValue: 0,
-        useNativeDriver: true,
-      }).start();
-    }
-  };
-
-  // Handler for navigating to the previous product in the modal
-  const handlePreviousProducto = () => {
-    if (selectedProductoIndex > 0) {
-      setSelectedProductoIndex(selectedProductoIndex - 1);
-      setSelectedProducto(productos[selectedProductoIndex - 1]);
-      Animated.spring(productoSliderAnim, {
-        toValue: 0,
-        useNativeDriver: true,
-      }).start();
-    }
-  };
-
-  // Handler for closing the product modal
-  const handleCloseProductoModal = () => {
-    setShowProductoModal(false);
-    setSelectedProducto(null);
-    setSelectedProductoIndex(0);
-    Animated.spring(productoSliderAnim, {
-      toValue: 0,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  // PanResponder for product modal swipe navigation
-  const productoPanResponder = PanResponder.create({
-    onMoveShouldSetPanResponder: (evt, gestureState) => {
-      // Only respond to horizontal swipes
-      return Math.abs(gestureState.dx) > 20;
-    },
-    onPanResponderMove: (evt, gestureState) => {
-      productoSliderAnim.setValue(gestureState.dx);
-    },
-    onPanResponderRelease: (evt, gestureState) => {
-      if (gestureState.dx > 100 && selectedProductoIndex > 0) {
-        handlePreviousProducto();
-      } else if (gestureState.dx < -100 && selectedProductoIndex < productos.length - 1) {
-        handleNextProducto();
-      }
-      Animated.spring(productoSliderAnim, {
-        toValue: 0,
-        useNativeDriver: true,
-      }).start();
-    },
-    onPanResponderTerminate: () => {
-      Animated.spring(productoSliderAnim, {
-        toValue: 0,
-        useNativeDriver: true,
-      }).start();
-    },
-  });
 
   useEffect(() => { // Efecto para cargar el perfil del artesano
     if (userId) { // Si hay id de usuario
@@ -612,18 +519,11 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
     }
   };
 
-  const navigateToDetail = (item, type) => {
-    router.push({
-      pathname: './PostDetail',
-      params: { itemId: item.id, itemType: type }
-    });
-  };
-
   const renderHeader = () => (
     <View style={styles.header}>
       <View style={styles.headerTop}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#9D046D" />
+          <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Perfil</Text>
         {isOwnProfile ? (
@@ -740,7 +640,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         <MaterialCommunityIcons 
           name="image-multiple" 
           size={20} 
-          color={activeTab === 'publicaciones' ? '#9D046D' : '#666'} 
+          color={activeTab === 'publicaciones' ? '#177eaaff' : '#666'} 
         />
         <Text style={[styles.tabText, activeTab === 'publicaciones' && styles.activeTabText]}>
           Publicaciones
@@ -754,7 +654,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         <MaterialCommunityIcons 
           name="package-variant" 
           size={20} 
-          color={activeTab === 'productos' ? '#9D046D' : '#666'} 
+          color={activeTab === 'productos' ? '#177eaaff' : '#666'} 
         />
         <Text style={[styles.tabText, activeTab === 'productos' && styles.activeTabText]}>
           Productos
@@ -763,12 +663,89 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
     </View>
   );
 
-  const renderPublicacion = ({ item, index }) => (
-    <TouchableOpacity 
-      style={styles.gridItem} 
-      onPress={() => item.imagen_url && navigateToDetail(item, 'publicaciones')}
-      disabled={!item.imagen_url || loading}
-    >
+  // Funciones para navegación de productos
+  const handleSelectProducto = (producto, index) => {
+    setSelectedProducto(producto);
+    setSelectedProductoIndex(index);
+    setShowProductoModal(true);
+  };
+
+  const handleCloseProductoModal = () => {
+    setShowProductoModal(false);
+    setSelectedProducto(null);
+    setSelectedProductoIndex(0);
+    productoSliderAnim.setValue(0);
+  };
+
+  const handleNextProducto = () => {
+    if (selectedProductoIndex < productos.length - 1) {
+      const nextIndex = selectedProductoIndex + 1;
+      setSelectedProductoIndex(nextIndex);
+      setSelectedProducto(productos[nextIndex]);
+      productoSliderAnim.setValue(0);
+    }
+  };
+
+  const handlePreviousProducto = () => {
+    if (selectedProductoIndex > 0) {
+      const prevIndex = selectedProductoIndex - 1;
+      setSelectedProductoIndex(prevIndex);
+      setSelectedProducto(productos[prevIndex]);
+      productoSliderAnim.setValue(0);
+    }
+  };
+
+  // PanResponder para gestos de deslizamiento en productos
+  const productoPanResponder = React.useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (evt, gestureState) => {
+        return Math.abs(gestureState.dx) > 10 || Math.abs(gestureState.dy) > 10;
+      },
+      onPanResponderRelease: (evt, gestureState) => {
+        const { dx, vx } = gestureState;
+        
+        // Deslizar hacia la izquierda (siguiente)
+        if (dx < -50 || vx < -0.5) {
+          handleNextProducto();
+        }
+        // Deslizar hacia la derecha (anterior)
+        else if (dx > 50 || vx > 0.5) {
+          handlePreviousProducto();
+        } else {
+          // Resetear animación si no se alcanzó el umbral
+          Animated.spring(productoSliderAnim, {
+            toValue: 0,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
+      onPanResponderMove: (evt, gestureState) => {
+        productoSliderAnim.setValue(gestureState.dx);
+      },
+    })
+  ).current;
+
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('es-MX', {
+      style: 'currency',
+      currency: 'MXN',
+      minimumFractionDigits: 0,
+    }).format(price);
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const renderPublicacion = ({ item }) => (
+    <View style={styles.gridItem}>
       {item.imagen_url ? (
         <Image source={{ uri: item.imagen_url }} style={styles.gridImage} />
       ) : (
@@ -776,20 +753,14 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
           <MaterialCommunityIcons name="image" size={30} color="#ccc" />
         </View>
       )}
-      <View style={styles.overlay}>
-        <View style={styles.overlayContent}>
-          <MaterialCommunityIcons name="heart" size={16} color="#fff" />
-          <Text style={styles.overlayText}>{item.likes_count || 0}</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
+    </View>
   );
 
   const renderProducto = ({ item, index }) => (
-    <TouchableOpacity 
-      style={styles.gridItem} 
-      onPress={() => item.imagen_url && navigateToDetail(item, 'productos')}
-      disabled={!item.imagen_url || loading}
+    <TouchableOpacity
+      style={styles.gridItem}
+      onPress={() => handleSelectProducto(item, index)}
+      activeOpacity={0.7}
     >
       {item.imagen_url ? (
         <Image source={{ uri: item.imagen_url }} style={styles.gridImage} />
@@ -850,7 +821,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
       <SafeAreaView style={styles.container}>
         {renderHeader()}
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#9D046D" />
+          <ActivityIndicator size="large" color="#177eaaff" />
           <Text style={styles.loadingText}>Cargando perfil...</Text>
         </View>
       </SafeAreaView>
@@ -863,7 +834,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         {renderHeader()}
         <View style={styles.errorContainer}>
           <MaterialCommunityIcons name="alert-circle" size={60} color="#ccc" />
-          <Text style={styles.errorContainerText}>No se pudo cargar el perfil</Text>
+          <Text style={styles.errorText}>No se pudo cargar el perfil</Text>
         </View>
       </SafeAreaView>
     );
@@ -1277,27 +1248,27 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
 
                   {/* Información */}
                   <View style={styles.modalInfo}>
-                    <View style={styles.modalInfoRow}>
+                    <View style={styles.infoRow}>
                       <MaterialCommunityIcons name="tag" size={20} color="#2575fc" />
                       <Text style={styles.infoLabel}>Nombre:</Text>
                       <Text style={styles.infoValue}>{selectedProducto.nombre || 'Sin nombre'}</Text>
                     </View>
 
-                    <View style={styles.modalInfoRow}>
+                    <View style={styles.infoRow}>
                       <MaterialCommunityIcons name="currency-usd" size={20} color="#28a745" />
                       <Text style={styles.infoLabel}>Precio:</Text>
                       <Text style={styles.infoValue}>{formatPrice(selectedProducto.precio)}</Text>
                     </View>
 
                     {selectedProducto.categoria && (
-                      <View style={styles.modalInfoRow}>
+                      <View style={styles.infoRow}>
                         <MaterialCommunityIcons name="tag-outline" size={20} color="#ff9800" />
                         <Text style={styles.infoLabel}>Categoría:</Text>
                         <Text style={styles.infoValue}>{selectedProducto.categoria}</Text>
                       </View>
                     )}
 
-                    <View style={styles.modalInfoRow}>
+                    <View style={styles.infoRow}>
                       <MaterialCommunityIcons name="calendar" size={20} color="#2196f3" />
                       <Text style={styles.infoLabel}>Fecha:</Text>
                       <Text style={styles.infoValue}>{formatDate(selectedProducto.created_at)}</Text>
@@ -1397,7 +1368,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  errorContainerText: {
+  emptyErrorText: {
     marginTop: 10,
     fontSize: 16,
     color: '#666',
@@ -1493,7 +1464,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   activeTab: {
-    borderBottomColor: '#9D046D',
+    borderBottomColor: '#177eaaff',
   },
   tabText: {
     fontSize: 14,
@@ -1501,7 +1472,7 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
   activeTabText: {
-    color: '#9D046D',
+    color: '#177eaaff',
     fontWeight: 'bold',
   },
   gridContainer: {
@@ -1887,157 +1858,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  deleteConfirmButton: {
-    backgroundColor: '#dc3545',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    flex: 1,
-    marginLeft: 10,
-  },
-  deleteConfirmButtonDisabled: {
-    backgroundColor: '#ccc',
-    opacity: 0.6,
-  },
-  deleteConfirmButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginLeft: 8,
-  },
-  // Estilos para edición de avatar en modal
-  avatarEditSection: {
-    marginBottom: 20,
-    alignItems: 'center',
-  },
-  avatarButton: {
-    marginBottom: 12,
-  },
-  avatarPreview: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 3,
-    borderColor: '#177eaaff',
-  },
-  avatarPlaceholder: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#e0e0e0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: '#177eaaff',
-  },
-  changeAvatarButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#f0f0f0',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-  changeAvatarButtonText: {
-    marginLeft: 8,
-    fontSize: 14,
-    color: '#177eaaff',
-    fontWeight: '600',
-  },
-  // Estilos para modal de productos
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  modalBody: {
-    maxHeight: 400,
-  },
-  modalImage: {
-    width: '100%',
-    height: 250,
-    backgroundColor: '#f0f0f0',
-  },
-  modalImagePlaceholder: {
-    width: '100%',
-    height: 250,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalInfo: {
-    padding: 20,
-  },
-  modalInfoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  infoLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginLeft: 10,
-    marginRight: 10,
-  },
-  infoValue: {
-    fontSize: 16,
-    color: '#666',
-    flex: 1,
-  },
-  textSection: {
-    marginTop: 10,
-  },
-  textLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  textContent: {
-    fontSize: 15,
-    color: '#666',
-    lineHeight: 22,
-  },
-  modalNavigation: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 15,
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-    backgroundColor: '#f8f9fa',
-  },
-  navButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  navButtonDisabled: {
-    opacity: 0.5,
-  },
-  navButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginHorizontal: 5,
-  },
-  navButtonTextDisabled: {
-    color: '#ccc',
-  },
-});
+    deleteConfirmButton: {
+      flex: 2,
+      backgroundColor: '#dc3545',
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: 8,
+    },
+    deleteConfirmButtonDisabled: {
+      backgroundColor: '#dc3545',
+      opacity: 0.6,
+    },
+    deleteConfirmButtonText: {
+      color: '#fff',
+      fontSize: 16,
+      fontWeight: 'bold',
+      marginLeft: 8,
+    }
+  });
