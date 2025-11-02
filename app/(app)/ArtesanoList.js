@@ -3,6 +3,8 @@
 // Muestra la lista de artesanos registrados en la base de datos y permite buscarlos por nombre, folio, categoría o ubicación.
 // También permite navegar al perfil del artesano y ver su información completa.
 
+// En: app/(app)/ArtesanoList.js -> Archivo de la lista de artesanos (Frontend)
+
 
 // Importaciones
 import React, { useState, useEffect, useCallback } from 'react';
