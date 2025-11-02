@@ -1248,27 +1248,27 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
 
                   {/* Información */}
                   <View style={styles.modalInfo}>
-                    <View style={styles.infoRow}>
+                    <View style={styles.infoRowModal}>
                       <MaterialCommunityIcons name="tag" size={20} color="#2575fc" />
                       <Text style={styles.infoLabel}>Nombre:</Text>
                       <Text style={styles.infoValue}>{selectedProducto.nombre || 'Sin nombre'}</Text>
                     </View>
 
-                    <View style={styles.infoRow}>
+                    <View style={styles.infoRowModal}>
                       <MaterialCommunityIcons name="currency-usd" size={20} color="#28a745" />
                       <Text style={styles.infoLabel}>Precio:</Text>
                       <Text style={styles.infoValue}>{formatPrice(selectedProducto.precio)}</Text>
                     </View>
 
                     {selectedProducto.categoria && (
-                      <View style={styles.infoRow}>
+                      <View style={styles.infoRowModal}>
                         <MaterialCommunityIcons name="tag-outline" size={20} color="#ff9800" />
                         <Text style={styles.infoLabel}>Categoría:</Text>
                         <Text style={styles.infoValue}>{selectedProducto.categoria}</Text>
                       </View>
                     )}
 
-                    <View style={styles.infoRow}>
+                    <View style={styles.infoRowModal}>
                       <MaterialCommunityIcons name="calendar" size={20} color="#2196f3" />
                       <Text style={styles.infoLabel}>Fecha:</Text>
                       <Text style={styles.infoValue}>{formatDate(selectedProducto.created_at)}</Text>
@@ -1950,7 +1950,7 @@ const styles = StyleSheet.create({
   modalInfo: {
     padding: 20,
   },
-  infoRow: {
+  infoRowModal: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 15,
