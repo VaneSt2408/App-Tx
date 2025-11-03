@@ -19,35 +19,23 @@ export default function ChangePassword() { // Define y exporta el componente fun
     if (!newPassword || !confirmPassword) {
       return Alert.alert('Campos vacíos', 'Por favor completa ambos campos.');
     }
-
     // Valida si las contraseñas escritas en ambos campos no coinciden.
     if (newPassword !== confirmPassword) {
       return Alert.alert('Error', 'Las contraseñas no coinciden.');
     }
-
     try {
       setLoading(true);
-      console.log('[ChangePassword] 🔐 Intentando actualizar contraseña...');
-
       const { error } = await supabase.auth.updateUser({ password: newPassword });
-
       if (error) {
-        console.error('[ChangePassword] ❌ Error al actualizar:', error); 
         Alert.alert('Error', 'No se pudo actualizar la contraseña.'); 
         return; 
-      }
-
-      console.log('[ChangePassword] ✅ Contraseña actualizada en Supabase.'); 
-      
+      } 
       await refreshProfile();
-      
       Alert.alert(
         '¡Éxito!', 
         'Tu contraseña ha sido actualizada. Serás redirigido en un momento.' 
       );
-
-    } catch (error) { 
-      console.error('[ChangePassword] ❌ Error inesperado:', error); 
+    } catch (error) {  
       Alert.alert('Error', 'Ocurrió un problema inesperado.'); 
     } finally { 
       setLoading(false); 

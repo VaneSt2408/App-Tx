@@ -75,10 +75,8 @@ export default function MarketplacePage() {
         setHasMore(result.hasMore);
         setCurrentPage(page);
       } else {
-        console.error('Error al cargar productos:', result.error);
       }
     } catch (error) {
-      console.error('Error en loadProductos:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);

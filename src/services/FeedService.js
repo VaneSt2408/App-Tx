@@ -14,12 +14,10 @@ export class FeedService {
     try {
       const { data: { user }, error } = await supabase.auth.getUser();
       if (error) {
-        console.error('❌ [SERVICE] Error al obtener usuario:', error);
         return { userId: null };
       }
       return { userId: user?.id || null };
     } catch (error) {
-      console.error('❌ [SERVICE] Error en getCurrentUserId:', error);
       return { userId: null };
     }
   }
@@ -36,7 +34,6 @@ export class FeedService {
       const { userId } = await this.getCurrentUserId();
       return await this.getFeed(limit, page, userId);
     } catch (error) {
-      console.error('❌ [SERVICE] Error en getFeedForCurrentUser:', error);
       return { success: false, error: error.message };
     }
   }
@@ -52,12 +49,10 @@ export class FeedService {
     try {
       const offset = page * limit;
       
-      console.log('📱 Obteniendo feed - Página:', page, 'Límite:', limit);
 
 
       // Consulta principal con JOIN a artesanos
       // Consulta principal con JOIN a artesanos (tabla directa)
-      console.log('🔍 [FEED] Consultando publicaciones con JOIN a tabla artesanos...');
       const { data: publicaciones, error: feedError, count } = await supabase
         .from('publicaciones')
         .select(`
@@ -77,7 +72,6 @@ export class FeedService {
         .range(offset, offset + limit - 1);
 
       if (feedError) {
-        console.error('❌ Error al obtener feed:', feedError);
         return { success: false, error: feedError.message };
       }
 
@@ -95,7 +89,6 @@ export class FeedService {
         .in('publicacion_id', publicacionIds);
 
       if (likesError) {
-        console.error('⚠️ Error al obtener likes:', likesError);
       }
 
       // Contar likes por publicación
@@ -141,11 +134,7 @@ export class FeedService {
 
       // Log para verificar avatares
       if (publicacionesConLikes.length > 0) {
-        console.log('🖼️ [FEED] Primer artesano en feed - Avatar URL:', publicacionesConLikes[0].artesano?.avatar_url);
-        console.log('🖼️ [FEED] Artesano completo:', publicacionesConLikes[0].artesano);
       }
-
-      console.log('✅ Feed obtenido:', publicacionesConLikes.length, 'publicaciones');
 
       return {
         success: true,
@@ -155,7 +144,6 @@ export class FeedService {
       };
 
     } catch (error) {
-      console.error('❌ Error en getFeed:', error);
       return { success: false, error: error.message };
     }
   }
@@ -176,7 +164,6 @@ export class FeedService {
 
       return await this.toggleLike(publicacionId, userId);
     } catch (error) {
-      console.error('❌ [SERVICE] Error en toggleLikeForCurrentUser:', error);
       return { success: false, error: error.message };
     }
   }
@@ -189,7 +176,6 @@ export class FeedService {
    */
   static async toggleLike(publicacionId, userId) {
     try {
-      console.log('💖 Toggle like - Publicación:', publicacionId, 'Usuario:', userId);
 
       // Verificar si ya existe el like
       const { data: existingLike, error: checkError } = await supabase
@@ -200,7 +186,6 @@ export class FeedService {
         .maybeSingle();
 
       if (checkError) {
-        console.error('❌ Error al verificar like:', checkError);
         return { success: false, error: checkError.message };
       }
 
@@ -215,12 +200,10 @@ export class FeedService {
           .eq('user_id', userId);
 
         if (deleteError) {
-          console.error('❌ Error al quitar like:', deleteError);
           return { success: false, error: deleteError.message };
         }
 
         liked = false;
-        console.log('💔 Like removido');
       } else {
         // Dar like
         const { error: insertError } = await supabase
@@ -231,12 +214,10 @@ export class FeedService {
           });
 
         if (insertError) {
-          console.error('❌ Error al dar like:', insertError);
           return { success: false, error: insertError.message };
         }
 
         liked = true;
-        console.log('❤️ Like agregado');
       }
 
       // Obtener el nuevo conteo de likes
@@ -246,7 +227,6 @@ export class FeedService {
         .eq('publicacion_id', publicacionId);
 
       if (countError) {
-        console.error('⚠️ Error al contar likes:', countError);
       }
 
       return {
@@ -256,7 +236,6 @@ export class FeedService {
       };
 
     } catch (error) {
-      console.error('❌ Error en toggleLike:', error);
       return { success: false, error: error.message };
     }
   }
@@ -289,7 +268,6 @@ export class FeedService {
         .single();
 
       if (pubError) {
-        console.error('❌ Error al obtener publicación:', pubError);
         return { success: false, error: pubError.message };
       }
 
@@ -331,7 +309,6 @@ export class FeedService {
       return { success: true, data: result };
 
     } catch (error) {
-      console.error('❌ Error en getPublicacion:', error);
       return { success: false, error: error.message };
     }
   }
@@ -356,7 +333,6 @@ export class FeedService {
       };
 
     } catch (error) {
-      console.error('❌ Error en getPublicacionStats:', error);
       return { success: false, error: error.message };
     }
   }
@@ -367,7 +343,6 @@ export class FeedService {
    * @returns {Promise<{success: boolean, data?: array, error?: string}>}
    */
   static async refreshFeed(currentUserId = null) {
-    console.log('🔄 Refrescando feed...');
     return await this.getFeed(10, 0, currentUserId);
   }
 }

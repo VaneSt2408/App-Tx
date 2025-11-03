@@ -36,7 +36,6 @@ const ProductDetailPage = ({ route, navigation }) => {
         navigation.goBack();
       }
     } catch (error) {
-      console.error('Error al cargar producto:', error);
       Alert.alert('Error', 'Ocurrió un error inesperado');
       navigation.goBack();
     } finally {

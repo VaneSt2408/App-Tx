@@ -19,15 +19,6 @@ function RootLayoutNav() {
   const router = useRouter();
 
   useEffect(() => {
-    // Log para depuración: nos dice el estado actual en cada render.
-    console.log('Auth Check:', { 
-      authLoading, 
-      hasSession: !!session?.user, 
-      role,
-      profile,
-      segments,
-      isPasswordRecovery
-    });
 
     // Si el estado de autenticación aún está cargando, no hacemos nada.
     if (authLoading) {
@@ -40,7 +31,6 @@ function RootLayoutNav() {
 
     // Si estamos en modo de recuperación de contraseña, no redirigir automáticamente
     if (isPasswordRecovery) {
-      console.log('🔑 Modo de recuperación de contraseña activo - no redirigiendo');
       return;
     }
 
@@ -55,7 +45,6 @@ function RootLayoutNav() {
     else {
       // Verificar si es un cliente que necesita completar su perfil
       if (role === 'cliente' && profile && !profile.nombre_completo) {
-        console.log('👤 Cliente necesita completar perfil - redirigiendo a completeProfile');
         if (!inCompleteProfile) {
           router.replace('/completeProfile' as Href);
         }
@@ -64,7 +53,6 @@ function RootLayoutNav() {
 
       // Si estamos en completeProfile pero ya no necesitamos completar el perfil
       if (inCompleteProfile && role === 'cliente' && profile?.nombre_completo) {
-        console.log('✅ Perfil completo - redirigiendo a app principal');
         router.replace('/(app)' as Href);
         return;
       }
@@ -75,19 +63,8 @@ function RootLayoutNav() {
         const tieneDescripcion = !!profile.descripcion;
         const tieneAvatar = !!profile.avatar_url;
         const perfilCompleto = tieneDescripcion && tieneAvatar;
-        
-        console.log('🎨 [Layout] Verificando perfil de artesano:', {
-          role,
-          tiene_descripcion: tieneDescripcion,
-          tiene_avatar: tieneAvatar,
-          perfil_completo: perfilCompleto,
-          descripcion_preview: profile.descripcion ? `${profile.descripcion.substring(0, 30)}...` : 'null',
-          avatar_url: profile.avatar_url || 'null',
-          inCompleteArtesanoProfile
-        });
 
         if (!perfilCompleto) {
-          console.log('⚠️ [Layout] Artesano necesita completar perfil - redirigiendo a completeArtesanoProfile');
           if (!inCompleteArtesanoProfile) {
             router.replace('/completeArtesanoProfile' as Href);
           }
@@ -100,15 +77,8 @@ function RootLayoutNav() {
         const tieneDescripcion = !!profile.descripcion;
         const tieneAvatar = !!profile.avatar_url;
         const perfilCompleto = tieneDescripcion && tieneAvatar;
-        
-        console.log('🔄 [Layout] Verificando si salir de completeArtesanoProfile:', {
-          perfil_completo: perfilCompleto,
-          tiene_descripcion: tieneDescripcion,
-          tiene_avatar: tieneAvatar
-        });
 
         if (perfilCompleto) {
-          console.log('✅ [Layout] Perfil de artesano completo - redirigiendo a app principal');
           router.replace('/(app)' as Href);
           return;
         }

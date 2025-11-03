@@ -39,7 +39,6 @@ export default function PostDetail() {
       const data = await artesanoService.getItemById(itemId, itemType);
       setItem(data);
     } catch (error) {
-      console.error('Error al cargar detalle:', error);
       Alert.alert('Error', 'No se pudo cargar el detalle.');
     } finally {
       setLoading(false);
