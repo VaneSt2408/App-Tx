@@ -1,113 +1,94 @@
-// En: src/pages/ClientPage.js
+// En: app/(app)/ClientPage.js -> Archivo de la página del cliente (Frontend)
+// Este archivo es el encargado de mostrar la página del cliente en la aplicación.
+// Muestra la página del cliente registrada en la base de datos y permite navegar a la página de inicio, marketplace y perfil.
 
-import React, { useEffect, useState } from 'react'; // Similar a ArtPage.js
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native'; // Similar a ArtPage.js
-import { signOut } from '../../src/services/authService'; // Similar to ClientPage.js
-import { supabase } from '../../src/supabase/client'; // Similar to ClientPage.js
-import { MaterialCommunityIcons } from '@expo/vector-icons'; // Similar to ArtPage.js
-import { useRouter } from 'expo-router'; // Importar useRouter para navegación
+// Importaciones
+import React from 'react';
+import { StyleSheet } from 'react-native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import FeedPage from './FeedPage';
+import MarketplacePage from './MarketplacePage';
+import ArtesanoList from './ArtesanoList';
+import ClientProfile from './clientProfile';
 
-function ClientPage() { // Asegúrate de que el nombre del componente coincida con el del archivo
-    const [user, setUser] = useState(null); // Estado para almacenar los datos del usuario
-    const [loading, setLoading] = useState(true); // Estado para manejar la carga
-    const router = useRouter(); // Hook para navegación en Expo Router
+const Tab = createBottomTabNavigator(); // Crear el tab navigator
 
-    useEffect(() => {
-        const fetchUser = async () => { // Función para obtener los datos del usuario
-            const { data: { user } } = await supabase.auth.getUser(); // Obtiene el usuario actual
-            setUser(user); // Actualiza el estado del usuario
-            setLoading(false); // Actualiza el estado de carga
-        };
-        fetchUser(); // Llama a la función para obtener los datos del usuario
-    }, []);
-
-    const handleLogout = async () => { // Función para manejar el cierre de sesión
-        await signOut(); // Llama a la función signOut
-        // App.js se encarga de la redirección
-    };
-
-    // Función para navegar a la lista de artesanos
-    const handleNavigateToArtesanos = () => {
-        router.push('./ArtesanoList');
-    };
-
-    if (loading || !user) { // Muestra un indicador de carga mientras se obtienen los datos del usuario
-        return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#2575fc" /></View>;
-    }
-
+// Componente principal
+function ClientPage() {
+    // Renderizado
     return (
-        <View style={styles.container}>
-            <View style={styles.userInfo}>
-                <Text style={styles.emailText}>Email: {user.email}</Text>
-                <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-                    <MaterialCommunityIcons name="logout" size={28} color="#db4437" />
-                </TouchableOpacity>
-            </View>
-            <Text style={styles.title}>Modo: Cliente</Text>
-            
-            <TouchableOpacity style={styles.uploadButton} onPress={() => router.push('/clientProfile')}>
-                <MaterialCommunityIcons name="plus" size={24} color="#fff" />
-                <Text style={styles.uploadButtonText}>Ver perfil</Text>
-            </TouchableOpacity>
+        <Tab.Navigator
+            screenOptions={({ route }) => ({
+                tabBarIcon: ({ focused, color, size }) => {
+                    let iconName;
 
-            <TouchableOpacity style={styles.artesanosButton} onPress={handleNavigateToArtesanos}>
-                <MaterialCommunityIcons name="account-group" size={24} color="#fff" />
-                <Text style={styles.artesanosButtonText}>Lista de Artesanos</Text>
-            </TouchableOpacity>
+                    if (route.name === 'Feed') {
+                        iconName = focused ? 'home' : 'home-outline';
+                    } else if (route.name === 'Marketplace') {
+                        iconName = focused ? 'store' : 'store-outline';
+                    } else if (route.name === 'Artesanos') {
+                        iconName = focused ? 'account-group' : 'account-group-outline';
+                    } else if (route.name === 'Profile') {
+                        iconName = focused ? 'account-circle' : 'account-circle-outline';
+                    }
 
-        </View>
+                    return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
+                },
+
+                tabBarActiveTintColor: '#9D046D',
+                tabBarInactiveTintColor: '#666',
+                tabBarStyle: {
+                    backgroundColor: '#fff',
+                    borderTopWidth: 1,
+                    borderTopColor: '#e1e8ed',
+                    height: 60,
+                    paddingBottom: 8,
+                    paddingTop: 8,
+                },
+                tabBarLabelStyle: {
+                    fontSize: 11,
+                    fontWeight: '500',
+                },
+                headerShown: false,
+            })}
+        >
+            <Tab.Screen 
+                name="Feed" 
+                component={FeedPage}
+                options={{
+                    tabBarLabel: 'Inicio',
+                }}
+            />
+            <Tab.Screen 
+                name="Marketplace" 
+                component={MarketplacePage}
+                options={{
+                    tabBarLabel: 'Marketplace',
+                }}
+            />
+            <Tab.Screen 
+                name="Artesanos" 
+                component={ArtesanoList}
+                options={{
+                    tabBarLabel: 'Artesanos',
+                }}
+            />
+            <Tab.Screen 
+                name="Profile" 
+                component={ClientProfile}
+                options={{
+                    tabBarLabel: 'Perfil',
+                }}
+            />
+        </Tab.Navigator>
     );
 }
 
-// ... (tus estilos aquí)
 const styles = StyleSheet.create({
-    loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    container: { flex: 1, padding: 20, backgroundColor: '#f5f5f5' },
-    title: { fontSize: 20, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
-    userInfo: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#ddd', marginBottom: 20 },
-    emailText: { fontSize: 16, color: '#555' },
-    logoutButton: { padding: 8 },
-    uploadButton: {
-        backgroundColor: '#2575fc',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 15,
-        paddingHorizontal: 20,
-        borderRadius: 10,
-        marginBottom: 20,
-        elevation: 3,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-    },
-    uploadButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginLeft: 8,
-    },
-    artesanosButton: {
-        backgroundColor: '#8a17aaff',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 15,
-        paddingHorizontal: 20,
-        borderRadius: 10,
-        marginBottom: 20,
-        elevation: 3,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-    },
-    artesanosButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginLeft: 8,
+    container: {
+        flex: 1,
+        backgroundColor: '#f5f5f5',
     },
 });
 

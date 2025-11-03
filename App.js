@@ -6,8 +6,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as Linking from 'expo-linking'; // Tu equipo lo usa para deep links
 import { supabase } from './src/supabase/client'; // Importas supabase aquí
-
 import { onAuthStateChange, checkUserRole } from './src/services/authService';
+
 
 // --- Importación de todas las pantallas ---
 import Login from './src/pages/login';
@@ -20,6 +20,17 @@ import NotFoundPage from './src/pages/NotFoundPage';
 import MagicLink from './src/pages/MagicLink';
 import ChangePassword from './src/pages/ChangePassword';
 import CompleteProfilePage from './src/pages/CompleteProfilePage';
+import UploadProductModal from './src/components/UploadProductModal';
+import MarketplacePage from './src/pages/MarketplacePage';   
+import ProductDetailPage from './src/pages/ProductDetailPage';   
+
+
+import MainTabsNavigatorClient from './src/navigation/MainTabsNavigatorClient'; 
+import MainTabsNavigatorArtesano from './src/navigation/MainTabsNavigatorArtesano'; 
+import MainTabsNavigatorAdmin from './src/navigation/MainTabsNavigatorAdmin';   
+
+
+import CreatePostPage from './src/pages/CreatePostPage';   
 
 // --- Componente simple para mostrar una pantalla de carga ---
 const LoadingScreen = () => (
@@ -124,12 +135,83 @@ export default function App() {
                     <>
                         <Stack.Screen name="PageAdmin" component={PageAdmin} options={{ title: 'Modo Admin' }} />
                         <Stack.Screen name="MagicLink" component={MagicLink} options={{ title: 'Invitar Artesano' }} />
+
+                        <Stack.Screen 
+                            name="MainTabs" 
+                            component={MainTabsNavigatorAdmin}
+                            options={{ headerShown: false }}
+                        />
+                        <Stack.Screen 
+                            name="Marketplace" 
+                            component={MarketplacePage} 
+                            options={{ title: 'Marketplace' }} 
+                        />
+                        <Stack.Screen 
+                            name="ProductDetail" 
+                            component={ProductDetailPage} 
+                            options={{ title: 'Detalle del Producto' }} 
+                        />
                     </>
                 );
             case 'artesano':
-                return <Stack.Screen name="ArtPage" component={ArtPage} options={{ title: 'Página del Artesano' }} />;
+                return (
+                    <>
+                        {/* ✅ CAMBIO: Usar MainTabs en lugar de ArtPage directamente */}
+                        <Stack.Screen 
+                            name="MainTabs" 
+                            component={MainTabsNavigatorArtesano}
+                            options={{ headerShown: false }}
+                        />
+                        <Stack.Screen 
+                            name="CreatePost" 
+                            component={CreatePostPage} 
+                            options={{ title: 'Crear Publicación' }} 
+                        />
+                        {/* Modal para subir productos */}
+                        <Stack.Screen 
+                            name="UploadProduct" 
+                            component={UploadProductModal} 
+                            options={{ title: 'Subir Producto' }} 
+                        />
+                        <Stack.Screen 
+                            name="Marketplace" 
+                            component={MarketplacePage} 
+                            options={{ title: 'Marketplace' }} 
+                        />
+                        <Stack.Screen 
+                            name="ProductDetail" 
+                            component={ProductDetailPage} 
+                            options={{ title: 'Detalle del Producto' }} 
+                        />
+                    </>
+                );
+
             case 'cliente':
-                return <Stack.Screen name="ClientPage" component={ClientPage} options={{ title: 'Página del Cliente' }} />;
+                return (
+                    <>
+                        <Stack.Screen 
+                            name="MainTabs" 
+                            component={MainTabsNavigatorClient}
+                            options={{ headerShown: false }}
+                        />
+                        <Stack.Screen 
+                            name="PerfilPage" 
+                            component={ClientPage} 
+                            options={{ title: 'Página del Cliente' }} 
+                        />
+                        <Stack.Screen 
+                            name="Marketplace" 
+                            component={MarketplacePage} 
+                            options={{ title: 'Marketplace' }} 
+                        />
+                        <Stack.Screen 
+                            name="ProductDetail" 
+                            component={ProductDetailPage} 
+                            options={{ title: 'Detalle del Producto' }} 
+                        />
+                    </>
+                );
+
             case 'En proceso':
                 return (
                     <>
@@ -151,6 +233,7 @@ export default function App() {
         </NavigationContainer>
     );
 }
+
 
 const styles = StyleSheet.create({
     loadingContainer: {

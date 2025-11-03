@@ -79,7 +79,49 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 };
             }
 
-            // Si no es un cliente, devolvemos lo que encontramos en 'perfiles' (para admin/artesano).
+            // Paso 4: Si no es cliente, verificamos si es artesano
+            if (profileData?.rol === 'artesano') {
+                console.log('🎨 [AuthContext] Detectado usuario artesano, obteniendo datos del perfil...');
+                
+                // Buscamos el perfil en la tabla 'artesanos' para obtener avatar_url y descripcion
+                const { data: artesanoData, error: artesanoError } = await supabase
+                    .from('artesanos')
+                    .select('user_id, avatar_url, descripcion')
+                    .eq('user_id', userId)
+                    .single();
+
+                console.log('📊 [AuthContext] Datos de tabla artesanos:', {
+                    encontrado: !!artesanoData,
+                    avatar_url: artesanoData?.avatar_url || 'null',
+                    descripcion: artesanoData?.descripcion ? `${artesanoData.descripcion.substring(0, 50)}...` : 'null',
+                    error: artesanoError?.code
+                });
+
+                // Si hay un error que no sea "no se encontró la fila", lo registramos pero continuamos
+                if (artesanoError && artesanoError.code !== 'PGRST116') {
+                    console.error("❌ [AuthContext] Error buscando en la tabla artesanos:", artesanoError);
+                }
+
+                // Combinamos la información del artesano con el rol
+                const artesanoProfile = {
+                    id: userId,
+                    descripcion: artesanoData?.descripcion || null,
+                    avatar_url: artesanoData?.avatar_url || null,
+                    rol: 'artesano'
+                };
+
+                console.log('✅ [AuthContext] Perfil de artesano construido:', {
+                    id: artesanoProfile.id,
+                    tiene_descripcion: !!artesanoProfile.descripcion,
+                    tiene_avatar: !!artesanoProfile.avatar_url,
+                    perfil_completo: !!(artesanoProfile.descripcion && artesanoProfile.avatar_url),
+                    rol: artesanoProfile.rol
+                });
+
+                return artesanoProfile;
+            }
+
+            // Si no es cliente ni artesano, devolvemos lo que encontramos en 'perfiles' (para admin).
             return profileData;
 
         } catch (error) {
@@ -90,28 +132,43 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // --- Función para refrescar el perfil ---
     const refreshProfile = async () => {
-        if (!session?.user) return;
+        if (!session?.user) {
+            console.log('⚠️ [AuthContext] refreshProfile: No hay sesión de usuario');
+            return;
+        }
         
+        console.log('🔄 [AuthContext] refreshProfile: Iniciando actualización del perfil...');
         setLoading(true);
         try {
             const userProfile = await checkUserRole(session.user.id);
+            console.log('📊 [AuthContext] refreshProfile: Perfil obtenido:', {
+                tiene_perfil: !!userProfile,
+                rol: userProfile?.rol,
+                tiene_descripcion: !!userProfile?.descripcion,
+                tiene_avatar: !!userProfile?.avatar_url,
+                tiene_nombre_completo: !!userProfile?.nombre_completo
+            });
+            
             setProfile(userProfile);
             
             if (userProfile?.rol) {
                 setRole(userProfile.rol);
+                console.log('✅ [AuthContext] refreshProfile: Rol actualizado:', userProfile.rol);
                 // Limpiar timer si se encuentra perfil
                 if (noProfileTimer) {
                     clearTimeout(noProfileTimer);
                     setNoProfileTimer(null);
                 }
             } else {
+                console.log('⚠️ [AuthContext] refreshProfile: No se encontró perfil');
                 // Si no hay perfil, iniciar timer de 10 segundos
                 handleNoProfile();
             }
         } catch (error) {
-            console.error("Error refrescando perfil:", error);
+            console.error("❌ [AuthContext] refreshProfile: Error refrescando perfil:", error);
         } finally {
             setLoading(false);
+            console.log('🏁 [AuthContext] refreshProfile: Finalizado');
         }
     };
 

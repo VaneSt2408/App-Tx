@@ -1,16 +1,24 @@
-// En: src/pages/RegisterArtesano.js
+// En: app/(app)/RegisterArtesano.js -> Archivo de registro de artesano (Frontend)
+// Este archivo es el encargado de mostrar el formulario de registro de artesano en la aplicación.
+// Permite registrar un nuevo artesano en la aplicación mediante un formulario de registro.
+
+// Importaciones
 import React, { useState, useEffect } from 'react'; // Importa React y los hooks 'useState' y 'useEffect'.
+
 import { 
-  View, TextInput, Button, Alert, StyleSheet, TouchableOpacity, Text, 
-  ScrollView, ActivityIndicator 
+  View, TextInput, Alert, StyleSheet, TouchableOpacity, Text, 
+  ScrollView, ActivityIndicator, SafeAreaView, KeyboardAvoidingView, Platform
 } from 'react-native'; // Importa varios componentes de UI de React Native.
+// duplicate import removed (consolidated above)
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Importa una librería de íconos.
-import { useNavigation } from '@react-navigation/native'; // Importa el hook para manejar la navegación entre pantallas.
+import { useRouter } from 'expo-router'; // Usamos useRouter para la navegación con Expo Router
 import { supabase } from '../../src/supabase/client'; // Importa el cliente de Supabase.
 import { completeArtesanoRegistration } from '../../src/services/userService'; // Importa la función de servicio para el registro.
+import { LinearGradient } from 'expo-linear-gradient'; // Para el fondo degradado
+import { MotiView, MotiText } from 'moti'; // Para animaciones
 
 export default function RegisterArtesano() { // Define y exporta el componente de la pantalla de registro.
-  const navigation = useNavigation(); // Obtiene el objeto de navegación para poder cambiar de pantalla.
+  const router = useRouter(); // Hook de navegación de Expo Router
 
   // --- Estados del componente ---
   const [user, setUser] = useState(null); // Estado para guardar la información del usuario actual.
@@ -27,6 +35,10 @@ export default function RegisterArtesano() { // Define y exporta el componente d
   const [telefono, setTelefono] = useState('');
   const [numero_ine, setNumero_Ine] = useState('');
   const [folio, setFolio] = useState('');
+
+  // --- Estados para la UI ---
+  const [focusedInput, setFocusedInput] = useState(null);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   // Hook 'useEffect' que se ejecuta una sola vez cuando el componente se monta.
   useEffect(() => {
@@ -83,7 +95,7 @@ export default function RegisterArtesano() { // Define y exporta el componente d
               text: 'Continuar', // Texto del botón.
               // Al presionar, navega a la pantalla 'ChangePassword'.
               onPress: () => {
-                navigation.navigate('ChangePassword', { tempPassword: password });
+                router.push('/ChangePassword');
               },
             },
           ]
@@ -106,44 +118,213 @@ export default function RegisterArtesano() { // Define y exporta el componente d
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2575fc" />
-        <Text style={{ marginTop: 10, fontSize: 16 }}>Cargando información...</Text>
+        <Text style={styles.loadingText}>Cargando información...</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Completa tu Registro</Text>
-      <TextInput style={[styles.input, styles.disabledInput]} value={user?.email} editable={false} />
-      <TextInput style={styles.input} placeholder="Nombre completo" value={nombre} onChangeText={setNombre} />
-      <TextInput style={styles.input} placeholder="Número de teléfono" value={telefono} onChangeText={setTelefono} keyboardType="phone-pad" />
-      <TextInput style={styles.input} placeholder="Crea una contraseña" value={password} onChangeText={setPassword} secureTextEntry />
-      <TextInput style={styles.input} placeholder="Confirma tu contraseña" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry />
-      <TextInput style={styles.input} placeholder="Categoría" value={categoria} onChangeText={setCategoria} />
-      <TextInput style={styles.input} placeholder="Ubicación" value={ubicacion} onChangeText={setUbicacion} />
-      <TextInput style={styles.input} placeholder="CURP" value={curp} onChangeText={setCurp} />
-      <TextInput style={styles.input} placeholder="Número de Identificación (INE)" value={numero_ine} onChangeText={setNumero_Ine} />
-      <View style={styles.folioContainer}>
-        <TextInput style={[styles.input, { flex: 1, marginBottom: 0 }]} placeholder="Folio" value={folio} onChangeText={setFolio} />
-        <TouchableOpacity style={styles.generateButton} onPress={generarFolio}>
-          <MaterialCommunityIcons name="auto-fix" size={28} color="#2575fc" />
-        </TouchableOpacity>
-      </View>
-      <Button 
-        title={registerLoading ? "Procesando..." : "Finalizar Registro"} 
-        onPress={handleRegister}
-        disabled={registerLoading}
-      />
-    </ScrollView>
+    <LinearGradient
+      colors={['#FDFAF1', '#FDFAF1']}
+      style={styles.container}
+    >
+      <SafeAreaView style={{ flex: 1 }}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+        >
+          <ScrollView contentContainerStyle={styles.scrollContainer}>
+            <MotiText
+              from={{ opacity: 0, translateY: -30 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              transition={{ type: 'timing', duration: 800 }}
+              style={styles.title}
+            >
+              Completa tu Registro
+            </MotiText>
+            <MotiText
+              from={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ type: 'timing', duration: 800, delay: 200 }}
+              style={styles.subtitle}
+            >
+              Estás a un paso de ser parte de nuestra comunidad de artesanos.
+            </MotiText>
+
+            {/* Email (deshabilitado) */}
+            <View style={[styles.inputContainer, styles.disabledInput]}>
+              <MaterialCommunityIcons name="email-outline" size={20} color="#888" style={styles.icon} />
+              <TextInput style={styles.input} value={user?.email} editable={false} />
+            </View>
+
+            {/* Nombre Completo */}
+            <View style={[styles.inputContainer, focusedInput === 'nombre' && styles.inputFocused]}>
+              <MaterialCommunityIcons name="account-outline" size={20} color="#9D046D" style={styles.icon} />
+              <TextInput style={styles.input} placeholder="Nombre completo" placeholderTextColor="#9D046D" value={nombre} onChangeText={setNombre} onFocus={() => setFocusedInput('nombre')} onBlur={() => setFocusedInput(null)} />
+            </View>
+
+            {/* Teléfono */}
+            <View style={[styles.inputContainer, focusedInput === 'telefono' && styles.inputFocused]}>
+              <MaterialCommunityIcons name="phone-outline" size={20} color="#9D046D" style={styles.icon} />
+              <TextInput style={styles.input} placeholder="Número de teléfono" placeholderTextColor="#9D046D" value={telefono} onChangeText={setTelefono} keyboardType="phone-pad" onFocus={() => setFocusedInput('telefono')} onBlur={() => setFocusedInput(null)} />
+            </View>
+
+            {/* Contraseña */}
+            <View style={[styles.inputContainer, focusedInput === 'password' && styles.inputFocused]}>
+              <MaterialCommunityIcons name="lock-outline" size={20} color="#9D046D" style={styles.icon} />
+              <TextInput style={styles.input} placeholder="Crea una contraseña" placeholderTextColor="#9D046D" value={password} onChangeText={setPassword} secureTextEntry={!isPasswordVisible} onFocus={() => setFocusedInput('password')} onBlur={() => setFocusedInput(null)} />
+              <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)}>
+                <MaterialCommunityIcons name={isPasswordVisible ? "eye-off-outline" : "eye-outline"} size={20} color="#9D046D" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Confirmar Contraseña */}
+            <View style={[styles.inputContainer, focusedInput === 'confirmPassword' && styles.inputFocused]}>
+              <MaterialCommunityIcons name="lock-check-outline" size={20} color="#9D046D" style={styles.icon} />
+              <TextInput style={styles.input} placeholder="Confirma tu contraseña" placeholderTextColor="#9D046D" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry={!isPasswordVisible} onFocus={() => setFocusedInput('confirmPassword')} onBlur={() => setFocusedInput(null)} />
+            </View>
+
+            {/* Categoría */}
+            <View style={[styles.inputContainer, focusedInput === 'categoria' && styles.inputFocused]}>
+              <MaterialCommunityIcons name="shape-outline" size={20} color="#9D046D" style={styles.icon} />
+              <TextInput style={styles.input} placeholder="Categoría (ej. Textil, Alfarería)" placeholderTextColor="#9D046D" value={categoria} onChangeText={setCategoria} onFocus={() => setFocusedInput('categoria')} onBlur={() => setFocusedInput(null)} />
+            </View>
+
+            {/* Ubicación */}
+            <View style={[styles.inputContainer, focusedInput === 'ubicacion' && styles.inputFocused]}>
+              <MaterialCommunityIcons name="map-marker-outline" size={20} color="#9D046D" style={styles.icon} />
+              <TextInput style={styles.input} placeholder="Ubicación (ej. Oaxaca, México)" placeholderTextColor="#9D046D" value={ubicacion} onChangeText={setUbicacion} onFocus={() => setFocusedInput('ubicacion')} onBlur={() => setFocusedInput(null)} />
+            </View>
+
+            {/* CURP */}
+            <View style={[styles.inputContainer, focusedInput === 'curp' && styles.inputFocused]}>
+              <MaterialCommunityIcons name="card-account-details-outline" size={20} color="#9D046D" style={styles.icon} />
+              <TextInput style={styles.input} placeholder="CURP" placeholderTextColor="#9D046D" value={curp} onChangeText={setCurp} autoCapitalize="characters" onFocus={() => setFocusedInput('curp')} onBlur={() => setFocusedInput(null)} />
+            </View>
+
+            {/* INE */}
+            <View style={[styles.inputContainer, focusedInput === 'ine' && styles.inputFocused]}>
+              <MaterialCommunityIcons name="card-account-details-star-outline" size={20} color="#9D046D" style={styles.icon} />
+              <TextInput style={styles.input} placeholder="Número de Identificación (INE)" placeholderTextColor="#9D046D" value={numero_ine} onChangeText={setNumero_Ine} onFocus={() => setFocusedInput('ine')} onBlur={() => setFocusedInput(null)} />
+            </View>
+
+            {/* Folio */}
+            <View style={[styles.inputContainer, focusedInput === 'folio' && styles.inputFocused]}>
+              <MaterialCommunityIcons name="pound" size={20} color="#9D046D" style={styles.icon} />
+              <TextInput style={styles.input} placeholder="Folio" placeholderTextColor="#9D046D" value={folio} onChangeText={setFolio} onFocus={() => setFocusedInput('folio')} onBlur={() => setFocusedInput(null)} />
+              <TouchableOpacity onPress={generarFolio} style={styles.generateButton}>
+                <MaterialCommunityIcons name="auto-fix" size={24} color="#9D046D" />
+              </TouchableOpacity>
+            </View>
+
+            <MotiView
+              from={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: 'timing', duration: 500, delay: 400 }}
+              style={{ width: '100%', marginTop: 20 }}
+            >
+              <TouchableOpacity
+                style={[styles.button, registerLoading && styles.buttonDisabled]}
+                onPress={handleRegister}
+                disabled={registerLoading}
+              >
+                {registerLoading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.buttonText}>Finalizar Registro</Text>
+                )}
+              </TouchableOpacity>
+            </MotiView>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  title: { fontSize: 22, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
-  input: { borderWidth: 1, borderColor: '#ccc', padding: 12, marginBottom: 15, borderRadius: 8 },
-  disabledInput: { backgroundColor: '#f0f0f0', color: '#888' },
-  folioContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 15 },
-  generateButton: { marginLeft: 10 },
+  container: {
+    flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 30,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FDFAF1',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666'
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 30,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    backgroundColor: 'rgba(238, 3, 89, 0.1)',
+    borderRadius: 16,
+    paddingHorizontal: 15,
+    marginBottom: 15,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  inputFocused: {
+    borderColor: '#9D046D',
+  },
+  icon: {
+    marginRight: 10,
+  },
+  input: {
+    flex: 1,
+    height: 50,
+    fontSize: 16,
+    color: '#333',
+  },
+  disabledInput: {
+    backgroundColor: '#f0f0f0',
+    color: '#888',
+  },
+  generateButton: {
+    padding: 5,
+  },
+  button: {
+    width: '100%',
+    backgroundColor: '#9D046D',
+    padding: 15,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 6,
+  },
+  buttonDisabled: {
+    backgroundColor: '#ccc',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
 });
