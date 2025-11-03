@@ -16,18 +16,10 @@
     "@expo/vector-icons": "^15.0.3",
     "@motionone/dom": "^10.18.0",
     "@react-native-async-storage/async-storage": "2.2.0",
-<<<<<<< HEAD
-    "@react-navigation/native": "^7.1.19",
-    "@react-navigation/native-stack": "^7.6.0",
-=======
-    "@react-navigation/bottom-tabs": "^7.5.0",
-    "@react-navigation/native": "^7.1.18",
-    "@react-navigation/native-stack": "^7.5.1",
->>>>>>> ed4abb02619f11a648a0a46073399f6eee48e306
     "@supabase/supabase-js": "^2.76.1",
     "async-storage": "^0.1.0",
     "base64-arraybuffer": "^1.0.2",
-    "expo": "54.0.20",
+    "expo": "54.0.21",
     "expo-auth-session": "~7.0.8",
     "expo-blur": "~15.0.7",
     "expo-crypto": "~15.0.7",
@@ -35,7 +27,7 @@
     "expo-image-picker": "~17.0.8",
     "expo-linear-gradient": "~15.0.7",
     "expo-linking": "~8.0.8",
-    "expo-router": "~6.0.11",
+    "expo-router": "~6.0.14",
     "expo-splash-screen": "~31.0.10",
     "expo-status-bar": "~3.0.8",
     "expo-symbols": "~1.0.7",
