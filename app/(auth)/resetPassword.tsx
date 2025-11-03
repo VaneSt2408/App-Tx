@@ -36,11 +36,9 @@ export default function ResetPasswordScreen() {
             if (user) {
                 // En un escenario real, no podemos obtener la contraseña actual por seguridad
                 // Pero podemos usar el email para verificar si es un cambio de contraseña válido
-                console.log('Usuario autenticado:', user.email);
                 return user.email; // Usamos el email como referencia
             }
         } catch (error) {
-            console.error('Error obteniendo usuario actual:', error);
         }
         return null;
     };

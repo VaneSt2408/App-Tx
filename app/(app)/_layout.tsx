@@ -34,12 +34,7 @@ export default function AppLayout() {
       'En proceso': '/RegisterArtesano',
     };
 
-    console.log('--- DEBUG DE ROL ---');
-    console.log('Rol recibido del contexto:', role);
-    console.log('¿Existe la clave en routeMapping?:', role in routeMapping);
     const targetRoute = routeMapping[role as keyof typeof routeMapping];
-    console.log('Ruta de destino calculada:', targetRoute);
-    console.log('---------------------');
 
 
     // 3. Redirigimos al usuario a la pantalla que le corresponde.
@@ -63,7 +58,7 @@ export default function AppLayout() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="PageAdmin" options={{ title: "Modo Admin" }} />
       <Stack.Screen name="MagicLink" options={{ title: "Envio de link" }} />
-      <Stack.Screen name="RegisterArtesano" options={{ title: "Registro de datos personales" }} />
+      <Stack.Screen name="RegisterArtesano" options={{ headerShown: false}} />
       <Stack.Screen name="ArtPage" options={{ title: "Pagina del artesano" }} />
       <Stack.Screen name="ClientPage" options={{ title: "Pagina del cliente" }} />
       <Stack.Screen name="ChangePassword" options={{ title: "Confirmar contraseña" }} />
@@ -77,6 +72,8 @@ export default function AppLayout() {
       <Stack.Screen name="FeedPage" options={{title: "Publicaciones"}}/>
       <Stack.Screen name="MarketplacePage" options={{title: "Marketplace"}}/>
       <Stack.Screen name="ProductDetailPage" options={{title: "Detalle del Producto"}}/>
+      <Stack.Screen name="estadisticas" options={{title: "Estadisticas"}}/>
+
     </Stack>
   );
 }

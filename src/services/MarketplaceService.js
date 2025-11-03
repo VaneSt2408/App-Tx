@@ -17,8 +17,6 @@ export class MarketplaceService {
     try {
       const offset = page * limit;
       
-      console.log('🛒 Obteniendo productos - Página:', page, 'Límite:', limit);
-      console.log('📊 Filtros:', filters);
 
       // Construir query base
       let query = supabase
@@ -66,7 +64,6 @@ export class MarketplaceService {
       const { data: productos, error: productsError, count } = await query;
 
       if (productsError) {
-        console.error('❌ Error al obtener productos:', productsError);
         return { success: false, error: productsError.message };
       }
 
@@ -92,7 +89,6 @@ export class MarketplaceService {
         },
       }));
 
-      console.log('✅ Productos obtenidos:', productosFormateados.length);
 
       return {
         success: true,
@@ -102,7 +98,6 @@ export class MarketplaceService {
       };
 
     } catch (error) {
-      console.error('❌ Error en getProductos:', error);
       return { success: false, error: error.message };
     }
   }
@@ -114,7 +109,6 @@ export class MarketplaceService {
    */
   static async getProducto(productoId) {
     try {
-      console.log('🔍 Obteniendo producto:', productoId);
 
       const { data: producto, error } = await supabase
         .from('productos')
@@ -142,7 +136,6 @@ export class MarketplaceService {
         .single();
 
       if (error) {
-        console.error('❌ Error al obtener producto:', error);
         return { success: false, error: error.message };
       }
 
@@ -169,7 +162,6 @@ export class MarketplaceService {
       return { success: true, data: productoFormateado };
 
     } catch (error) {
-      console.error('❌ Error en getProducto:', error);
       return { success: false, error: error.message };
     }
   }
@@ -189,14 +181,12 @@ export class MarketplaceService {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Error al obtener productos del artesano:', error);
         return { success: false, error: error.message };
       }
 
       return { success: true, data: productos };
 
     } catch (error) {
-      console.error('❌ Error en getProductosPorArtesano:', error);
       return { success: false, error: error.message };
     }
   }
@@ -214,7 +204,6 @@ export class MarketplaceService {
         .not('categoria', 'is', null);
 
       if (error) {
-        console.error('❌ Error al obtener categorías:', error);
         return { success: false, error: error.message };
       }
 
@@ -224,7 +213,6 @@ export class MarketplaceService {
       return { success: true, data: categoriasUnicas };
 
     } catch (error) {
-      console.error('❌ Error en getCategorias:', error);
       return { success: false, error: error.message };
     }
   }
@@ -236,7 +224,6 @@ export class MarketplaceService {
    */
   static async buscarProductos(searchTerm) {
     try {
-      console.log('🔍 Buscando productos:', searchTerm);
 
       const { data: productos, error } = await supabase
         .from('productos')
@@ -261,7 +248,6 @@ export class MarketplaceService {
         .limit(50);
 
       if (error) {
-        console.error('❌ Error en búsqueda:', error);
         return { success: false, error: error.message };
       }
 
@@ -286,7 +272,6 @@ export class MarketplaceService {
       return { success: true, data: productosFormateados };
 
     } catch (error) {
-      console.error('❌ Error en buscarProductos:', error);
       return { success: false, error: error.message };
     }
   }
@@ -297,7 +282,6 @@ export class MarketplaceService {
    * @returns {Promise<{success: boolean, data?: array, error?: string}>}
    */
   static async refreshProductos(filters = {}) {
-    console.log('🔄 Refrescando productos...');
     return await this.getProductos(20, 0, filters);
   }
 
@@ -309,7 +293,6 @@ export class MarketplaceService {
    */
   static async toggleFavorito(productoId, userId) {
     try {
-      console.log('⭐ Toggle favorito:', productoId);
 
       // Verificar si ya existe
       const { data: existingFav, error: checkError } = await supabase
@@ -357,7 +340,6 @@ export class MarketplaceService {
       return { success: true, favorited };
 
     } catch (error) {
-      console.error('❌ Error en toggleFavorito:', error);
       return { success: false, error: error.message };
     }
   }

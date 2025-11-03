@@ -45,7 +45,6 @@ export default function ChangePasswordModal({ visible, onClose, onSuccess }) { /
         totalFailedAttemptsRef.current = parsedAttempts;
       }
     } catch (error) {
-      console.error('Error loading failed attempts:', error);
     }
   };
 
@@ -56,7 +55,6 @@ export default function ChangePasswordModal({ visible, onClose, onSuccess }) { /
       totalFailedAttemptsRef.current = attempts;
       setTotalFailedAttempts(attempts);
     } catch (error) {
-      console.error('Error saving failed attempts:', error);
     }
   };
 
@@ -67,7 +65,6 @@ export default function ChangePasswordModal({ visible, onClose, onSuccess }) { /
       totalFailedAttemptsRef.current = 0;
       setTotalFailedAttempts(0);
     } catch (error) {
-      console.error('Error clearing failed attempts:', error);
     }
   };
 
@@ -119,15 +116,10 @@ export default function ChangePasswordModal({ visible, onClose, onSuccess }) { /
 
     setPasswordLoading(true); // Establecer el estado de carga
     try { // Intentar verificar la contraseña actual
-      console.log('Verificando contraseña actual...'); // Imprimir en la consola que se está verificando la contraseña actual
-      console.log('Intentos actuales:', currentPasswordAttemptsRef.current); // Debug
-      console.log('Intentos totales:', totalFailedAttemptsRef.current); // Debug
       
       const { data, error } = await validateCurrentPassword(passwordData.currentPassword); // Llamar a la función para verificar la contraseña actual
-      console.log('Resultado validación - data:', data, 'error:', error); // Debug
       
       if (error) { // Si hay un error
-        console.log('Error en validación, proceso intentos fallidos'); // Debug
         setCurrentPasswordValidated(false);
         
         // Usar refs para evitar race conditions
@@ -137,14 +129,11 @@ export default function ChangePasswordModal({ visible, onClose, onSuccess }) { /
         const newAttempts = currentPasswordAttemptsRef.current;
         const newTotalAttempts = totalFailedAttemptsRef.current;
         
-        console.log('Nuevos intentos:', newAttempts, 'Nuevos totales:', newTotalAttempts); // Debug
-        
         // Actualizar estados UI
         setCurrentPasswordAttempts(newAttempts);
         await saveFailedAttempts(newTotalAttempts);
         
         if (newAttempts >= 3) {
-          console.log('BLOQUEANDO por 3 intentos fallidos'); // Debug
           setPasswordBlocked(true);
           setBlockTimeRemaining(300); // 5 minutos
           currentPasswordAttemptsRef.current = 0;
@@ -187,8 +176,6 @@ export default function ChangePasswordModal({ visible, onClose, onSuccess }) { /
       }
       
       if (data) { // Si la contraseña actual es válida
-        console.log('Contraseña CORRECTA, reseteando intentos'); // Debug
-        console.log('Contraseña validada correctamente, desbloqueando campos...'); // Imprimir en la consola que la contraseña actual es válida
         
         // Limpiar también los campos de contraseña nueva para empezar fresco
         setPasswordData(prev => ({
@@ -257,7 +244,6 @@ export default function ChangePasswordModal({ visible, onClose, onSuccess }) { /
         }
       }
     } catch (error) {
-      console.error('Error validating current password:', error);
       Alert.alert('Error', 'Ocurrió un error al verificar la contraseña');
     } finally {
       setPasswordLoading(false);
@@ -322,7 +308,6 @@ export default function ChangePasswordModal({ visible, onClose, onSuccess }) { /
         ]
       ); 
     } catch (error) {
-      console.error('Error changing password:', error);
       Alert.alert('Error', 'Ocurrió un error inesperado');
     } finally {
       setPasswordLoading(false);

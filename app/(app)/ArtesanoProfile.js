@@ -22,7 +22,6 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
   const router = useRouter(); // Obtener el router
   const { userId, tab } = useLocalSearchParams(); // Obtener el id del usuario y la tab
   const { session } = useAuth(); // Obtener la sesión
-  
   const [artesano, setArtesano] = useState(null); // Establecer el estado del artesano
   const [publicaciones, setPublicaciones] = useState([]); // Establecer el estado de las publicaciones
   const [productos, setProductos] = useState([]); // Establecer el estado de los productos
@@ -36,7 +35,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
   const [uploadingAvatar, setUploadingAvatar] = useState(false); // Establecer el estado de subida de foto de perfil
   const [selectedImage, setSelectedImage] = useState(null); // Establecer el estado de la imagen seleccionada
   const isOwnProfile = session?.user?.id === userId; // Verificar si el usuario es el propio
-  
+
   // Estados para eliminación de perfil con validación de contraseña
   const [showDeleteProfile, setShowDeleteProfile] = useState(false); // Modal de eliminación de perfil
   const [deletePasswordData, setDeletePasswordData] = useState({ currentPassword: '' }); // Datos de contraseña de eliminación
@@ -47,7 +46,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
   const [deleteBlockTimeRemaining, setDeleteBlockTimeRemaining] = useState(0); // Tiempo restante de bloqueo
   const [showDeletePassword, setShowDeletePassword] = useState(false); // Mostrar/ocultar contraseña
   const [totalFailedAttempts, setTotalFailedAttempts] = useState(0); // Intentos fallidos totales (compartido con cambio de contraseña)
-  
+
   // Refs para evitar race conditions en contadores
   const deletePasswordAttemptsRef = useRef(0); // Ref para intentos de contraseña de eliminación
   const totalFailedAttemptsRef = useRef(0); // Ref para intentos fallidos totales (compartido)
@@ -81,7 +80,6 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         setTotalFailedAttempts(attempts);
       }
     } catch (error) {
-      console.error('Error loading failed attempts:', error);
     }
   };
 
@@ -90,7 +88,6 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
     try {
       await AsyncStorage.setItem('artesanoFailedAttempts', attempts.toString());
     } catch (error) {
-      console.error('Error saving failed attempts:', error);
     }
   };
 
@@ -99,7 +96,6 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
     try {
       await AsyncStorage.removeItem('artesanoFailedAttempts');
     } catch (error) {
-      console.error('Error clearing failed attempts:', error);
     }
   };
 
@@ -108,7 +104,6 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
     try {
       await AsyncStorage.setItem('artesanoDeleteAttempts', attempts.toString());
     } catch (error) {
-      console.error('Error saving delete attempts:', error);
     }
   };
 
@@ -122,7 +117,6 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         setDeletePasswordAttempts(attempts);
       }
     } catch (error) {
-      console.error('Error loading delete attempts:', error);
     }
   };
 
@@ -131,7 +125,6 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
     try {
       await AsyncStorage.removeItem('artesanoDeleteAttempts');
     } catch (error) {
-      console.error('Error clearing delete attempts:', error);
     }
   };
 
@@ -155,21 +148,14 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
   useEffect(() => {
     loadFailedAttempts();
   }, []);
-
   const loadArtesanoCompleto = async () => { // Función para cargar el perfil del artesano
     try {
-      console.log('🔄 Cargando perfil completo del artesano...');
       setLoading(true); // Establecer el estado de carga
       const data = await artesanoService.getArtesanoCompleto(userId); // Cargar el perfil del artesano
-      
-      console.log('📊 Datos del artesano recibidos:', data.artesano);
-      console.log('🖼️ Avatar URL en BD:', data.artesano?.avatar_url);
-      
       setArtesano(data.artesano); // Establecer el estado del artesano
       setPublicaciones(data.publicaciones); // Establecer el estado de las publicaciones
       setProductos(data.productos); // Establecer el estado de los productos
       
-      console.log('✅ Estado del artesano actualizado:', data.artesano?.avatar_url);
       
       // Cargar datos para edición
       if (isOwnProfile && data.artesano) { // Si el usuario es el propio y hay datos del artesano
@@ -180,10 +166,8 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
           descripcion: data.artesano.descripcion || '',
           avatar_url: data.artesano.avatar_url || null
         }); // Establecer el estado de los datos de edición
-        console.log('📝 Datos de edición cargados. Avatar URL:', data.artesano.avatar_url);
       }
     } catch (error) { // Capturar el error
-      console.error('❌ Error al cargar perfil:', error); // Mostrar el error en la consola
       Alert.alert('Error', 'No se pudo cargar el perfil del artesano'); // Mostrar el error en la alerta
       router.back(); // Redirigir a la página anterior
     } finally { // Finalmente
@@ -195,24 +179,19 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
   const handleEditProfile = async () => {
     try {
       setUploadingAvatar(true);
-      
       const result = await updatePerfilArtesanoCompleto(userId, editData, selectedImage);
-      
       if (!result.success) {
         throw new Error(result.error);
       }
-
       // Si se actualizó el avatar, actualizar el estado local
       if (result.avatar_url) {
         setEditData(prev => ({ ...prev, avatar_url: result.avatar_url }));
       }
-
       Alert.alert('Éxito', 'Perfil actualizado correctamente');
       setShowEditModal(false);
       setSelectedImage(null);
       await loadArtesanoCompleto();
     } catch (error) {
-      console.error('Error al editar perfil:', error);
       Alert.alert('Error', error.message || 'No se pudo actualizar el perfil');
     } finally {
       setUploadingAvatar(false);
@@ -234,7 +213,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
       );
       return;
     }
-    
+
     // Abrir directamente el modal de eliminación con validación de contraseña
     setShowDeleteProfile(true);
     setDeletePasswordData({ currentPassword: '' });
@@ -266,17 +245,13 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
       Alert.alert('Error', 'Por favor ingresa tu contraseña actual');
       return;
     }
-    
     if (deletePasswordData.currentPassword.length < 8) {
       Alert.alert('Error', 'La contraseña debe tener al menos 8 caracteres');
       return;
     }
-    
     try {
-      console.log('Verificando contraseña para eliminación...');
       const { data, error } = await validateCurrentPassword(deletePasswordData.currentPassword);
       if (data) {
-        console.log('Contraseña validada, procediendo con eliminación...');
         setDeletePasswordValidated(true);
         setDeletePasswordAttempts(0);
         deletePasswordAttemptsRef.current = 0;
@@ -292,10 +267,9 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         deletePasswordAttemptsRef.current = deletePasswordAttemptsRef.current + 1; // Incrementar el contador de intentos de eliminación
         totalFailedAttemptsRef.current = totalFailedAttemptsRef.current + 1; // COMPARTIDO
         
+        // Obtener los nuevos valores
         const newAttempts = deletePasswordAttemptsRef.current;
         const newTotalAttempts = totalFailedAttemptsRef.current; // Usar contador compartido
-        
-        console.log('Nuevos intentos eliminación:', newAttempts, 'Nuevos totales:', newTotalAttempts);
         
         // Actualizar estados UI
         setDeletePasswordAttempts(newAttempts);
@@ -306,7 +280,6 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         if (newAttempts >= 3) {
           setDeletePasswordBlocked(true);
           setDeleteBlockTimeRemaining(300); // 5 minutos en segundos
-          
           // Verificar si es el segundo bloqueo (6 intentos totales COMPARTIDOS entre cambio y eliminación)
           if (newTotalAttempts >= 6) {
             // Mostrar alerta ANTES de cerrar sesión
@@ -344,7 +317,6 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
               setDeletePasswordValidated(false);
               setDeletePasswordData({ currentPassword: '' });
             }, 2000);
-            
             Alert.alert(
               'Acceso bloqueado',
               'Has excedido el número de intentos. El acceso estará bloqueado por 5 minutos.'
@@ -358,7 +330,6 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         }
       }
     } catch (error) {
-      console.error('Error validating delete password:', error);
       Alert.alert('Error', 'Ocurrió un error al verificar la contraseña');
     }
   };
@@ -369,7 +340,6 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
       Alert.alert('Error', 'Debes validar tu contraseña actual primero');
       return;
     }
-
     Alert.alert(
       'Confirmar Eliminación',
       'Esta acción es IRREVERSIBLE. Se eliminarán TODOS tus datos incluyendo:\n\n• Perfil de artesano\n• Avatar e imágenes\n• Productos y publicaciones\n• Sesión actual (serás deslogueado)\n\nNota: La cuenta de autenticación permanecerá pero sin datos asociados.\n\n¿Estás completamente seguro?',
@@ -390,7 +360,6 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
                 Alert.alert('Error', result.error);
                 return;
               }
-              
               Alert.alert(
                 'Perfil Eliminado',
                 'Tu perfil ha sido eliminado completamente. Serás redirigido al login.',
@@ -406,7 +375,6 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
               );
             } catch (error) {
               Alert.alert('Error', 'Ocurrió un error inesperado');
-              console.error('Error deleting profile:', error);
             } finally {
               setDeletePasswordLoading(false);
             }
@@ -425,13 +393,11 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         // Pequeño delay para que el modal se cierre antes de abrir la galería
         await new Promise(resolve => setTimeout(resolve, 300));
       }
-      
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync(); // Solicitar permisos para acceder a la galería
       if (status !== 'granted') { // Si no hay permisos
         Alert.alert('Permisos necesarios', 'Se requiere acceso a la galería para cambiar la foto de perfil');
         return;
       }
-
       const result = await ImagePicker.launchImageLibraryAsync({ // Abrir el selector de imágenes
         mediaTypes: ImagePicker.MediaTypeOptions.Images, // Tipo de media: imágenes
         allowsEditing: true, // Permitir edición
@@ -439,7 +405,6 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         quality: 0.5, // Calidad de la imagen
         base64: true, // Convertir a base64
       });
-
       if (!result.canceled && result.assets && result.assets[0]) { // Si no se canceló y hay assets y el primer asset
         // Guardar la imagen seleccionada temporalmente (no subirla aún)
         setSelectedImage(result.assets[0]);
@@ -449,7 +414,6 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         }));
       }
     } catch (error) { // Capturar el error
-      console.error('Error al seleccionar imagen:', error);
       Alert.alert('Error', 'No se pudo seleccionar la imagen: ' + error.message);
     }
   };
@@ -463,7 +427,6 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         Alert.alert('Permisos necesarios', 'Se requiere acceso a la galería para cambiar la foto de perfil');
         return;
       }
-
       // Abrir el selector de imágenes
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -472,7 +435,6 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         quality: 0.5,
         base64: true,
       });
-
       if (!result.canceled && result.assets && result.assets[0]) {
         // Si estamos en modal de edición, guardar temporalmente
         if (showEditModal) {
@@ -487,7 +449,6 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         }
       }
     } catch (error) {
-      console.error('Error al seleccionar imagen:', error);
       Alert.alert('Error', 'No se pudo seleccionar la imagen: ' + error.message);
     }
   };
@@ -495,24 +456,16 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
   // Función para subir la imagen de perfil (desde el perfil principal, no desde modal de edición)
   const uploadAvatarImage = async (imageAsset) => {
     try {
-      console.log('📤 [FRONTEND] Iniciando subida de avatar desde perfil...');
-      
       setUploadingAvatar(true);
-
       const result = await subirAvatarArtesano(userId, imageAsset);
-
       if (!result.success) {
         throw new Error(result.error);
       }
-
       // Actualizar estado local con el nuevo avatar
       setArtesano(prev => ({ ...prev, avatar_url: result.avatar_url }));
       setEditData(prev => ({ ...prev, avatar_url: result.avatar_url }));
-      
-      console.log('✅ [FRONTEND] Avatar actualizado correctamente');
       Alert.alert('Éxito', 'Foto de perfil actualizada correctamente');
     } catch (error) {
-      console.error('❌ [FRONTEND] Error al subir avatar:', error);
       Alert.alert('Error', error.message || 'No se pudo actualizar la foto de perfil');
     } finally {
       setUploadingAvatar(false);

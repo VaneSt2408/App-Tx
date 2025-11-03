@@ -138,7 +138,6 @@
 ### Herramientas
 - [Supabase Dashboard](https://app.supabase.com/)
 - [Expo Dashboard](https://expo.dev/)
-- [Google Cloud Console](https://console.cloud.google.com/)
 - [Apple Developer](https://developer.apple.com/)
 
 ## 📞 Soporte

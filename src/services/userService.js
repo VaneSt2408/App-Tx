@@ -33,12 +33,9 @@ const getRedirectUri = (path = null) => {
 // --- Función para enviar la invitación al artesano (enlace mágico) ---
 export const sendArtesanoInvite = async (email) => { 
   try {
-    console.log("🚀 --- ENVIANDO INVITACIÓN A ARTESANO ---");
     
     // Usa la función utilitaria para generar la URI de redirección apropiada
     const redirectUri = getRedirectUri();
-    console.log(`🔗 Redirect URI generada: ${redirectUri}`);
-    console.log(`📱 Entorno: ${__DEV__ ? 'Desarrollo' : 'Producción'}`);
     
     // Llama al método de Supabase para iniciar sesión con un enlace de un solo uso (OTP/Magic Link).
     const { data, error } = await supabase.auth.signInWithOtp({
@@ -53,7 +50,6 @@ export const sendArtesanoInvite = async (email) => {
 
     // Si Supabase devuelve un error durante el envío del enlace...
     if (error) {
-      console.error("❌ Error al enviar invitación:", error);
       // ...se comprueba si el error es porque el usuario ya existe.
       if (error.message.includes("User already registered")) {
         // Si es así, se lanza un error personalizado y más claro para el usuario.
@@ -63,11 +59,9 @@ export const sendArtesanoInvite = async (email) => {
       throw new Error(`Error al enviar el enlace: ${error.message}`);
     }
 
-    console.log("✅ Invitación enviada exitosamente");
     // Si no hay errores, se devuelve la información de la operación.
     return data;
   } catch (e) {
-    console.error("❌ Error en sendArtesanoInvite:", e);
     throw e; // Re-lanza el error para que sea manejado por el componente que llama
   }
 };
@@ -75,7 +69,6 @@ export const sendArtesanoInvite = async (email) => {
 // --- Función para completar el registro del artesano una vez que ha iniciado sesión ---
 export const completeArtesanoRegistration = async (registrationData) => {
   // Imprime un mensaje en consola para indicar que la función ha comenzado.
-  console.log("[userService] --- Iniciando completeArtesanoRegistration ---");
 
   // Desestructura los datos del formulario de registro que se reciben como parámetro.
   const { nombre, telefono, ubicacion, categoria, curp, numero_ine, folio } = registrationData;
@@ -111,14 +104,11 @@ export const completeArtesanoRegistration = async (registrationData) => {
     // Si ocurre un error durante la inserción, se lanza para ser capturado por el bloque 'catch'.
     if (artesanoError) throw artesanoError;
 
-    // Imprime un mensaje de éxito en la consola.
-    console.log("[userService] ✅ Datos de artesano insertados con éxito.");
 
     // Devuelve un objeto indicando que la operación fue exitosa y los datos del nuevo artesano.
     return { success: true, artesanoData };
   } catch (error) { // Si se lanza cualquier error en el bloque 'try', se captura aquí.
     // Imprime el error completo en la consola para depuración.
-    console.error("[userService] ❌ ERROR GENERAL ATRAPADO:", error);
     // Devuelve un objeto indicando que la operación falló y el mensaje de error.
     return { success: false, error: error.message || error };
   }
@@ -133,30 +123,22 @@ export const completeArtesanoRegistration = async (registrationData) => {
  */
 export const completeArtesanoProfile = async (profileData, imageAsset = null) => {
   try {
-    console.log('📝 [SERVICE] Iniciando completeArtesanoProfile...');
-    console.log('📋 [SERVICE] Datos recibidos:', {
-      descripcion: profileData.descripcion ? `${profileData.descripcion.substring(0, 50)}...` : 'vacía',
-      tieneImagen: !!imageAsset
-    });
+
 
     // Obtener el usuario actual de la sesión
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     
     if (userError || !user) {
-      console.error('❌ [SERVICE] No se encontró usuario:', userError);
       throw new Error('No se encontró la sesión del usuario');
     }
-    console.log('✅ [SERVICE] Usuario obtenido:', user.id);
 
     let avatarUrl = null;
 
     // Subir imagen si se proporciona
     if (imageAsset && imageAsset.base64) {
-      console.log('📤 [SERVICE] Iniciando subida de imagen...');
       const fileExt = imageAsset.uri?.split('.').pop() || 'jpg';
       const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
-      console.log('📁 [SERVICE] Ruta del archivo:', filePath);
       
       // Subir la imagen decodificada al bucket 'avatars'
       const { error: uploadError } = await supabase.storage
@@ -166,16 +148,13 @@ export const completeArtesanoProfile = async (profileData, imageAsset = null) =>
         });
 
       if (uploadError) {
-        console.error('❌ [SERVICE] Error al subir imagen:', uploadError);
         throw new Error('No se pudo subir la imagen: ' + uploadError.message);
       }
 
       // Obtener la URL pública de la imagen subida
       const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
       avatarUrl = urlData.publicUrl;
-      console.log('✅ [SERVICE] Imagen subida exitosamente:', avatarUrl);
     } else {
-      console.log('ℹ️ [SERVICE] No se seleccionó imagen');
     }
 
     // Preparar datos de actualización
@@ -186,11 +165,9 @@ export const completeArtesanoProfile = async (profileData, imageAsset = null) =>
     // Si hay avatar, agregarlo a los datos de actualización
     if (avatarUrl) {
       updateData.avatar_url = avatarUrl;
-      console.log('🔄 [SERVICE] Actualizando avatar en tabla artesanos...');
     }
 
     // Actualizar descripción (y avatar si existe) en la tabla artesanos
-    console.log('🔄 [SERVICE] Actualizando perfil en tabla artesanos...');
     const { data: updatedData, error: updateError } = await supabase
       .from('artesanos')
       .update(updateData)
@@ -198,17 +175,13 @@ export const completeArtesanoProfile = async (profileData, imageAsset = null) =>
       .select();
 
     if (updateError) {
-      console.error('❌ [SERVICE] Error actualizando perfil:', updateError);
       throw new Error('No se pudo actualizar el perfil: ' + updateError.message);
     }
-    console.log('✅ [SERVICE] Perfil actualizado exitosamente:', updatedData);
 
     // Esperar un momento para que Supabase procese los cambios
-    console.log('⏳ [SERVICE] Esperando 500ms para que Supabase procese los cambios...');
     await new Promise(resolve => setTimeout(resolve, 500));
 
     // Verificar que los datos se guardaron correctamente
-    console.log('🔍 [SERVICE] Verificando que los datos se guardaron...');
     const { data: verifyData, error: verifyError } = await supabase
       .from('artesanos')
       .select('descripcion, avatar_url')
@@ -216,21 +189,14 @@ export const completeArtesanoProfile = async (profileData, imageAsset = null) =>
       .single();
 
     if (verifyError) {
-      console.warn('⚠️ [SERVICE] Error al verificar datos:', verifyError);
     } else {
-      console.log('📊 [SERVICE] Verificación post-guardado:', {
-        tiene_descripcion: !!verifyData?.descripcion,
-        tiene_avatar: !!verifyData?.avatar_url
-      });
     }
 
-    console.log('✅ [SERVICE] Perfil completado exitosamente');
     return { 
       success: true, 
       data: verifyData || updatedData 
     };
   } catch (error) {
-    console.error('❌ [SERVICE] Error en completeArtesanoProfile:', error);
     throw error;
   }
 };

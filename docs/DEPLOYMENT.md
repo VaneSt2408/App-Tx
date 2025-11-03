@@ -24,7 +24,6 @@
 #### Cuentas Requeridas
 - Cuenta de Expo
 - Cuenta de Supabase
-- Cuenta de Google Play Console (Android)
 - Cuenta de Apple Developer (iOS)
 
 ### Configuración Inicial
@@ -116,7 +115,6 @@ INSERT INTO storage.buckets (id, name, public) VALUES
 5. **OAuth Providers**: Configurar Google OAuth
 
 #### Configuración de Google OAuth:
-1. Ir a [Google Cloud Console](https://console.cloud.google.com)
 2. Crear proyecto o seleccionar existente
 3. Habilitar Google+ API
 4. Crear credenciales OAuth 2.0
@@ -293,7 +291,7 @@ keytool -genkey -v -keystore apptx-release-key.keystore -alias apptx -keyalg RSA
 # Configurar en eas.json
 ```
 
-#### 2. Subir a Google Play Console
+
 ```bash
 # Subir automáticamente
 eas submit --platform android --profile production
@@ -301,7 +299,6 @@ eas submit --platform android --profile production
 # O subir manualmente el AAB generado
 ```
 
-#### 3. Configuración en Google Play Console
 - **App Bundle**: Subir el archivo `.aab`
 - **Store Listing**: Completar información de la app
 - **Content Rating**: Configurar clasificación
@@ -427,8 +424,6 @@ npx expo start --clear
 #### Habilitar Logs Detallados
 ```javascript
 // En desarrollo
-console.log('Supabase URL:', process.env.EXPO_PUBLIC_SUPABASE_URL);
-console.log('Supabase Key:', process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY);
 
 // En producción
 import { LogBox } from 'react-native';

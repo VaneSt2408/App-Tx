@@ -25,7 +25,6 @@ export default function ArtesanoProducts() {
   const router = useRouter(); // Router de expo-router para navegar entre pantallas
   const { userId } = useLocalSearchParams(); // Obtener el id del usuario
   const { session } = useAuth(); // Obtener la sesión
-  
   const [productos, setProductos] = useState([]); // Estado para guardar los productos
   const [loading, setLoading] = useState(true); // Estado para guardar el estado de carga
   const [refreshing, setRefreshing] = useState(false); // Estado para guardar el estado de refresco
@@ -38,7 +37,6 @@ export default function ArtesanoProducts() {
   const [editLoading, setEditLoading] = useState(false); // Estado para guardar el estado de carga de edición
   const [showUploadModal, setShowUploadModal] = useState(false); // Estado para guardar el estado del modal de subida de producto
   const productoSliderAnim = React.useRef(new Animated.Value(0)).current; // Referencia para la animación del slider de productos
-
   const isOwnProfile = session?.user?.id === userId; // Verificar si el usuario es el propio
 
   // Efecto para cargar los productos
@@ -52,18 +50,13 @@ export default function ArtesanoProducts() {
   const loadProductos = async () => {
     try {
       setLoading(true);
-      console.log('📦 [PRODUCTOS] Cargando productos del artesano:', userId);
-      
       const productosData = await artesanoService.getProductosByArtesano(userId);
-      
       if (productosData) {
         setProductos(productosData);
-        console.log('✅ [PRODUCTOS] Productos cargados:', productosData.length);
       } else {
         setProductos([]);
       }
     } catch (error) {
-      console.error('❌ [PRODUCTOS] Error al cargar:', error);
       Alert.alert('Error', 'No se pudieron cargar los productos');
       setProductos([]);
     } finally {
@@ -168,7 +161,6 @@ export default function ArtesanoProducts() {
         Alert.alert('Permisos necesarios', 'Se requiere acceso a la galería para cambiar la imagen del producto');
         return;
       }
-
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -176,7 +168,6 @@ export default function ArtesanoProducts() {
         quality: 0.7,
         base64: true,
       });
-
       if (!result.canceled && result.assets && result.assets[0]) {
         setSelectedImage(result.assets[0]);
         setEditData(prev => ({
@@ -185,7 +176,6 @@ export default function ArtesanoProducts() {
         }));
       }
     } catch (error) {
-      console.error('Error al seleccionar imagen:', error);
       Alert.alert('Error', 'No se pudo seleccionar la imagen: ' + error.message);
     }
   };
@@ -201,28 +191,21 @@ export default function ArtesanoProducts() {
   // Función para guardar la edición del producto
   const handleSaveEdit = async () => {
     if (!selectedProducto) return;
-
     setEditLoading(true);
     try {
-      console.log('✏️ [PRODUCTOS] Editando producto:', selectedProducto.id);
-      
       const updateData = {
         nombre: editData.nombre,
         precio: editData.precio,
         categoria: editData.categoria,
         descripcion: editData.descripcion,
       };
-
       await updateProduct(selectedProducto.id, updateData, selectedImage);
-
       Alert.alert('Éxito', 'Producto editado correctamente');
       handleCloseEditModal();
       handleCloseProductoModal();
       // Recargar los productos
       loadProductos();
-      
     } catch (error) {
-      console.error('❌ [PRODUCTOS] Error en handleSaveEdit:', error);
       Alert.alert('Error', error.message || 'Ocurrió un error al editar el producto');
     } finally {
       setEditLoading(false);
@@ -244,17 +227,12 @@ export default function ArtesanoProducts() {
           style: 'destructive',
           onPress: async () => {
             try {
-              console.log('🗑️ [PRODUCTOS] Eliminando producto:', productoId);
-              
               await deleteProduct(productoId);
-
               Alert.alert('Éxito', 'Producto eliminado correctamente');
               handleCloseProductoModal();
               // Recargar los productos
               loadProductos();
-              
             } catch (error) {
-              console.error('❌ [PRODUCTOS] Error al eliminar:', error);
               Alert.alert('Error', error.message || 'Ocurrió un error al eliminar el producto');
             }
           }
@@ -272,6 +250,7 @@ export default function ArtesanoProducts() {
     }).format(price);
   };
 
+  // Función para formatear la fecha
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', {

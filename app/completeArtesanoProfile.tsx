@@ -73,7 +73,6 @@ export default function CompleteArtesanoProfilePage() {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      console.log('📝 [CompleteArtesanoProfile] Iniciando handleSubmit...');
       
       const result = await completeArtesanoProfile(
         { descripcion: formData.descripcion },
@@ -81,32 +80,25 @@ export default function CompleteArtesanoProfilePage() {
       );
 
       if (result.success) {
-        console.log('✅ [CompleteArtesanoProfile] Perfil completado exitosamente');
         
         // Esperar un momento para que Supabase procese los cambios
         await new Promise(resolve => setTimeout(resolve, 500));
 
         // Refrescar el perfil ANTES de mostrar el alert para asegurar que los datos estén actualizados
-        console.log('🔄 [CompleteArtesanoProfile] Refrescando perfil en contexto...');
         await refreshProfile();
-        console.log('✅ [CompleteArtesanoProfile] refreshProfile() completado');
 
         Alert.alert('¡Éxito!', 'Tu perfil ha sido completado.', [
           {
             text: 'Continuar',
             onPress: () => {
               // La lógica de navegación en _layout.tsx se encargará de redirigir
-              console.log('✅ [CompleteArtesanoProfile] Usuario presionó continuar');
             }
           }
         ]);
       }
     } catch (error) {
-      console.error('❌ [CompleteArtesanoProfile] Error general:', error);
-      Alert.alert('Error', error.message || 'No se pudo guardar tu perfil. Inténtalo de nuevo.');
     } finally {
       setLoading(false);
-      console.log('🏁 [CompleteArtesanoProfile] handleSubmit finalizado');
     }
   };
 

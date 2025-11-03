@@ -48,7 +48,6 @@ export default function CreatePostPage() {
             navigation.goBack(); // Regresa a la pantalla anterior
 
         } catch (error) {
-            console.error("Error en handlePublish:", error);
             Alert.alert('Error', error.message || 'No se pudo crear la publicación');
         } finally {
             setLoading(false);
