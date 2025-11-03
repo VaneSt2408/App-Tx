@@ -21,22 +21,14 @@ export default function ArtesanoList() {
   const [error, setError] = useState(null); // Estado para guardar el estado de error
   const [searchQuery, setSearchQuery] = useState(''); // Estado para guardar la consulta de búsqueda
 
-  
-  // Efecto para cargar la lista de artesanos
-  useEffect(() => {
-    loadArtesanos();
-  }, []);
-  
-
   // Función para cargar la lista de artesanos
   const loadArtesanos = async () => {
     try {
       setLoading(true);
       const data = await artesanoService.getArtesanos();
-      setArtesanos(data);
+      setArtesanos(data || []);
       setError(null);
     } catch (err) {
-      console.error('Error al cargar artesanos:', err);
       setError('Error al cargar la lista de artesanos');
       Alert.alert('Error', 'No se pudo cargar la lista de artesanos');
     } finally {
@@ -58,17 +50,25 @@ export default function ArtesanoList() {
       const folio = (artesano.folio || '').toLowerCase();
       const categoria = (artesano.categoria || '').toLowerCase();
       const ubicacion = (artesano.ubicacion || '').toLowerCase();
-
       return nombre.includes(query) ||
              folio.includes(query) ||
              categoria.includes(query) ||
              ubicacion.includes(query);
     });
 
-
     // Actualizar el estado con la lista de artesanos filtrados
     setFilteredArtesanos(filtered);
   }, [searchQuery, artesanos]);
+  
+  // Efecto para cargar la lista de artesanos
+  useEffect(() => {
+    loadArtesanos();
+  }, []);
+
+  // Efecto para filtrar artesanos cuando cambia la búsqueda o los artesanos
+  useEffect(() => {
+    filterArtesanos();
+  }, [filterArtesanos]);
 
   // Función para limpiar la búsqueda
   const clearSearch = () => {
@@ -129,7 +129,7 @@ export default function ArtesanoList() {
           style={styles.arrowButton}
           onPress={() => navigateToProfile(item.user_id)}
         >
-          <MaterialCommunityIcons name="chevron-right" size={24} color="#DC5BA2" />
+          <MaterialCommunityIcons name="chevron-right" size={24} color="#177eaaff" />
         </TouchableOpacity>
       </View>
       
@@ -185,7 +185,7 @@ export default function ArtesanoList() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#9D046D" />
+          <ActivityIndicator size="large" color="#177eaaff" />
           <Text style={styles.loadingText}>Cargando artesanos...</Text>
         </View>
       </SafeAreaView>
@@ -197,7 +197,7 @@ export default function ArtesanoList() {
       <View style={styles.headerContainer}>
         <Text style={styles.title}>Lista de Artesanos</Text>
         <TouchableOpacity onPress={loadArtesanos} style={styles.refreshIcon}>
-          <MaterialCommunityIcons name="refresh" size={24} color="#9D046D" />
+          <MaterialCommunityIcons name="refresh" size={24} color="#177eaaff" />
         </TouchableOpacity>
       </View>
       
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
   },
   tapHint: {
     fontSize: 12,
-    color: '#9D046D',
+    color: '#177eaaff',
     fontStyle: 'italic',
     marginTop: 4,
   },
@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   refreshButton: {
-    backgroundColor: '#9D046D',
+    backgroundColor: '#177eaaff',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,

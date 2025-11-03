@@ -35,7 +35,6 @@ export default function ProductDetailPage() {
         router.back();
       }
     } catch (error) {
-      console.error('Error al cargar producto:', error);
       Alert.alert('Error', 'Ocurrió un error inesperado');
       router.back();
     } finally {

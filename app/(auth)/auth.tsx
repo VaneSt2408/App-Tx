@@ -93,26 +93,16 @@ export default function AuthScreen() {
 
   // Función de registro 
   const handleSignUp = async () => {
-    console.log('🔍 Iniciando proceso de registro...');
-    console.log('📧 Email:', email);
-    console.log('🔑 Password:', password ? '*' : 'vacío');
-    console.log('✅ Validación:', validate());
     
     if (validate()) {
-      console.log('✅ Validación exitosa, procediendo con el registro...');
-      console.log('Sign Up attempt with:', { email, password, confirmPassword, profileImage });
       
       try {
         // Llamada al método de registro del backend
-        console.log('🚀 Llamando a signUpWithEmail...');
         const { data, error } = await signUpWithEmail(email, password);
-        console.log('📊 Respuesta del backend:', { data, error });
         
         if (error) {
-          console.error('❌ Error en el registro:', error);
           Alert.alert('Error en el registro', error.message);
         } else if (data.user && !data.session) {
-          console.log('✅ Registro exitoso, usuario creado pero sin sesión activa');
           // Este es el mensaje clave para el usuario.
           Alert.alert(
             'Registro Exitoso',
@@ -120,15 +110,12 @@ export default function AuthScreen() {
             [{ text: 'OK', onPress: () => setAuthMode('login') }]
           );
         } else {
-          console.log('⚠️ Respuesta inesperada:', { data, error });
           Alert.alert('Registro', 'Registro completado, pero con respuesta inesperada');
         }
       } catch (catchError) {
-        console.error('💥 Error inesperado en handleSignUp:', catchError);
         Alert.alert('Error', 'Ocurrió un error inesperado durante el registro');
       }
     } else {
-      console.log('❌ Validación falló, no se procede con el registro');
       Alert.alert('Error de validación', 'Por favor, revisa los campos marcados en rojo');
     }
   };

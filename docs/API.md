@@ -159,7 +159,6 @@ Selecciona y comprime una imagen desde la galería.
 ```javascript
 const imageAsset = await selectAndCompressImage();
 if (imageAsset) {
-  console.log('Imagen seleccionada:', imageAsset.uri);
 }
 ```
 
@@ -178,7 +177,6 @@ string // URL pública de la imagen
 **Ejemplo:**
 ```javascript
 const imageUrl = await uploadImageToSupabase(imageAsset, 'product-123');
-console.log('URL de la imagen:', imageUrl);
 ```
 
 ### `createProduct(productData)`

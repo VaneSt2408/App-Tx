@@ -53,7 +53,6 @@ const PostCard = ({ post, onLike, currentUserId }) => {
       // Revertir en caso de error
       setLiked(wasLiked);
       setLikesCount(previousCount);
-      console.error('Error al dar like:', error);
     } finally {
       setIsLiking(false);
     }

@@ -34,19 +34,13 @@ const PostCard = ({ post, onLike }) => {
 
   // Navegar al perfil del artesano
   const handleNavigateToProfile = () => {
-    console.log('🔍 [PostCard] Intentando navegar al perfil...');
-    console.log('📊 [PostCard] Datos del post:', post);
-    console.log('👤 [PostCard] artesano.id:', post.artesano?.id);
-    console.log('👤 [PostCard] artesano:', post.artesano);
     
     if (post.artesano?.id) {
-      console.log('✅ [PostCard] Navegando con artesano.id:', post.artesano.id);
       router.push({
         pathname: '/ArtesanoProfile',
         params: { userId: post.artesano.id.toString() }
       });
     } else {
-      console.log('❌ [PostCard] No se encontró artesano.id');
     }
   };
 
@@ -79,7 +73,6 @@ const PostCard = ({ post, onLike }) => {
       // Revertir en caso de error
       setLiked(wasLiked);
       setLikesCount(previousCount);
-      console.error('Error al dar like:', error);
     } finally {
       setIsLiking(false);
     }
@@ -95,11 +88,8 @@ const PostCard = ({ post, onLike }) => {
               source={{ uri: post.artesano.avatar_url }} 
               style={styles.avatar}
               onError={(error) => {
-                console.error('❌ Error cargando avatar en PostCard:', error);
-                console.log('🔗 URL intentada:', post.artesano.avatar_url);
               }}
               onLoad={() => {
-                console.log('✅ Avatar cargado correctamente:', post.artesano.avatar_url);
               }}
             />
           ) : (

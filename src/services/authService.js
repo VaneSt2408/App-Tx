@@ -44,22 +44,50 @@ const getRedirectUri = (path = null) => {
 // --- Registro de nuevos usuarios (Clientes) ---
 // Esta función crea la cuenta en Supabase Auth.
 export const signUpWithEmail = async (email, password) => {
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    // Genera la URI de redirección apropiada para el correo de confirmación
+    const redirectUri = getRedirectUri();
+    
+    const { data, error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+            emailRedirectTo: redirectUri, // URL donde el usuario será redirigido después de confirmar el email
+        }
+    });
     return { data, error };
 };
 
 // --- Creación del perfil en la tabla 'clientes' ---
 // Ahora acepta y guarda la URL del avatar en la tabla 'clientes'.
+// El teléfono se guarda en la tabla 'perfiles' para consistencia.
 export const createClientProfile = async (userId, fullName, phone, avatarUrl) => {
+    // Insertar perfil en tabla clientes (sin teléfono)
     const { data, error } = await supabase
         .from('clientes')
         .insert({
             id: userId,
             nombre_completo: fullName,
-            telefono: phone,
             avatar_url: avatarUrl // <-- Aquí guardamos la URL de la foto
         });
-    if (error) console.error("Error creando el perfil del cliente:", error);
+    if (error) {
+        return { data, error };
+    }
+
+    // Actualizar o insertar teléfono en tabla perfiles
+    if (phone) {
+        const { error: perfilesError } = await supabase
+            .from('perfiles')
+            .upsert({
+                id: userId,
+                telefono: phone
+            }, {
+                onConflict: 'id'
+            });
+        if (perfilesError) {
+            // No retornamos error aquí para no fallar la creación del perfil principal
+        }
+    }
+
     return { data, error };
 };
 
@@ -77,7 +105,6 @@ export const checkUserRole = async (userId) => {
 
         // Si hay un error que no sea "no se encontró la fila", lo registramos.
         if (clientError && clientError.code !== 'PGRST116') {
-            console.error("Error buscando en la tabla clientes:", clientError);
             return null; // Devolvemos null para evitar que la app se rompa.
         }
 
@@ -89,7 +116,6 @@ export const checkUserRole = async (userId) => {
             .single();
 
         if (profileError && profileError.code !== 'PGRST116') {
-            console.error("Error buscando en la tabla perfiles:", profileError);
         }
 
         // Paso 3: Combinamos la información.
@@ -105,7 +131,6 @@ export const checkUserRole = async (userId) => {
         return profileData;
 
     } catch (error) {
-        console.error("Error general en checkUserRole:", error);
         return null;
     }
 };
@@ -118,12 +143,9 @@ WebBrowser.maybeCompleteAuthSession();
 export const signInWithGoogle = async () => {
   // Inicia un bloque try...catch para manejar cualquier error que pueda ocurrir durante el proceso.
   try {
-    console.log("🚀 --- INICIO DE LOGIN CON GOOGLE ---"); // Log para depuración.
 
     // Crea la URL a la que Google debe redirigir al usuario después de la autenticación.
     const redirectTo = getRedirectUri(); // Usa la función utilitaria
-    console.log("🧭 Redirect URI generada:", redirectTo); // Log para depuración.
-    console.log(`📱 Entorno: ${__DEV__ ? 'Desarrollo' : 'Producción'}`); // Log para depuración.
 
     // Llama a Supabase para iniciar el flujo OAuth con el proveedor 'google'.
     const { data, error } = await supabase.auth.signInWithOAuth({
@@ -137,25 +159,21 @@ export const signInWithGoogle = async () => {
       },
     });
 
-    console.log("📡 Respuesta de Supabase (signInWithOAuth):", data); // Log para depuración.
 
     // Si Supabase devuelve un error al intentar iniciar el flujo, lo manejamos.
     if (error) {
-      console.error("❌ Error al iniciar OAuth con Supabase:", error); // Muestra el error en consola.
       throw new Error(error.message); // Lanza una excepción para que sea atrapada por el bloque 'catch'.
     }
 
     // Si Supabase devuelve una URL de autenticación, procedemos a abrirla.
     if (data?.url) {
-      console.log("🔗 URL de autenticación de Google (Supabase):", data.url); // Log para depuración.
 
       // Abre la URL de Google en un navegador dentro de la aplicación.
       const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-      console.log("📦 Resultado WebBrowser (completo):", result); // Log para depuración.
       
       // Si el usuario completa el flujo exitosamente en el navegador ('success').
       if (result.type === "success" && result.url) {
-        console.log("🔙 URL final devuelta por Google:", result.url); // Log para depuración.
+
 
         // La URL de retorno contiene los tokens en el "fragmento" (después del '#').
         const fragment = result.url.split("#")[1]; // Extraemos esa parte de la URL.
@@ -167,8 +185,6 @@ export const signInWithGoogle = async () => {
         const refresh_token = queryParams.get("refresh_token");
         
         // Verificamos que los tokens se hayan extraído correctamente.
-        console.log("🔑 Access Token extraído:", access_token);
-        console.log("🔄 Refresh Token extraído:", refresh_token);
 
         // Si no se obtuvieron los tokens, algo salió mal.
         if (!access_token || !refresh_token) {
@@ -185,23 +201,17 @@ export const signInWithGoogle = async () => {
 
         // Si hay un error al establecer la sesión, se lo notificamos al usuario.
         if (setSessionError) {
-          console.error("❌ Error al establecer sesión en Supabase:", setSessionError);
           Alert.alert("Error", "No se pudo establecer la sesión.");
         } else { // Si la sesión se estableció correctamente.
-          console.log("🎉 Sesión de Supabase establecida correctamente:", sessionData);
           Alert.alert("Éxito", "Inicio de sesión con Google completado.");
         }
       } else { // Si el usuario cancela el flujo en el navegador ('cancel', 'dismiss', etc.).
-        console.warn("⚠️ Flujo cancelado o no exitoso:", result.type);
       }
     } else { // Si por alguna razón Supabase no devolvió una URL.
-      console.warn("⚠️ No se recibió data.url de Supabase");
     }
   } catch (e) { // Captura cualquier error general que haya ocurrido en el bloque 'try'.
-    console.error("❌ Error general en el flujo OAuth:", e);
     Alert.alert("Error", "Ocurrió un error con Google: " + e.message);
   } finally { // Este bloque se ejecuta siempre, al final del proceso.
-    console.log("🏁 --- FIN DEL FLUJO DE LOGIN CON GOOGLE ---"); // Log para depuración.
   }
 };
 
@@ -235,9 +245,6 @@ export const onAuthStateChange = (callback) => { // Recibe una función de callb
 export const resetPasswordForEmail = async (email) => {
     try {
         const redirectUri = getRedirectUri("resetPassword"); // Usa la función utilitaria con ruta específica
-        console.log(`🔗 Redirect URI generada: ${redirectUri}`);
-        console.log(`📱 Entorno: ${__DEV__ ? 'Desarrollo' : 'Producción'}`);
-        console.log(`📧 Email: ${email}`);
         
         // Usamos la sintaxis correcta para resetPasswordForEmail
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -245,17 +252,12 @@ export const resetPasswordForEmail = async (email) => {
         });
 
         if (error) {
-            console.error("❌ Error en resetPasswordForEmail:", error);
-            console.error("❌ Detalles del error:", JSON.stringify(error, null, 2));
             return { error: error.message };
         }
         
-        console.log("✅ Email de recuperación enviado exitosamente");
-        console.log(`✅ URL enviada a Supabase: ${redirectUri}`);
         return { error: null };
         
     } catch (e) {
-        console.error("❌ Error en authService.resetPasswordForEmail:", e);
         return { error: e.message || "Ocurrió un error del sistema inesperado." };
     }
 }
@@ -281,8 +283,6 @@ export const updatePassword = async (newPassword) => {
 
         return { error: null };
     } catch (e) {
-        console.error("Error en authService.updatePassword:", e);
         return { error: e.message || "Ocurrió un error al actualizar la contraseña." };
     }
 }
-

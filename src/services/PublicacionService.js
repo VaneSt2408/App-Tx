@@ -22,7 +22,6 @@ export const createPost = async (userId, text, imageBase64, imageMimeType) => {
                 });
 
             if (uploadError) {
-                console.error("Error uploading image:", uploadError);
                 throw new Error('Error al subir la imagen: ' + uploadError.message);
             }
 
@@ -31,7 +30,6 @@ export const createPost = async (userId, text, imageBase64, imageMimeType) => {
             imageUrl = urlData.publicUrl;
 
         } catch (error) {
-            console.error("Catch block - Error uploading image:", error);
             // Decide si quieres detener el proceso si la imagen falla o continuar sin imagen
             // throw error; // Descomenta si la imagen es obligatoria
             Alert.alert("Error de Imagen", "No se pudo subir la imagen, pero se intentará guardar el texto.")
@@ -50,7 +48,6 @@ export const createPost = async (userId, text, imageBase64, imageMimeType) => {
         .single(); // Esperamos un solo resultado
 
     if (insertError) {
-        console.error("Error inserting post:", insertError);
         throw new Error('Error al guardar la publicación: ' + insertError.message);
     }
 
@@ -66,7 +63,6 @@ export const createPost = async (userId, text, imageBase64, imageMimeType) => {
  */
 export async function createPostForCurrentUser(text, imageAsset) {
   try {
-    console.log('📝 [SERVICE] Creando publicación para usuario actual...');
     
     // Validar que haya texto o imagen
     if (!text?.trim() && !imageAsset?.base64) {
@@ -80,8 +76,6 @@ export async function createPostForCurrentUser(text, imageAsset) {
       throw new Error('Usuario no autenticado');
     }
 
-    console.log('👤 [SERVICE] Usuario obtenido:', user.id);
-
     // Crear la publicación usando la función existente
     const postData = await createPost(
       user.id,
@@ -90,10 +84,8 @@ export async function createPostForCurrentUser(text, imageAsset) {
       imageAsset?.mimeType || null
     );
 
-    console.log('✅ [SERVICE] Publicación creada exitosamente');
     return postData;
   } catch (error) {
-    console.error('❌ [SERVICE] Error en createPostForCurrentUser:', error);
     throw error;
   }
 }
@@ -107,8 +99,6 @@ export async function createPostForCurrentUser(text, imageAsset) {
  */
 export async function getPublicacionesByArtesano(artesanoUserId, limit = 20, offset = 0) {
   try {
-    console.log('📱 [PUBLICACIONES] Obteniendo publicaciones del artesano:', artesanoUserId);
-    console.log('📱 [PUBLICACIONES] Parámetros - Limit:', limit, 'Offset:', offset);
 
     // Consulta principal con conteo de likes
     const { data: publicaciones, error: feedError, count } = await supabase
@@ -125,12 +115,8 @@ export async function getPublicacionesByArtesano(artesanoUserId, limit = 20, off
       .range(offset * limit, (offset + 1) * limit - 1);
 
     if (feedError) {
-      console.error('❌ [PUBLICACIONES] Error al obtener publicaciones:', feedError);
       return { success: false, error: feedError.message };
     }
-
-    console.log('📱 [PUBLICACIONES] Publicaciones obtenidas:', publicaciones?.length || 0);
-    console.log('📱 [PUBLICACIONES] Total count:', count);
 
     if (!publicaciones || publicaciones.length === 0) {
       return {
@@ -150,7 +136,6 @@ export async function getPublicacionesByArtesano(artesanoUserId, limit = 20, off
       .in('publicacion_id', publicacionIds);
 
     if (likesError) {
-      console.error('❌ [PUBLICACIONES] Error al obtener likes:', likesError);
       // Continuar sin likes si hay error
     }
 
@@ -171,8 +156,6 @@ export async function getPublicacionesByArtesano(artesanoUserId, limit = 20, off
       likes_count: likesCount[pub.id] || 0,
     }));
 
-    console.log('✅ [PUBLICACIONES] Publicaciones procesadas:', publicacionesConLikes.length);
-
     return {
       success: true,
       data: publicacionesConLikes,
@@ -181,7 +164,6 @@ export async function getPublicacionesByArtesano(artesanoUserId, limit = 20, off
     };
 
   } catch (error) {
-    console.error('❌ [PUBLICACIONES] Error en getPublicacionesByArtesano:', error);
     return { success: false, error: error.message };
   }
 }
@@ -194,7 +176,6 @@ export async function getPublicacionesByArtesano(artesanoUserId, limit = 20, off
  */
 export async function updatePublication(publicacionId, updateData) {
   try {
-    console.log('✏️ [SERVICE] Actualizando publicación:', publicacionId);
     
     // Validaciones
     if (!updateData.texto || !updateData.texto.trim()) {
@@ -207,14 +188,11 @@ export async function updatePublication(publicacionId, updateData) {
       .eq('id', publicacionId);
 
     if (error) {
-      console.error('❌ [SERVICE] Error al actualizar publicación:', error);
       throw new Error('No se pudo actualizar la publicación: ' + error.message);
     }
 
-    console.log('✅ [SERVICE] Publicación actualizada correctamente');
     return { success: true };
   } catch (error) {
-    console.error('❌ [SERVICE] Error en updatePublication:', error);
     throw error;
   }
 }
@@ -226,7 +204,6 @@ export async function updatePublication(publicacionId, updateData) {
  */
 export async function deletePublication(publicacionId) {
   try {
-    console.log('🗑️ [PUBLICACIONES] Eliminando publicación:', publicacionId);
 
     // Primero eliminar los likes asociados
     const { error: likesError } = await supabase
@@ -235,7 +212,6 @@ export async function deletePublication(publicacionId) {
       .eq('publicacion_id', publicacionId);
 
     if (likesError) {
-      console.error('❌ [PUBLICACIONES] Error al eliminar likes:', likesError);
       return { success: false, error: 'Error al eliminar los likes de la publicación' };
     }
 
@@ -252,21 +228,16 @@ export async function deletePublication(publicacionId) {
         const urlParts = publicacion.imagen_url.split('/');
         const fileName = urlParts[urlParts.length - 1];
         const filePath = `publicaciones/${fileName}`;
-
-        console.log('🗑️ [PUBLICACIONES] Eliminando imagen del storage:', filePath);
         
         const { error: storageError } = await supabase.storage
           .from('imagenes-publicaciones')
           .remove([filePath]);
 
         if (storageError) {
-          console.error('❌ [PUBLICACIONES] Error al eliminar imagen del storage:', storageError);
           // Continuar con la eliminación aunque falle el storage
         } else {
-          console.log('✅ [PUBLICACIONES] Imagen eliminada del storage');
         }
       } catch (storageError) {
-        console.error('❌ [PUBLICACIONES] Error procesando eliminación de imagen:', storageError);
       }
     }
 
@@ -277,15 +248,12 @@ export async function deletePublication(publicacionId) {
       .eq('id', publicacionId);
 
     if (deleteError) {
-      console.error('❌ [PUBLICACIONES] Error al eliminar publicación:', deleteError);
       return { success: false, error: deleteError.message };
     }
 
-    console.log('✅ [PUBLICACIONES] Publicación eliminada correctamente');
     return { success: true };
 
   } catch (error) {
-    console.error('❌ [PUBLICACIONES] Error en deletePublication:', error);
     return { success: false, error: error.message };
   }
 }
@@ -297,7 +265,6 @@ export async function deletePublication(publicacionId) {
  */
 export async function getPublicacionesStats(artesanoUserId) {
   try {
-    console.log('📊 [PUBLICACIONES] Obteniendo estadísticas del artesano:', artesanoUserId);
 
     // Obtener conteo total de publicaciones
     const { count: totalPublicaciones, error: countError } = await supabase
@@ -306,7 +273,6 @@ export async function getPublicacionesStats(artesanoUserId) {
       .eq('artesano_user_id', artesanoUserId);
 
     if (countError) {
-      console.error('❌ [PUBLICACIONES] Error al obtener conteo:', countError);
       return { success: false, error: countError.message };
     }
 
@@ -317,7 +283,6 @@ export async function getPublicacionesStats(artesanoUserId) {
       .eq('artesano_user_id', artesanoUserId);
 
     if (pubError) {
-      console.error('❌ [PUBLICACIONES] Error al obtener publicaciones:', pubError);
       return { success: false, error: pubError.message };
     }
 
@@ -339,12 +304,9 @@ export async function getPublicacionesStats(artesanoUserId) {
       total_publicaciones: totalPublicaciones || 0,
       total_likes: totalLikes,
     };
-
-    console.log('✅ [PUBLICACIONES] Estadísticas obtenidas:', stats);
     return { success: true, data: stats };
 
   } catch (error) {
-    console.error('❌ [PUBLICACIONES] Error en getPublicacionesStats:', error);
     return { success: false, error: error.message };
   }
 }

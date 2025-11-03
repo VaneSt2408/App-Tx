@@ -34,11 +34,11 @@ export const useAuth = () => {
 // El componente "Proveedor" que contendrá toda la lógica
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null); // Almacena la sesión del usuario (si está logueado o no).
-    const [role, setRole] = useState(null); // Almacena el rol del usuario ('admin', 'artesano', etc.).
-    const [profile, setProfile] = useState(null); // Almacena el perfil completo del usuario.
+    const [role, setRole] = useState<string | null>(null); // Almacena el rol del usuario ('admin', 'artesano', etc.).
+    const [profile, setProfile] = useState<any | null>(null); // Almacena el perfil completo del usuario.
     const [loading, setLoading] = useState(true); // Controla la visualización de la pantalla de carga inicial.
     const [isPasswordRecovery, setIsPasswordRecovery] = useState(false); // Controla si estamos en modo de recuperación de contraseña.
-    const [noProfileTimer, setNoProfileTimer] = useState<NodeJS.Timeout | null>(null); // Timer para usuarios sin perfil.
+    const [noProfileTimer, setNoProfileTimer] = useState<ReturnType<typeof setTimeout> | null>(null); // Timer para usuarios sin perfil.
     //hooks/useAuth.js
 
     // --- Función para verificar el rol y perfil del usuario ---
@@ -55,7 +55,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
             // Si hay un error que no sea "no se encontró la fila", lo registramos.
             if (clientError && clientError.code !== 'PGRST116') {
-                console.error("Error buscando en la tabla clientes:", clientError);
                 return null; // Devolvemos null para evitar que la app se rompa.
             }
 
@@ -67,7 +66,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 .single();
 
             if (profileError && profileError.code !== 'PGRST116') {
-                console.error("Error buscando en la tabla perfiles:", profileError);
             }
 
             // Paso 3: Combinamos la información.
@@ -81,7 +79,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
             // Paso 4: Si no es cliente, verificamos si es artesano
             if (profileData?.rol === 'artesano') {
-                console.log('🎨 [AuthContext] Detectado usuario artesano, obteniendo datos del perfil...');
                 
                 // Buscamos el perfil en la tabla 'artesanos' para obtener avatar_url y descripcion
                 const { data: artesanoData, error: artesanoError } = await supabase
@@ -90,16 +87,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     .eq('user_id', userId)
                     .single();
 
-                console.log('📊 [AuthContext] Datos de tabla artesanos:', {
-                    encontrado: !!artesanoData,
-                    avatar_url: artesanoData?.avatar_url || 'null',
-                    descripcion: artesanoData?.descripcion ? `${artesanoData.descripcion.substring(0, 50)}...` : 'null',
-                    error: artesanoError?.code
-                });
-
                 // Si hay un error que no sea "no se encontró la fila", lo registramos pero continuamos
                 if (artesanoError && artesanoError.code !== 'PGRST116') {
-                    console.error("❌ [AuthContext] Error buscando en la tabla artesanos:", artesanoError);
                 }
 
                 // Combinamos la información del artesano con el rol
@@ -110,14 +99,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     rol: 'artesano'
                 };
 
-                console.log('✅ [AuthContext] Perfil de artesano construido:', {
-                    id: artesanoProfile.id,
-                    tiene_descripcion: !!artesanoProfile.descripcion,
-                    tiene_avatar: !!artesanoProfile.avatar_url,
-                    perfil_completo: !!(artesanoProfile.descripcion && artesanoProfile.avatar_url),
-                    rol: artesanoProfile.rol
-                });
-
                 return artesanoProfile;
             }
 
@@ -125,7 +106,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             return profileData;
 
         } catch (error) {
-            console.error("Error general en checkUserRole:", error);
             return null;
         }
     };
@@ -133,42 +113,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // --- Función para refrescar el perfil ---
     const refreshProfile = async () => {
         if (!session?.user) {
-            console.log('⚠️ [AuthContext] refreshProfile: No hay sesión de usuario');
             return;
         }
-        
-        console.log('🔄 [AuthContext] refreshProfile: Iniciando actualización del perfil...');
         setLoading(true);
         try {
             const userProfile = await checkUserRole(session.user.id);
-            console.log('📊 [AuthContext] refreshProfile: Perfil obtenido:', {
-                tiene_perfil: !!userProfile,
-                rol: userProfile?.rol,
-                tiene_descripcion: !!userProfile?.descripcion,
-                tiene_avatar: !!userProfile?.avatar_url,
-                tiene_nombre_completo: !!userProfile?.nombre_completo
-            });
             
             setProfile(userProfile);
             
             if (userProfile?.rol) {
                 setRole(userProfile.rol);
-                console.log('✅ [AuthContext] refreshProfile: Rol actualizado:', userProfile.rol);
                 // Limpiar timer si se encuentra perfil
                 if (noProfileTimer) {
                     clearTimeout(noProfileTimer);
                     setNoProfileTimer(null);
                 }
             } else {
-                console.log('⚠️ [AuthContext] refreshProfile: No se encontró perfil');
                 // Si no hay perfil, iniciar timer de 10 segundos
                 handleNoProfile();
             }
         } catch (error) {
-            console.error("❌ [AuthContext] refreshProfile: Error refrescando perfil:", error);
         } finally {
             setLoading(false);
-            console.log('🏁 [AuthContext] refreshProfile: Finalizado');
         }
     };
 
@@ -192,7 +158,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             try {
                                 await supabase.auth.signOut();
                             } catch (error) {
-                                console.error('Error cerrando sesión:', error);
                             }
                         }
                     }
@@ -206,15 +171,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // --- Función para cerrar sesión ---
     const signOut = async () => {
         try {
-            console.log('Cerrando sesión...');
             const { error } = await supabase.auth.signOut();
             if (error) {
-                console.error('Error al cerrar sesión:', error);
                 throw error;
             }
-            console.log('Sesión cerrada correctamente');
         } catch (error) {
-            console.error('Error en signOut:', error);
             throw error;
         }
     };
@@ -242,7 +203,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Crea un "oyente" (listener) que se activa cada vez que hay un cambio en el estado de autenticación.
       // Ejemplos de eventos: SIGNED_IN, SIGNED_OUT, USER_UPDATED.
       const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        console.log(`📡 Evento de Auth recibido: ${_event}`); // Muestra el evento en consola.
         setSession(session); // Actualiza el estado de la sesión con la nueva información.
       });
   
@@ -264,13 +224,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Define una función asíncrona para buscar el perfil completo en la base de datos.
       const fetchProfile = async () => {
         try {
-          console.log("🔍 Buscando perfil completo para el usuario:", session.user.id);
           
           // Usamos la función checkUserRole que obtiene tanto el rol como los datos del cliente
           const userProfile = await checkUserRole(session.user.id);
           
           if (userProfile) {
-            console.log("✅ Perfil detectado exitosamente:", userProfile);
             setProfile(userProfile);
             setRole(userProfile.rol);
             // Limpiar timer si se encuentra perfil
@@ -279,7 +237,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               setNoProfileTimer(null);
             }
           } else {
-            console.warn("⚠️ No se encontró un perfil para este usuario.");
             setProfile(null);
             setRole(null);
             // Iniciar timer de 10 segundos para usuarios sin perfil
@@ -287,7 +244,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           }
         } catch (err) { // Captura cualquier error durante la obtención del perfil.
           if (err instanceof Error) {
-            console.error("❌ Error crítico obteniendo el perfil:", err.message);
           }
           setProfile(null);
           setRole(null); // Resetea el perfil y rol en caso de error.
@@ -305,11 +261,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       //Función que procesa el URL recibido por el deep link.
       const handleDeepLink = async (url: string) => {
         if (!url) return;
-        console.log('🔗 URL de Deep Link recibida:', url);
         
         // Verificamos si es un deep link para recuperación de contraseña
         if (url.includes('resetPassword')) {
-          console.log('🔑 Deep link de recuperación de contraseña detectado');
           // Establecemos el modo de recuperación de contraseña
           setIsPasswordRecovery(true);
           
@@ -322,9 +276,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
             // Si se encuentran ambos tokens, se usan para establecer la sesión temporal en Supabase
             if (access_token && refresh_token) {
-              console.log('🔐 Estableciendo sesión temporal para recuperación de contraseña');
-              console.log('🔑 Access token recibido:', access_token.substring(0, 50) + '...');
-              console.log('🔄 Refresh token recibido:', refresh_token.substring(0, 20) + '...');
               
               try {
                 const { error } = await supabase.auth.setSession({ 
@@ -333,39 +284,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 });
                 
                 if (error) {
-                  console.error('❌ Error estableciendo sesión temporal:', error);
-                  console.error('❌ Tipo de error:', error.name);
-                  console.error('❌ Mensaje de error:', error.message);
                   
                   // Intentar verificar si el token es válido
                   if (error.message.includes('Invalid JWT structure')) {
-                    console.log('🔄 Intentando verificar la sesión actual...');
                     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
                     if (sessionError) {
-                      console.error('❌ Error verificando sesión:', sessionError);
                     } else {
-                      console.log('✅ Sesión verificada correctamente:', sessionData);
                     }
                   }
                 } else {
-                  console.log('✅ Sesión temporal establecida correctamente');
                   
                   // Verificar que la sesión se estableció correctamente
                   const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
                   if (sessionError) {
-                    console.error('❌ Error verificando sesión establecida:', sessionError);
                   } else {
-                    console.log('✅ Sesión verificada:', sessionData.session?.user?.email);
                   }
                 }
               } catch (sessionError) {
-                console.error('❌ Error inesperado estableciendo sesión:', sessionError);
               }
             } else {
-              console.warn('⚠️ No se encontraron tokens válidos en el deep link');
             }
           } else {
-            console.warn('⚠️ No se encontró fragmento en la URL del deep link');
           }
         } else {
           // Para otros tipos de deep links (como magic links de login)
@@ -377,12 +316,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
             // Si se encuentran ambos tokens, se usan para establecer la sesión en Supabase.
             if (access_token && refresh_token) {
-              console.log('🔐 Estableciendo sesión para magic link/login');
               try {
                 await supabase.auth.setSession({ access_token, refresh_token });
-                console.log('✅ Sesión establecida correctamente');
               } catch (error) {
-                console.error('❌ Error estableciendo sesión:', error);
               }
             }
           }

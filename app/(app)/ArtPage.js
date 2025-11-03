@@ -12,59 +12,17 @@ import FeedPage from './FeedPage';
 import MarketplacePage from './MarketplacePage';
 import ArtesanoSettings from './ArtesanoSettings';
 
-// Update the import path below to the actual location of your authentication module
-import { signOut } from '../(auth)'; // Example: adjust '../auth/auth' as needed
-
-
 const Tab = createBottomTabNavigator(); // Crear el tab navigator
 
 // Componente principal
 function ArtPage() {
-    const [user, setUser] = useState(null); // Estado para almacenar los datos del usuario
-    const [loading, setLoading] = useState(true); // Estado para manejar la carga
-    const [showUploadModal, setShowUploadModal] = useState(false); // Estado para mostrar el modal de subir producto
-
-    // ✅ Función para navegar a crear publicación
-    const irACrearPublicacion = () => {
-        navigation.navigate('CreatePost');
-    };
-
-    const handleUploadProduct = () => { // Función para mostrar el modal de subir producto
-        setShowUploadModal(true);
-    };
-
-    const handleProductUploaded = () => { // Función que se ejecuta cuando se sube un producto exitosamente
-        // Aquí puedes agregar lógica adicional como refrescar la lista de productos
-        console.log('Producto subido exitosamente');
-    };
-
-    const handleLogout = async () => {
-        await signOut();
-    };
-
-    if (loading || !user) { // Muestra un indicador de carga mientras se obtienen los datos del usuario
-        return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#9D046D" /></View>;
-    }
-
     return (
-        <View style={styles.container}>
-            <View style={styles.userInfo}>
-                <Text style={styles.emailText}>Email: {user.email}</Text>
-                <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-                    <MaterialCommunityIcons name="logout" size={28} color="#9D046D" />
-                </TouchableOpacity>
-            </View>
-
-            <Text style={styles.title}>Modo: Artesano</Text>
-            
-            <TouchableOpacity style={styles.uploadButton} onPress={handleUploadProduct}>
-                <MaterialCommunityIcons name="plus" size={24} color="#fff" />
-                <Text style={styles.uploadButtonText}>Subir producto</Text>
-            </TouchableOpacity>
-
-            <Tab.Navigator
-                screenOptions={({ route, focused, color, size }) => {
+        // Renderizado
+        <Tab.Navigator
+            screenOptions={({ route }) => ({
+                tabBarIcon: ({ focused, color, size }) => {
                     let iconName;
+
                     if (route.name === 'Feed') {
                         iconName = focused ? 'home' : 'home-outline';
                     } else if (route.name === 'Marketplace') {
@@ -72,51 +30,48 @@ function ArtPage() {
                     } else if (route.name === 'Settings') {
                         iconName = focused ? 'account-circle' : 'account-circle-outline';
                     }
-                    return {
-                        tabBarIcon: ({ focused, color, size }) => (
-                            <MaterialCommunityIcons name={iconName} size={size} color={color} />
-                        ),
-                        tabBarActiveTintColor: '#9D046D',
-                        tabBarInactiveTintColor: '#666',
-                        tabBarStyle: {
-                            backgroundColor: '#fff',
-                            borderTopWidth: 1,
-                            borderTopColor: '#e1e8ed',
-                            height: 60,
-                            paddingBottom: 8,
-                            paddingTop: 8,
-                        },
-                        tabBarLabelStyle: {
-                            fontSize: 12,
-                            fontWeight: '500',
-                        },
-                        headerShown: false,
-                    };
+
+                    return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
+                },
+                tabBarActiveTintColor: '#2575fc',
+                tabBarInactiveTintColor: '#666',
+                tabBarStyle: {
+                    backgroundColor: '#fff',
+                    borderTopWidth: 1,
+                    borderTopColor: '#e1e8ed',
+                    height: 60,
+                    paddingBottom: 8,
+                    paddingTop: 8,
+                },
+                tabBarLabelStyle: {
+                    fontSize: 12,
+                    fontWeight: '500',
+                },
+                headerShown: false,
+            })}
+        >
+            <Tab.Screen 
+                name="Feed" 
+                component={FeedPage}
+                options={{
+                    tabBarLabel: 'Inicio',
                 }}
-            >
-                <Tab.Screen 
-                    name="Feed" 
-                    component={FeedPage}
-                    options={{
-                        tabBarLabel: 'Inicio',
-                    }}
-                />
-                <Tab.Screen 
-                    name="Marketplace" 
-                    component={MarketplacePage}
-                    options={{
-                        tabBarLabel: 'Marketplace',
-                    }}
-                />
-                <Tab.Screen 
-                    name="Settings" 
-                    component={ArtesanoSettings}
-                    options={{
-                        tabBarLabel: 'Ajustes',
-                    }}
-                />
-            </Tab.Navigator>
-        </View>
+            />
+            <Tab.Screen 
+                name="Marketplace" 
+                component={MarketplacePage}
+                options={{
+                    tabBarLabel: 'Marketplace',
+                }}
+            />
+            <Tab.Screen 
+                name="Settings" 
+                component={ArtesanoSettings}
+                options={{
+                    tabBarLabel: 'Ajustes',
+                }}
+            />
+        </Tab.Navigator>
     );
 }
 
