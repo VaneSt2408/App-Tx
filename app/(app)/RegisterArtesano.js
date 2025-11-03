@@ -26,8 +26,6 @@ export default function RegisterArtesano() { // Define y exporta el componente d
   const [registerLoading, setRegisterLoading] = useState(false); // Estado para el botón de registro mientras se procesa.
 
   // --- Estados para los campos del formulario ---
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [nombre, setNombre] = useState('');
   const [ubicacion, setUbicacion] = useState('');
   const [categoria, setCategoria] = useState('');
@@ -66,26 +64,31 @@ export default function RegisterArtesano() { // Define y exporta el componente d
   const handleRegister = async () => {
     // Si ya se está registrando, detiene la función para evitar envíos múltiples.
     if (registerLoading) return;
-    // Valida que las dos contraseñas ingresadas coincidan.
-    if (password !== confirmPassword) return Alert.alert('Error', 'Las contraseñas no coinciden.');
     // Valida que todos los campos requeridos del formulario estén llenos.
-    if (!nombre || !telefono || !password || !categoria || !ubicacion || !curp || !numero_ine || !folio) {
+    if (!nombre || !telefono || !categoria || !ubicacion || !curp || !numero_ine || !folio) {
       return Alert.alert('Error', 'Por favor completa todos los campos obligatorios.');
     }
 
     // Inicia un bloque 'try...catch' para manejar errores durante el registro.
     try {
       setRegisterLoading(true); // Activa el estado de carga del botón.
-      // Crea un objeto con todos los datos del formulario.
+      
+      // Crea un objeto con todos los datos del formulario que se envían a Supabase.
       const registrationData = {
-        password, nombre, telefono, ubicacion, categoria, curp, numero_ine, folio
+        nombre, telefono, ubicacion, categoria, curp, numero_ine, folio
       };
 
       // Llama a la función del servicio, le pasa los datos y espera el resultado.
       const result = await completeArtesanoRegistration(registrationData);
 
+      // Verificar que result existe
+      if (!result) {
+        Alert.alert('Error', 'No se recibió respuesta del servidor. Por favor intenta de nuevo.');
+        return;
+      }
+
       // Si el registro en el servicio fue exitoso.
-      if (result.success) {
+      if (result && result.success) {
         // Muestra una alerta de éxito al usuario.
         Alert.alert(
           '¡Registro Exitoso!',
@@ -102,11 +105,13 @@ export default function RegisterArtesano() { // Define y exporta el componente d
         );
       } else { // Si el registro falló (result.success es false).
         // Muestra una alerta con el mensaje de error que devolvió el servicio.
-        Alert.alert('Error en el Registro', result.error || 'Ocurrió un error inesperado.');
+        const errorMessage = result?.error || 'Ocurrió un error inesperado. Por favor intenta de nuevo.';
+        Alert.alert('Error en el Registro', errorMessage);
       }
     } catch (error) { // Si ocurre un error de conexión o un problema crítico.
-      // Muestra una alerta genérica de error crítico.
-      Alert.alert('Error Crítico', 'No se pudo conectar con el servicio. Inténtalo de nuevo.');
+      // Muestra el mensaje de error específico si está disponible
+      const errorMessage = error?.message || error?.toString() || 'No se pudo conectar con el servicio. Inténtalo de nuevo.';
+      Alert.alert('Error Crítico', errorMessage);
     } finally { // Este bloque se ejecuta siempre, sin importar si hubo éxito o error.
       setRegisterLoading(false); // Desactiva el estado de carga del botón.
     }
@@ -167,21 +172,6 @@ export default function RegisterArtesano() { // Define y exporta el componente d
             <View style={[styles.inputContainer, focusedInput === 'telefono' && styles.inputFocused]}>
               <MaterialCommunityIcons name="phone-outline" size={20} color="#9D046D" style={styles.icon} />
               <TextInput style={styles.input} placeholder="Número de teléfono" placeholderTextColor="#9D046D" value={telefono} onChangeText={setTelefono} keyboardType="phone-pad" onFocus={() => setFocusedInput('telefono')} onBlur={() => setFocusedInput(null)} />
-            </View>
-
-            {/* Contraseña */}
-            <View style={[styles.inputContainer, focusedInput === 'password' && styles.inputFocused]}>
-              <MaterialCommunityIcons name="lock-outline" size={20} color="#9D046D" style={styles.icon} />
-              <TextInput style={styles.input} placeholder="Crea una contraseña" placeholderTextColor="#9D046D" value={password} onChangeText={setPassword} secureTextEntry={!isPasswordVisible} onFocus={() => setFocusedInput('password')} onBlur={() => setFocusedInput(null)} />
-              <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)}>
-                <MaterialCommunityIcons name={isPasswordVisible ? "eye-off-outline" : "eye-outline"} size={20} color="#9D046D" />
-              </TouchableOpacity>
-            </View>
-
-            {/* Confirmar Contraseña */}
-            <View style={[styles.inputContainer, focusedInput === 'confirmPassword' && styles.inputFocused]}>
-              <MaterialCommunityIcons name="lock-check-outline" size={20} color="#9D046D" style={styles.icon} />
-              <TextInput style={styles.input} placeholder="Confirma tu contraseña" placeholderTextColor="#9D046D" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry={!isPasswordVisible} onFocus={() => setFocusedInput('confirmPassword')} onBlur={() => setFocusedInput(null)} />
             </View>
 
             {/* Categoría */}

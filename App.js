@@ -74,7 +74,6 @@ export default function App() {
             const userProfile = await checkUserRole(session.user.id);
             // --- LÍNEA DE DEPURACIÓN CLAVE ---
             // Vamos a ver qué nos devuelve la base de datos DESPUÉS de guardar.
-            console.log('PERFIL OBTENIDO DENTRO DE handleProfileCompletion:', JSON.stringify(userProfile, null, 2));
             // ------------------------------------
 
             setProfile(userProfile);

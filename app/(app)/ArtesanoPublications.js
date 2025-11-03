@@ -20,7 +20,6 @@ export default function ArtesanoPublications() {
   const router = useRouter(); // Obtener el router
   const { userId } = useLocalSearchParams(); // Obtener el id del usuario
   const { session } = useAuth(); // Obtener la sesión
-  
   const [publicaciones, setPublicaciones] = useState([]); // Establecer el estado de las publicaciones
   const [loading, setLoading] = useState(true); // Establecer el estado de carga
   const [refreshing, setRefreshing] = useState(false); // Establecer el estado de refresco
@@ -34,7 +33,6 @@ export default function ArtesanoPublications() {
   const [editData, setEditData] = useState({ texto: '' }); // Establecer el estado de los datos de edición
   const [editLoading, setEditLoading] = useState(false); // Establecer el estado de carga de edición
   const swipeAnim = React.useRef(new Animated.Value(0)).current; // Referencia para la animación del swipe
-
   const isOwnProfile = session?.user?.id === userId; // Verificar si el usuario es el propio
 
   // Efecto para cargar las publicaciones
@@ -50,10 +48,7 @@ export default function ArtesanoPublications() {
       if (page === 0) {
         setLoading(true);
       }
-
-      console.log('📱 [PUBLICACIONES] Cargando publicaciones del artesano:', userId);
       const result = await getPublicacionesByArtesano(userId, 20, page);
-
       if (result.success) {
         if (page === 0) {
           setPublicaciones(result.data);
@@ -63,13 +58,10 @@ export default function ArtesanoPublications() {
         setHasMore(result.hasMore);
         setCurrentPage(page);
         setTotalCount(result.totalCount || 0);
-        console.log('✅ [PUBLICACIONES] Publicaciones cargadas:', result.data.length);
       } else {
-        console.error('❌ [PUBLICACIONES] Error al cargar:', result.error);
         Alert.alert('Error', 'No se pudieron cargar las publicaciones');
       }
     } catch (error) {
-      console.error('❌ [PUBLICACIONES] Error en loadPublicaciones:', error);
       Alert.alert('Error', 'Ocurrió un error inesperado');
     } finally {
       setLoading(false);
@@ -133,7 +125,6 @@ export default function ArtesanoPublications() {
       },
       onPanResponderRelease: (evt, gestureState) => {
         const { dx, vx } = gestureState;
-        
         // Deslizar hacia la izquierda (siguiente)
         if (dx < -50 || vx < -0.5) {
           handleNextPublication();
@@ -170,7 +161,6 @@ export default function ArtesanoPublications() {
           style: 'destructive',
           onPress: async () => {
             try {
-              console.log('🗑️ [PUBLICACIONES] Eliminando publicación:', publicacionId);
               const result = await deletePublication(publicacionId);
               
               if (result.success) {
@@ -182,7 +172,6 @@ export default function ArtesanoPublications() {
                 Alert.alert('Error', result.error || 'No se pudo eliminar la publicación');
               }
             } catch (error) {
-              console.error('❌ [PUBLICACIONES] Error al eliminar:', error);
               Alert.alert('Error', 'Ocurrió un error al eliminar la publicación');
             }
           }
@@ -193,17 +182,11 @@ export default function ArtesanoPublications() {
 
   // Función para editar una publicación
   const handleEditPublication = () => {
-    console.log('✏️ [EDITAR] Botón editar presionado');
-    console.log('✏️ [EDITAR] selectedPublication:', selectedPublication);
-    
     if (selectedPublication) {
-      console.log('✏️ [EDITAR] Abriendo modal de edición...');
       setEditData({ texto: selectedPublication.texto || '' });
       setShowEditModal(true);
-      console.log('✏️ [EDITAR] showEditModal establecido a true');
       // No cerrar el modal de detalles inmediatamente
     } else {
-      console.log('❌ [EDITAR] No hay publicación seleccionada');
     }
   };
 
@@ -216,21 +199,15 @@ export default function ArtesanoPublications() {
   // Función para guardar la edición de una publicación
   const handleSaveEdit = async () => {
     if (!selectedPublication) return;
-
     setEditLoading(true);
     try {
-      console.log('✏️ [PUBLICACIONES] Editando publicación:', selectedPublication.id);
-      
       await updatePublication(selectedPublication.id, { texto: editData.texto });
-
       Alert.alert('Éxito', 'Publicación editada correctamente');
       handleCloseEditModal();
       handleCloseModal();
       // Recargar las publicaciones
       loadPublicaciones(0);
-      
     } catch (error) {
-      console.error('❌ [PUBLICACIONES] Error en handleSaveEdit:', error);
       Alert.alert('Error', error.message || 'Ocurrió un error al editar la publicación');
     } finally {
       setEditLoading(false);
@@ -488,15 +465,11 @@ export default function ArtesanoPublications() {
                 <TouchableOpacity
                   style={styles.editButton}
                   onPress={() => {
-                    console.log('✏️ [EDITAR] Botón presionado directamente');
-                    console.log('✏️ [EDITAR] selectedPublication:', selectedPublication);
                     if (selectedPublication) {
                       setEditData({ texto: selectedPublication.texto || '' });
                       setShowPublicationModal(false); // Cerrar modal de detalles
                       setShowEditModal(true); // Abrir modal de edición
-                      console.log('✏️ [EDITAR] Modal abierto');
                     } else {
-                      console.log('❌ [EDITAR] No hay publicación seleccionada');
                       Alert.alert('Error', 'No hay publicación seleccionada');
                     }
                   }}

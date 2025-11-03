@@ -50,16 +50,8 @@ function PageAdmin() { // Asegúrate de que el nombre del componente coincida co
             <Text style={styles.textoDelBoton}>Lista de artesanos</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.botonPersonalizado3} onPress={() => router.push('./RegisterArtesano')}>
+            <TouchableOpacity style={styles.botonPersonalizado3} onPress={() => console.log('Estadísticas')}>
             <Text style={styles.textoDelBoton}>Estadisticas</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.botonPersonalizado4} onPress={() => router.push('./RegisterArtesano')}>
-            <Text style={styles.textoDelBoton}>Modificar/Eliminar</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.botonPersonalizado5} onPress={() => router.push('./RegisterArtesano')}>
-            <Text style={styles.textoDelBoton}>Configuracion general</Text>
             </TouchableOpacity>
 
         </View>

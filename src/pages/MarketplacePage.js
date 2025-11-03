@@ -49,11 +49,9 @@ const MarketplacePage = ({ navigation }) => {
         setHasMore(result.hasMore);
         setCurrentPage(page);
       } else {
-        console.error('Error al cargar productos:', result.error);
         Alert.alert('Error', 'No se pudieron cargar los productos');
       }
     } catch (error) {
-      console.error('Error en loadProducts:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -95,7 +93,6 @@ const MarketplacePage = ({ navigation }) => {
         Alert.alert('Error', 'No se pudo realizar la búsqueda');
       }
     } catch (error) {
-      console.error('Error en búsqueda:', error);
     } finally {
       setLoading(false);
     }

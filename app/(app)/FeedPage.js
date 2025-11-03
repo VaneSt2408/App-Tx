@@ -44,10 +44,8 @@ const FeedPage = () => {
         setHasMore(result.hasMore);
         setCurrentPage(page);
       } else {
-        console.error('Error al cargar feed:', result.error);
       }
     } catch (error) {
-      console.error('Error en loadFeed:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);

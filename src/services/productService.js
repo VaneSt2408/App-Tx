@@ -25,13 +25,11 @@ export const selectAndCompressImage = async () => {
 
     if (!result.canceled && result.assets[0]) {
       const asset = result.assets[0];
-      console.log('Imagen seleccionada:', asset.uri);
       return asset; // Retornamos el objeto completo con base64
     }
     
     return null;
   } catch (error) {
-    console.error('Error al seleccionar imagen:', error);
     Alert.alert('Error', 'No se pudo seleccionar la imagen');
     return null;
   }
@@ -40,7 +38,6 @@ export const selectAndCompressImage = async () => {
 // --- Función para subir imagen a Supabase Storage (siguiendo la lógica de completeProfile) ---
 export const uploadImageToSupabase = async (imageAsset, productId) => {
   try {
-    console.log('Subiendo imagen a Supabase...');
     
     if (!imageAsset || !imageAsset.base64) {
       throw new Error('No se encontró la imagen o los datos base64');
@@ -68,17 +65,14 @@ export const uploadImageToSupabase = async (imageAsset, productId) => {
       });
 
     if (uploadError) {
-      console.error('Error al subir imagen:', uploadError);
       throw new Error(`Error al subir imagen: ${uploadError.message}`);
     }
 
     // Si la subida fue exitosa, obtenemos la URL pública de la imagen
     const { data: urlData } = supabase.storage.from('productos').getPublicUrl(filePath);
     
-    console.log('Imagen subida exitosamente:', urlData.publicUrl);
     return urlData.publicUrl;
   } catch (error) {
-    console.error('Error en uploadImageToSupabase:', error);
     throw error;
   }
 };
@@ -86,7 +80,6 @@ export const uploadImageToSupabase = async (imageAsset, productId) => {
 // --- Función para crear un nuevo producto (siguiendo la lógica de completeProfile) ---
 export const createProduct = async (productData) => {
   try {
-    console.log('Creando producto...', productData);
     
     // Obtener usuario actual
     const { data: { user } } = await supabase.auth.getUser();
@@ -98,7 +91,6 @@ export const createProduct = async (productData) => {
 
     // --- Subida de la imagen (si se proporcionó) ---
     if (productData.imageAsset) {
-      console.log('Subiendo imagen del producto...');
       imagenUrl = await uploadImageToSupabase(productData.imageAsset, null);
     }
 
@@ -118,14 +110,10 @@ export const createProduct = async (productData) => {
       .single();
 
     if (error) {
-      console.error('Error al crear producto:', error);
       throw new Error(`Error al crear producto: ${error.message}`);
     }
-
-    console.log('Producto creado exitosamente:', data);
     return data;
   } catch (error) {
-    console.error('Error en createProduct:', error);
     throw error;
   }
 };
@@ -133,7 +121,6 @@ export const createProduct = async (productData) => {
 // --- Función para subir imagen y actualizar producto con URL ---
 export const updateProductWithImage = async (productId, imageUrl) => {
   try {
-    console.log('Actualizando producto con imagen...');
     
     const { error } = await supabase
       .from('productos')
@@ -141,14 +128,10 @@ export const updateProductWithImage = async (productId, imageUrl) => {
       .eq('id', productId);
 
     if (error) {
-      console.error('Error al actualizar producto con imagen:', error);
       throw new Error(`Error al actualizar producto: ${error.message}`);
     }
-
-    console.log('Producto actualizado con imagen exitosamente');
     return true;
   } catch (error) {
-    console.error('Error en updateProductWithImage:', error);
     throw error;
   }
 };
@@ -156,7 +139,6 @@ export const updateProductWithImage = async (productId, imageUrl) => {
 // --- Función principal para subir producto completo ---
 export const uploadProduct = async (productData, imageUri) => {
   try {
-    console.log('Iniciando proceso de subida de producto...');
     
     // 1. Crear el producto en la base de datos
     const product = await createProduct(productData);
@@ -167,10 +149,8 @@ export const uploadProduct = async (productData, imageUri) => {
       await updateProductWithImage(product.id, imageUrl);
     }
     
-    console.log('Producto subido exitosamente');
     return { success: true, product };
   } catch (error) {
-    console.error('Error en uploadProduct:', error);
     return { success: false, error: error.message };
   }
 };
@@ -190,13 +170,11 @@ export const getArtesanoProducts = async () => {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error al obtener productos:', error);
       throw new Error(`Error al obtener productos: ${error.message}`);
     }
 
     return data;
   } catch (error) {
-    console.error('Error en getArtesanoProducts:', error);
     throw error;
   }
 };
@@ -204,7 +182,6 @@ export const getArtesanoProducts = async () => {
 // --- Función para subir imagen de producto para edición ---
 export const uploadProductImageForEdit = async (imageAsset, oldImageUrl) => {
   try {
-    console.log('📤 [SERVICE] Subiendo imagen del producto para edición...');
 
     if (!imageAsset.base64) {
       throw new Error('No se encontró la imagen o los datos base64');
@@ -231,9 +208,7 @@ export const uploadProductImageForEdit = async (imageAsset, oldImageUrl) => {
           .from('productos')
           .remove([oldFilePath]);
         
-        console.log('🗑️ [SERVICE] Imagen anterior eliminada');
       } catch (error) {
-        console.log('⚠️ [SERVICE] No se pudo eliminar la imagen anterior:', error);
       }
     }
 
@@ -245,17 +220,14 @@ export const uploadProductImageForEdit = async (imageAsset, oldImageUrl) => {
       });
 
     if (uploadError) {
-      console.error('❌ [SERVICE] Error al subir imagen:', uploadError);
       throw new Error('Error al subir la imagen: ' + uploadError.message);
     }
 
     // Obtener URL pública
     const { data: urlData } = supabase.storage.from('productos').getPublicUrl(filePath);
-    console.log('✅ [SERVICE] Imagen subida correctamente:', urlData.publicUrl);
     
     return urlData.publicUrl;
   } catch (error) {
-    console.error('❌ [SERVICE] Error en uploadProductImageForEdit:', error);
     throw error;
   }
 };
@@ -263,7 +235,6 @@ export const uploadProductImageForEdit = async (imageAsset, oldImageUrl) => {
 // --- Función para actualizar un producto ---
 export const updateProduct = async (productId, updateData, newImageAsset) => {
   try {
-    console.log('✏️ [SERVICE] Actualizando producto:', productId);
     
     // Validaciones
     if (!updateData.nombre || !updateData.nombre.trim()) {
@@ -291,7 +262,6 @@ export const updateProduct = async (productId, updateData, newImageAsset) => {
         .eq('id', productId)
         .single();
 
-      console.log('📤 [SERVICE] Nueva imagen detectada, subiendo...');
       const imagenUrl = await uploadProductImageForEdit(newImageAsset, currentProduct?.imagen_url);
       dataToUpdate.imagen_url = imagenUrl;
     }
@@ -302,14 +272,11 @@ export const updateProduct = async (productId, updateData, newImageAsset) => {
       .eq('id', productId);
 
     if (error) {
-      console.error('❌ [SERVICE] Error al actualizar producto:', error);
       throw new Error('No se pudo actualizar el producto: ' + error.message);
     }
 
-    console.log('✅ [SERVICE] Producto actualizado correctamente');
     return { success: true };
   } catch (error) {
-    console.error('❌ [SERVICE] Error en updateProduct:', error);
     throw error;
   }
 };
@@ -317,7 +284,6 @@ export const updateProduct = async (productId, updateData, newImageAsset) => {
 // --- Función para eliminar un producto ---
 export const deleteProduct = async (productId) => {
   try {
-    console.log('🗑️ [SERVICE] Eliminando producto:', productId);
     
     // Obtener datos del producto para eliminar la imagen
     const { data: producto, error: fetchError } = await supabase
@@ -327,7 +293,6 @@ export const deleteProduct = async (productId) => {
       .single();
 
     if (fetchError && fetchError.code !== 'PGRST116') {
-      console.error('❌ [SERVICE] Error al obtener producto:', fetchError);
       throw new Error('No se pudo obtener el producto: ' + fetchError.message);
     }
 
@@ -341,20 +306,16 @@ export const deleteProduct = async (productId) => {
           const fileName = urlParts[urlParts.length - 1];
           const filePath = `${user.id}/${fileName}`;
 
-          console.log('🗑️ [SERVICE] Eliminando imagen del storage:', filePath);
           
           const { error: storageError } = await supabase.storage
             .from('productos')
             .remove([filePath]);
 
           if (storageError) {
-            console.error('❌ [SERVICE] Error al eliminar imagen del storage:', storageError);
           } else {
-            console.log('✅ [SERVICE] Imagen eliminada del storage');
           }
         }
       } catch (storageError) {
-        console.error('❌ [SERVICE] Error procesando eliminación de imagen:', storageError);
       }
     }
 
@@ -365,14 +326,10 @@ export const deleteProduct = async (productId) => {
       .eq('id', productId);
 
     if (deleteError) {
-      console.error('❌ [SERVICE] Error al eliminar producto:', deleteError);
       throw new Error('No se pudo eliminar el producto: ' + deleteError.message);
     }
-
-    console.log('✅ [SERVICE] Producto eliminado correctamente');
     return { success: true };
   } catch (error) {
-    console.error('❌ [SERVICE] Error en deleteProduct:', error);
     throw error;
   }
 };

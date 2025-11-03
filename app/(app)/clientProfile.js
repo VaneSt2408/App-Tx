@@ -83,7 +83,6 @@ export default function ClientProfile() { // Exportar la función ClientProfile
         totalFailedAttemptsRef.current = parsedAttempts;
       }
     } catch (error) {
-      console.error('Error loading failed attempts:', error);
     }
   };
 
@@ -94,7 +93,6 @@ export default function ClientProfile() { // Exportar la función ClientProfile
       totalFailedAttemptsRef.current = attempts;
       setTotalFailedAttempts(attempts);
     } catch (error) {
-      console.error('Error saving failed attempts:', error);
     }
   };
 
@@ -105,7 +103,6 @@ export default function ClientProfile() { // Exportar la función ClientProfile
       totalFailedAttemptsRef.current = 0;
       setTotalFailedAttempts(0);
     } catch (error) {
-      console.error('Error clearing failed attempts:', error);
     }
   };
 
@@ -119,7 +116,6 @@ export default function ClientProfile() { // Exportar la función ClientProfile
         deletePasswordAttemptsRef.current = parsedAttempts;
       }
     } catch (error) {
-      console.error('Error loading delete attempts:', error);
     }
   };
 
@@ -130,7 +126,6 @@ export default function ClientProfile() { // Exportar la función ClientProfile
       deletePasswordAttemptsRef.current = attempts;
       setTotalDeleteAttempts(attempts);
     } catch (error) {
-      console.error('Error saving delete attempts:', error);
     }
   };
 
@@ -141,7 +136,6 @@ export default function ClientProfile() { // Exportar la función ClientProfile
       deletePasswordAttemptsRef.current = 0;
       setTotalDeleteAttempts(0);
     } catch (error) {
-      console.error('Error clearing delete attempts:', error);
     }
   };
 
@@ -210,7 +204,6 @@ export default function ClientProfile() { // Exportar la función ClientProfile
       setProfile(data); // Establecer el perfil del cliente
     } catch (error) {
       Alert.alert('Error', 'Ocurrió un error inesperado'); // Mostrar alerta de error
-      console.error('Error fetching profile:', error); // Mostrar error en la consola
     } finally {
       setLoading(false); // Establecer el estado de carga
     }
@@ -223,7 +216,6 @@ export default function ClientProfile() { // Exportar la función ClientProfile
         setIsGoogleUser(user.app_metadata.provider === 'google'); // Establecer el estado de si el usuario es de Google
       }
     } catch (error) {
-      console.error('Error checking user provider:', error); // Mostrar error en la consola
     }
   };
 
@@ -357,7 +349,6 @@ export default function ClientProfile() { // Exportar la función ClientProfile
       setSelectedImage(null); // Establecer la imagen seleccionada
     } catch (error) {
       Alert.alert('Error', 'Ocurrió un error inesperado');
-      console.error('Error saving profile:', error); // Mostrar error en la consola
     } finally {
       setSaving(false);
     }
@@ -369,7 +360,6 @@ export default function ClientProfile() { // Exportar la función ClientProfile
       Alert.alert('Acceso bloqueado', `Has excedido el número de intentos. Inténtalo de nuevo en ${Math.ceil(blockTimeRemaining / 60)} minutos.`); // Mostrar alerta de acceso bloqueado
       return;
     }
-    console.log('Abriendo modal de cambio de contraseña...'); // Mostrar mensaje en la consola
     setShowChangePassword(true); // Establecer el estado de la visualización del modal de cambio de contraseña
     setPasswordData({
       currentPassword: '', // Establecer el estado de la contraseña actual
@@ -381,7 +371,6 @@ export default function ClientProfile() { // Exportar la función ClientProfile
     setCurrentPasswordAttempts(0); // Establecer el contador de intentos de la contraseña actual a 0
     currentPasswordAttemptsRef.current = 0; // Resetear ref al abrir modal
     // No resetear totalFailedAttempts aquí para mantener el conteo entre sesiones
-    console.log(`Intentos fallidos totales: ${totalFailedAttemptsRef.current}`); // Debug
   };
 
   const handleCancelPasswordChange = () => { // Función para cancelar el cambio de contraseña
@@ -424,10 +413,8 @@ export default function ClientProfile() { // Exportar la función ClientProfile
     }
     
     try {
-      console.log('Verificando contraseña actual...'); // Mostrar mensaje en la consola
       const { data, error } = await validateCurrentPassword(passwordData.currentPassword); // Validar la contraseña actual
       if (data) { // Si la contraseña actual es válida
-        console.log('Contraseña validada correctamente, desbloqueando campos...'); // Mostrar mensaje en la consola
         setCurrentPasswordValidated(true); // Establecer el estado de la validación de la contraseña actual
         setCurrentPasswordAttempts(0); // Establecer el contador de intentos de la contraseña actual a 0
         currentPasswordAttemptsRef.current = 0; // Resetear ref
@@ -513,7 +500,6 @@ export default function ClientProfile() { // Exportar la función ClientProfile
           }
       }
     } catch (error) { 
-      console.error('Error validating current password:', error);
       Alert.alert('Error', 'Ocurrió un error al verificar la contraseña');
     }
   };
@@ -583,7 +569,6 @@ export default function ClientProfile() { // Exportar la función ClientProfile
       );
     } catch (error) {
       Alert.alert('Error', 'Ocurrió un error inesperado');
-      console.error('Error changing password:', error);
     } finally {
       setPasswordLoading(false);
     }
@@ -656,10 +641,8 @@ export default function ClientProfile() { // Exportar la función ClientProfile
     }
     
     try {
-      console.log('Verificando contraseña para eliminación...'); // Mostrar mensaje en la consola
       const { data, error } = await validateCurrentPassword(deletePasswordData.currentPassword); // Validar la contraseña de eliminación
       if (data) {
-        console.log('Contraseña validada, procediendo con eliminación...'); // Mostrar mensaje en la consola
         setDeletePasswordValidated(true); // Establecer el estado de la validación de la contraseña de eliminación
         setDeletePasswordAttempts(0); // Establecer el contador de intentos de la contraseña de eliminación a 0
         deletePasswordAttemptsRef.current = 0; // Resetear ref
@@ -677,7 +660,6 @@ export default function ClientProfile() { // Exportar la función ClientProfile
         const newAttempts = deletePasswordAttemptsRef.current;
         const newTotalAttempts = totalFailedAttemptsRef.current; // Usar contador compartido
         
-        console.log('Nuevos intentos eliminación:', newAttempts, 'Nuevos totales:', newTotalAttempts); // Debug
         
         // Actualizar estados UI
         setDeletePasswordAttempts(newAttempts);
@@ -745,7 +727,6 @@ export default function ClientProfile() { // Exportar la función ClientProfile
           }
       }
     } catch (error) {
-      console.error('Error validating delete password:', error);
       Alert.alert('Error', 'Ocurrió un error al verificar la contraseña');
     }
   };
@@ -792,7 +773,6 @@ export default function ClientProfile() { // Exportar la función ClientProfile
               );
             } catch (error) {
               Alert.alert('Error', 'Ocurrió un error inesperado');
-              console.error('Error deleting profile:', error);
             } finally {
               setDeletePasswordLoading(false);
             }
@@ -865,7 +845,6 @@ export default function ClientProfile() { // Exportar la función ClientProfile
               );
             } catch (error) {
               Alert.alert('Error', 'Ocurrió un error inesperado');
-              console.error('Error deleting Google profile:', error);
             } finally {
               setDeleteGoogleLoading(false);
             }
