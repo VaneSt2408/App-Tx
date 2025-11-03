@@ -4,6 +4,7 @@ import { estadisticasService } from '../../src/services/estadisticasService';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
+// Componente principal
 export default function EstadisticasPage() {
   const [artesanosByLikes, setArtesanosByLikes] = useState([]);
   const [artesanosByProduct, setArtesanosByProduct] = useState([]);
@@ -13,6 +14,7 @@ export default function EstadisticasPage() {
   const [view, setView] = useState('likes'); // 'likes' | 'products' | 'antiguedad'
   const router = useRouter();
 
+  // Efecto para cargar las estadísticas
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -31,14 +33,15 @@ export default function EstadisticasPage() {
         setLoading(false);
       }
     };
-
     fetchStats();
   }, []);
 
+  // Función para navegar al perfil del artesano
   const handlePressArtesano = (userId) => {
     router.push({ pathname: "/(app)/ArtesanoProfile", params: { userId } });
   };
 
+  // Función para formatear la fecha
   const formatDate = (dateString) => {
     if (!dateString) return 'Sin fecha';
     try {
@@ -49,6 +52,7 @@ export default function EstadisticasPage() {
     }
   };
 
+  // Función para renderizar cada artesano en la lista
   const renderItem = ({ item, index }) => (
     <TouchableOpacity onPress={() => handlePressArtesano(item.user_id)} style={styles.itemContainer}>
       <Text style={styles.rank}>{index + 1}</Text>

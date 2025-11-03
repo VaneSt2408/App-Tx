@@ -2,7 +2,7 @@ import { supabase } from "../supabase/client";
 
 export const estadisticasService = {
   async getArtesanosByLikes() {
-    // 1. Fetch all artesanos
+    // Obtener todos los artesanos
     const { data: artesanos, error: artesanosError } = await supabase
       .from('artesanos')
       .select('user_id, nombre, avatar_url');
@@ -12,7 +12,7 @@ export const estadisticasService = {
       return null;
     }
 
-    // 2. Fetch all publications with likes count
+    // Obtener todas las publicaciones con el conteo de likes
     const { data: publicaciones, error: publicacionesError } = await supabase
       .from('publicaciones')
       .select('artesano_user_id, likes(id)');
@@ -22,7 +22,7 @@ export const estadisticasService = {
       return null;
     }
 
-    // 3. Create a map of likes per artisan
+    // Crear un mapa de likes por artesano
     const likesPerArtesano = publicaciones.reduce((acc, pub) => {
       if (pub.artesano_user_id) {
         acc[pub.artesano_user_id] = (acc[pub.artesano_user_id] || 0) + pub.likes.length;
@@ -30,22 +30,22 @@ export const estadisticasService = {
       return acc;
     }, {});
 
-    // 4. Combine artesanos with their likes count
+    // Combinar artesanos con su conteo de likes
     const artesanosConLikes = artesanos.map(artesano => ({
       ...artesano,
       total_likes: likesPerArtesano[artesano.user_id] || 0
     }));
 
-    // 5. Sort by likes
+    // Ordenar por likes
     const sortedArtesanos = artesanosConLikes.sort((a, b) => b.total_likes - a.total_likes);
 
     return sortedArtesanos;
   },
 
 
-  // 2. Get products count by artesano
+  // Obtener el conteo de productos por artesano
   async getProductsCountByArtesano() {
-    // 1. Fetch all artesanos
+    // Obtener todos los artesanos
     const { data: artesanos, error: artesanosError } = await supabase
       .from('artesanos')
       .select('user_id, nombre, avatar_url');
@@ -55,7 +55,7 @@ export const estadisticasService = {
       return null;
     }
 
-    // 2. Fetch all products
+    // Obtener todos los productos
     const { data: productos, error: productosError } = await supabase
       .from('productos')
       .select('artesano_id');
@@ -65,7 +65,7 @@ export const estadisticasService = {
       return null;
     }
 
-    // 3. Create a map of products per artisan
+    // Crear un mapa de productos por artesano
     const productsPerArtesano = productos.reduce((acc, prod) => {
       if (prod.artesano_id) {
         acc[prod.artesano_id] = (acc[prod.artesano_id] || 0) + 1;
@@ -73,21 +73,21 @@ export const estadisticasService = {
       return acc;
     }, {});
 
-    // 4. Combine artesanos with their product count
+    // Combinar artesanos con su conteo de productos
     const artesanosConProductos = artesanos.map(artesano => ({
       ...artesano,
       total_productos: productsPerArtesano[artesano.user_id] || 0
     }));
 
-    // 5. Sort by product count
+    // Ordenar por conteo de productos
     const sortedArtesanos = artesanosConProductos.sort((a, b) => b.total_productos - a.total_productos);
 
     return sortedArtesanos;
-  }
-  ,
-  // 3. Get artesanos sorted by registration date (oldest to newest)
+  },
+
+    // Obtener artesanos ordenados por fecha de registro (de más antiguo a más nuevo)
   async getArtesanosByAntiguedad() {
-    // Fetch artesanos with registration date
+    // Obtener artesanos con fecha de registro
     const { data: artesanos, error } = await supabase
       .from('artesanos')
       .select('user_id, nombre, avatar_url, created_at');
@@ -97,7 +97,7 @@ export const estadisticasService = {
       return null;
     }
 
-    // Sort by created_at ascending (oldest first)
+    // Ordenar por created_at ascendente (el más antiguo primero)
     const sortedByOldest = [...(artesanos || [])].sort((a, b) => {
       const aDate = a?.created_at ? new Date(a.created_at).getTime() : 0;
       const bDate = b?.created_at ? new Date(b.created_at).getTime() : 0;
