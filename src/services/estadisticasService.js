@@ -84,4 +84,26 @@ export const estadisticasService = {
 
     return sortedArtesanos;
   }
+  ,
+  // 3. Get artesanos sorted by registration date (oldest to newest)
+  async getArtesanosByAntiguedad() {
+    // Fetch artesanos with registration date
+    const { data: artesanos, error } = await supabase
+      .from('artesanos')
+      .select('user_id, nombre, avatar_url, created_at');
+
+    if (error) {
+      console.error('Error fetching artesanos for antiguedad:', error);
+      return null;
+    }
+
+    // Sort by created_at ascending (oldest first)
+    const sortedByOldest = [...(artesanos || [])].sort((a, b) => {
+      const aDate = a?.created_at ? new Date(a.created_at).getTime() : 0;
+      const bDate = b?.created_at ? new Date(b.created_at).getTime() : 0;
+      return aDate - bDate;
+    });
+
+    return sortedByOldest;
+  }
 };

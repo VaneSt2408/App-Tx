@@ -203,7 +203,6 @@ export const signInWithGoogle = async () => {
         if (setSessionError) {
           Alert.alert("Error", "No se pudo establecer la sesión.");
         } else { // Si la sesión se estableció correctamente.
-          Alert.alert("Éxito", "Inicio de sesión con Google completado.");
         }
       } else { // Si el usuario cancela el flujo en el navegador ('cancel', 'dismiss', etc.).
       }

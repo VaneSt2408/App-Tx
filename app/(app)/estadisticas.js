@@ -7,9 +7,10 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 export default function EstadisticasPage() {
   const [artesanosByLikes, setArtesanosByLikes] = useState([]);
   const [artesanosByProduct, setArtesanosByProduct] = useState([]);
+  const [artesanosByAntiguedad, setArtesanosByAntiguedad] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [view, setView] = useState('likes'); // 'likes' or 'products'
+  const [view, setView] = useState('likes'); // 'likes' | 'products' | 'antiguedad'
   const router = useRouter();
 
   useEffect(() => {
@@ -18,8 +19,10 @@ export default function EstadisticasPage() {
         setLoading(true);
         const likesData = await estadisticasService.getArtesanosByLikes();
         const productsData = await estadisticasService.getProductsCountByArtesano();
-        setArtesanosByLikes(likesData);
-        setArtesanosByProduct(productsData);
+        const antiguedadData = await estadisticasService.getArtesanosByAntiguedad();
+        setArtesanosByLikes(likesData || []);
+        setArtesanosByProduct(productsData || []);
+        setArtesanosByAntiguedad(antiguedadData || []);
         setError(null);
       } catch (e) {
         setError('Error al cargar las estadísticas');
@@ -36,6 +39,16 @@ export default function EstadisticasPage() {
     router.push({ pathname: "/(app)/ArtesanoProfile", params: { userId } });
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Sin fecha';
+    try {
+      const d = new Date(dateString);
+      return d.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+    } catch {
+      return 'Sin fecha';
+    }
+  };
+
   const renderItem = ({ item, index }) => (
     <TouchableOpacity onPress={() => handlePressArtesano(item.user_id)} style={styles.itemContainer}>
       <Text style={styles.rank}>{index + 1}</Text>
@@ -48,10 +61,14 @@ export default function EstadisticasPage() {
       )}
       <View style={styles.infoContainer}>
         <Text style={styles.name}>{item.nombre}</Text>
-        {view === 'likes' ? (
+        {view === 'likes' && (
           <Text style={styles.stat}>Likes: {item.total_likes}</Text>
-        ) : (
+        )}
+        {view === 'products' && (
           <Text style={styles.stat}>Productos: {item.total_productos}</Text>
+        )}
+        {view === 'antiguedad' && (
+          <Text style={styles.stat}>Registrado: {formatDate(item.created_at)}</Text>
         )}
       </View>
     </TouchableOpacity>
@@ -87,9 +104,18 @@ export default function EstadisticasPage() {
           onPress={() => setView('products')}>
           <Text style={[styles.toggleButtonText, view === 'products' && styles.activeButtonText]}>Por Productos</Text>
         </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.toggleButton, view === 'antiguedad' && styles.activeButton]} 
+          onPress={() => setView('antiguedad')}>
+          <Text style={[styles.toggleButtonText, view === 'antiguedad' && styles.activeButtonText]}>Por Antigüedad</Text>
+        </TouchableOpacity>
       </View>
       <FlatList
-        data={view === 'likes' ? artesanosByLikes : artesanosByProduct}
+        data={
+          view === 'likes' ? artesanosByLikes :
+          view === 'products' ? artesanosByProduct :
+          artesanosByAntiguedad
+        }
         renderItem={renderItem}
         keyExtractor={(item) => item.user_id}
         contentContainerStyle={styles.listContainer}
