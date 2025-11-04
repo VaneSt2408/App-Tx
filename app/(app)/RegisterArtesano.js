@@ -256,13 +256,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#9D046D',
     textAlign: 'center',
     marginBottom: 10,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: '#9D046D',
     textAlign: 'center',
     marginBottom: 30,
   },
@@ -270,8 +270,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
-    backgroundColor: 'rgba(238, 3, 89, 0.1)',
-    borderRadius: 16,
+    backgroundColor: 'rgba(238, 3, 89, 0.08)',
+    borderRadius: 18,
     paddingHorizontal: 15,
     marginBottom: 15,
     borderWidth: 2,
@@ -279,6 +279,7 @@ const styles = StyleSheet.create({
   },
   inputFocused: {
     borderColor: '#9D046D',
+    backgroundColor: 'rgba(238, 3, 89, 0.12)',
   },
   icon: {
     marginRight: 10,
@@ -296,18 +297,21 @@ const styles = StyleSheet.create({
   generateButton: {
     padding: 5,
   },
+
+  /** 🔥 BOTÓN MODERNO 🔥 **/
   button: {
     width: '100%',
     backgroundColor: '#9D046D',
-    padding: 15,
-    borderRadius: 16,
+    paddingVertical: 15,
+    borderRadius: 25, // más redondeado
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
+    shadowColor: '#9D046D',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
     elevation: 6,
+    overflow: 'hidden',
   },
   buttonDisabled: {
     backgroundColor: '#ccc',
@@ -315,6 +319,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
 });

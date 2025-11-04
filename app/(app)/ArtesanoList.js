@@ -5,6 +5,7 @@
 
 
 // Importaciones
+// Importaciones
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, ActivityIndicator, Alert,TouchableOpacity,SafeAreaView,TextInput} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -245,7 +246,7 @@ export default function ArtesanoList() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#fdf0f7', // Fondo rosado claro
   },
   headerContainer: {
     flexDirection: 'row',
@@ -255,12 +256,12 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: '#f2cde3',
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#9D046D',
   },
   refreshIcon: {
     padding: 8,
@@ -270,18 +271,19 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: '#f2cde3',
   },
   searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f8e4ef',
     borderRadius: 25,
     paddingHorizontal: 15,
     paddingVertical: 10,
   },
   searchIcon: {
     marginRight: 10,
+    color: '#9D046D',
   },
   searchInput: {
     flex: 1,
@@ -300,23 +302,20 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    color: '#666',
+    color: '#9D046D',
   },
   listContainer: {
     padding: 16,
   },
   card: {
     backgroundColor: '#fff',
-    borderRadius: 12,
+    borderRadius: 16,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowColor: '#9D046D',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
   },
   header: {
     flexDirection: 'row',
@@ -329,14 +328,14 @@ const styles = StyleSheet.create({
   avatar: {
     width: 60,
     height: 60,
-    borderRadius: 30,
-    backgroundColor: '#f0f0f0',
+    borderRadius: 12,
+    backgroundColor: '#f8e4ef',
   },
   defaultAvatar: {
     width: 60,
     height: 60,
-    borderRadius: 30,
-    backgroundColor: '#e0e0e0',
+    borderRadius: 12,
+    backgroundColor: '#f8e4ef',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -350,7 +349,7 @@ const styles = StyleSheet.create({
   nombre: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#9D046D',
     marginBottom: 4,
   },
   folio: {
@@ -359,13 +358,13 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   ubicacion: {
-    fontSize: 12,
-    color: '#888',
+    fontSize: 13,
+    color: '#9D046D',
     marginBottom: 2,
   },
   categoria: {
-    fontSize: 12,
-    color: '#888',
+    fontSize: 13,
+    color: '#9D046D',
   },
   descripcionContainer: {
     paddingHorizontal: 16,
@@ -380,15 +379,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+    borderTopColor: '#f2cde3',
+    backgroundColor: '#fdf0f7',
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
   },
   fecha: {
     fontSize: 12,
-    color: '#999',
+    color: '#9D046D',
   },
   tapHint: {
     fontSize: 12,
-    color: '#177eaaff',
+    color: '#9D046D',
     fontStyle: 'italic',
     marginTop: 4,
   },
@@ -400,12 +402,13 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#666',
+    color: '#9D046D',
     marginTop: 16,
     marginBottom: 20,
+    textAlign: 'center',
   },
   refreshButton: {
-    backgroundColor: '#177eaaff',
+    backgroundColor: '#9D046D',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
