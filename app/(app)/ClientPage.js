@@ -39,7 +39,7 @@ function ClientPage() {
                 tabBarActiveTintColor: '#9D046D',
                 tabBarInactiveTintColor: '#666',
                 tabBarStyle: {
-                    backgroundColor: '#9D05FF',
+                    backgroundColor: '#fff',
                     borderTopWidth: 1,
                     borderTopColor: '#e1e8ed',
                     height: 60,
