@@ -2043,6 +2043,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   navButtonTextDisabled: {
-    color: '#ccc',
+    color: '#fff',
   },
 });
