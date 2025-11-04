@@ -36,15 +36,15 @@ function ArtPage() {
 
                     return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
                 },
-                tabBarActiveTintColor: '#2575fc',
-                tabBarInactiveTintColor: '#666',
+                tabBarActiveTintColor: '#9D046D',
+                tabBarInactiveTintColor: '#2222',
                 tabBarStyle: {
                     backgroundColor: '#fff',
                     borderTopWidth: 1,
                     borderTopColor: '#e1e8ed',
-                    height: 60,
-                    paddingBottom: 8,
-                    paddingTop: 8,
+                    height: 70, // Aumentamos la altura total
+                    paddingBottom: 12, // Más espacio abajo para la barra del iPhone
+                    paddingTop: 8, // Mantenemos el espacio superior
                 },
                 tabBarLabelStyle: {
                     fontSize: 12,

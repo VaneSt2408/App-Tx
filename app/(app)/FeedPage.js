@@ -86,7 +86,7 @@ const FeedPage = () => {
     if (!loadingMore) return null;
     return (
       <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color="#2575fc" />
+        <ActivityIndicator size="small" color="#9D046D" />
       </View>
     );
   };
@@ -114,7 +114,7 @@ const FeedPage = () => {
   if (loading && posts.length === 0) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2575fc" />
+        <ActivityIndicator size="large" color="" />
         <Text style={styles.loadingText}>Cargando publicaciones...</Text>
       </View>
     );
@@ -131,8 +131,8 @@ const FeedPage = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#2575fc']}
-            tintColor="#2575fc"
+            colors={['#9D046D']}
+            tintColor="#9D046D"
           />
         }
 

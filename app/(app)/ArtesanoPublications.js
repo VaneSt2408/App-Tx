@@ -13,7 +13,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import { getPublicacionesByArtesano, deletePublication, updatePublication } from '../../src/services/PublicacionService';
 
 const { width } = Dimensions.get('window'); // Obtener el ancho de la ventana
-const imageSize = (width - 60) / 3; // Para grid de 3 columnas
+const imageSize = (width - 40) / 3; // Para grid de 3 columnas
 
 // Componente principal
 export default function ArtesanoPublications() {
@@ -256,7 +256,7 @@ export default function ArtesanoPublications() {
     if (!hasMore) return null;
     return (
       <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color="#2575fc" />
+        <ActivityIndicator size="small" color="#9D046D" />
       </View>
     );
   };
@@ -289,7 +289,7 @@ export default function ArtesanoPublications() {
   if (loading && publicaciones.length === 0) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2575fc" />
+        <ActivityIndicator size="large" color="#9D046D" />
         <Text style={styles.loadingText}>Cargando publicaciones...</Text>
       </View>
     );
@@ -302,7 +302,7 @@ export default function ArtesanoPublications() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
+          <MaterialCommunityIcons name="arrow-left" size={28} color="#333" />
         </TouchableOpacity>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>
@@ -317,7 +317,7 @@ export default function ArtesanoPublications() {
             style={styles.addButton}
             onPress={() => router.push('/CreatePostPage')}
           >
-            <MaterialCommunityIcons name="plus" size={24} color="#2575fc" />
+            <MaterialCommunityIcons name="plus" size={24} color="#9D046D" />
           </TouchableOpacity>
         )}
       </View>
@@ -335,8 +335,8 @@ export default function ArtesanoPublications() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#2575fc']}
-            tintColor="#2575fc"
+            colors={['#9D046D']}
+            tintColor="#9D046D"
           />
         }
         onEndReached={loadMore}
@@ -436,7 +436,7 @@ export default function ArtesanoPublications() {
                 <MaterialCommunityIcons 
                   name="chevron-left" 
                   size={24} 
-                  color={selectedIndex === 0 ? '#ccc' : '#333'} 
+                  color={selectedIndex === 0 ? '#9D046D' : 'rgba(238, 3, 89, 0.35)'} 
                 />
                 <Text style={[styles.navButtonText, selectedIndex === 0 && styles.navButtonTextDisabled]}>
                   Anterior
@@ -454,7 +454,7 @@ export default function ArtesanoPublications() {
                 <MaterialCommunityIcons 
                   name="chevron-right" 
                   size={24} 
-                  color={selectedIndex === publicaciones.length - 1 ? '#ccc' : '#333'} 
+                  color={selectedIndex === publicaciones.length - 1 ? 'rgba(238, 3, 89, 0.35)' : '#9D046D'} 
                 />
               </TouchableOpacity>
             </View>
@@ -612,8 +612,7 @@ const styles = StyleSheet.create({
   },
   list: {
     padding: 8,
-    paddingTop: 0,
-    paddingBottom: 80,
+    paddingBottom: 90, // Aumentado para más espacio inferior
   },
   emptyList: {
     flexGrow: 1,
@@ -642,7 +641,7 @@ const styles = StyleSheet.create({
   createButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2575fc',
+    backgroundColor: '#9D046D',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 25,
@@ -841,7 +840,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#2196f3',
+    backgroundColor: '#9D046D',
     paddingVertical: 12,
     borderRadius: 8,
   },
@@ -850,7 +849,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f44336',
+    backgroundColor: '#81049D',
     paddingVertical: 12,
     borderRadius: 8,
   },
@@ -894,7 +893,7 @@ const styles = StyleSheet.create({
     margin: 20,
     borderRadius: 8,
     borderLeftWidth: 4,
-    borderLeftColor: '#17a2b8',
+    borderLeftColor: '#81049D',
   },
   noteText: {
     fontSize: 14,
@@ -907,7 +906,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#6c757d',
+    backgroundColor: 'rgba(235, 53, 20,0.9)',
     paddingVertical: 12,
     borderRadius: 8,
     marginRight: 5,
@@ -922,7 +921,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#28a745',
+    backgroundColor: '#9D046D',
     paddingVertical: 12,
     borderRadius: 8,
     marginLeft: 5,

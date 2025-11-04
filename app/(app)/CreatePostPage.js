@@ -62,7 +62,7 @@ export default function CreatePostPage() {
             <TextInput
                 style={styles.textInput}
                 placeholder="¿Qué estás pensando?"
-                placeholderTextColor="#000"
+                placeholderTextColor="rgba(0,0,0,0.3)"
                 multiline
                 value={text}
                 onChangeText={setText}
@@ -81,16 +81,16 @@ export default function CreatePostPage() {
 
             {/* Botón para seleccionar imagen */}
             <TouchableOpacity style={styles.imagePickerButton} onPress={pickImage}>
-                <MaterialCommunityIcons name="image-plus" size={24} color="#2575fc" />
+                <MaterialCommunityIcons name="image-plus" size={24} color="#9D046D" />
                 <Text style={styles.imagePickerText}>Añadir Foto</Text>
             </TouchableOpacity>
 
             {/* Botón de publicar */}
             <View style={styles.publishButtonContainer}>
                 {loading ? (
-                    <ActivityIndicator size="large" color="#2575fc" />
+                    <ActivityIndicator size="large" color="#9D046D" />
                 ) : (
-                    <Button title="Publicar" onPress={handlePublish} color="#2575fc" />
+                    <Button title="Publicar" onPress={handlePublish} color="#9D046D" />
                 )}
             </View>
 
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     imagePickerText: {
         marginLeft: 10,
         fontSize: 16,
-        color: '#2575fc',
+        color: '#9D046D',
         fontWeight: '500',
     },
     imagePreviewContainer: {
@@ -163,6 +163,11 @@ const styles = StyleSheet.create({
     },
     publishButtonContainer: {
         marginTop: 10,
-        marginBottom: 30, // Espacio al final
+        marginBottom: 30,
+        borderColor: '#9D046D',
+        borderWidth:'1',
+        borderRadius: 8,
+        backgroundColor:'rgba(157, 4, 109,0.2)'
+         // Espacio al final
     },
 });

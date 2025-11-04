@@ -152,15 +152,7 @@ const PostCard = ({ post, onLike }) => {
           </Text>
         </TouchableOpacity>
 
-        {/* Placeholders para futuras funciones */}
-        <TouchableOpacity style={styles.actionButton} disabled>
-          <MaterialCommunityIcons name="comment-outline" size={22} color="#ccc" />
-          <Text style={styles.actionText}>0</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.actionButton} disabled>
-          <MaterialCommunityIcons name="share-outline" size={22} color="#ccc" />
-        </TouchableOpacity>
+        {/* Iconos de acción como comentarios y compartir han sido eliminados */}
       </View>
     </View>
   );

@@ -25,6 +25,7 @@ export default function ArtesanoProducts() {
   const router = useRouter(); // Router de expo-router para navegar entre pantallas
   const { userId } = useLocalSearchParams(); // Obtener el id del usuario
   const { session } = useAuth(); // Obtener la sesión
+  
   const [productos, setProductos] = useState([]); // Estado para guardar los productos
   const [loading, setLoading] = useState(true); // Estado para guardar el estado de carga
   const [refreshing, setRefreshing] = useState(false); // Estado para guardar el estado de refresco
@@ -37,6 +38,7 @@ export default function ArtesanoProducts() {
   const [editLoading, setEditLoading] = useState(false); // Estado para guardar el estado de carga de edición
   const [showUploadModal, setShowUploadModal] = useState(false); // Estado para guardar el estado del modal de subida de producto
   const productoSliderAnim = React.useRef(new Animated.Value(0)).current; // Referencia para la animación del slider de productos
+
   const isOwnProfile = session?.user?.id === userId; // Verificar si el usuario es el propio
 
   // Efecto para cargar los productos
@@ -50,13 +52,18 @@ export default function ArtesanoProducts() {
   const loadProductos = async () => {
     try {
       setLoading(true);
+      console.log('📦 [PRODUCTOS] Cargando productos del artesano:', userId);
+      
       const productosData = await artesanoService.getProductosByArtesano(userId);
+      
       if (productosData) {
         setProductos(productosData);
+        console.log('✅ [PRODUCTOS] Productos cargados:', productosData.length);
       } else {
         setProductos([]);
       }
     } catch (error) {
+      console.error('❌ [PRODUCTOS] Error al cargar:', error);
       Alert.alert('Error', 'No se pudieron cargar los productos');
       setProductos([]);
     } finally {
@@ -161,6 +168,7 @@ export default function ArtesanoProducts() {
         Alert.alert('Permisos necesarios', 'Se requiere acceso a la galería para cambiar la imagen del producto');
         return;
       }
+
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -168,6 +176,7 @@ export default function ArtesanoProducts() {
         quality: 0.7,
         base64: true,
       });
+
       if (!result.canceled && result.assets && result.assets[0]) {
         setSelectedImage(result.assets[0]);
         setEditData(prev => ({
@@ -176,6 +185,7 @@ export default function ArtesanoProducts() {
         }));
       }
     } catch (error) {
+      console.error('Error al seleccionar imagen:', error);
       Alert.alert('Error', 'No se pudo seleccionar la imagen: ' + error.message);
     }
   };
@@ -191,21 +201,28 @@ export default function ArtesanoProducts() {
   // Función para guardar la edición del producto
   const handleSaveEdit = async () => {
     if (!selectedProducto) return;
+
     setEditLoading(true);
     try {
+      console.log('✏️ [PRODUCTOS] Editando producto:', selectedProducto.id);
+      
       const updateData = {
         nombre: editData.nombre,
         precio: editData.precio,
         categoria: editData.categoria,
         descripcion: editData.descripcion,
       };
+
       await updateProduct(selectedProducto.id, updateData, selectedImage);
+
       Alert.alert('Éxito', 'Producto editado correctamente');
       handleCloseEditModal();
       handleCloseProductoModal();
       // Recargar los productos
       loadProductos();
+      
     } catch (error) {
+      console.error('❌ [PRODUCTOS] Error en handleSaveEdit:', error);
       Alert.alert('Error', error.message || 'Ocurrió un error al editar el producto');
     } finally {
       setEditLoading(false);
@@ -227,12 +244,17 @@ export default function ArtesanoProducts() {
           style: 'destructive',
           onPress: async () => {
             try {
+              console.log('🗑️ [PRODUCTOS] Eliminando producto:', productoId);
+              
               await deleteProduct(productoId);
+
               Alert.alert('Éxito', 'Producto eliminado correctamente');
               handleCloseProductoModal();
               // Recargar los productos
               loadProductos();
+              
             } catch (error) {
+              console.error('❌ [PRODUCTOS] Error al eliminar:', error);
               Alert.alert('Error', error.message || 'Ocurrió un error al eliminar el producto');
             }
           }
@@ -427,7 +449,7 @@ export default function ArtesanoProducts() {
                   {/* Información */}
                   <View style={styles.modalInfo}>
                     <View style={styles.infoRow}>
-                      <MaterialCommunityIcons name="tag" size={20} color="#2575fc" />
+                      <MaterialCommunityIcons name="tag" size={20} color="#904E0E" />
                       <Text style={styles.infoLabel}>Nombre:</Text>
                       <Text style={styles.infoValue}>{selectedProducto.nombre || 'Sin nombre'}</Text>
                     </View>
@@ -475,7 +497,7 @@ export default function ArtesanoProducts() {
                 <MaterialCommunityIcons 
                   name="chevron-left" 
                   size={24} 
-                  color={selectedProductoIndex === 0 ? '#ccc' : '#333'} 
+                  color={selectedProductoIndex === 0 ? '#9D046D' : 'rgba(238, 3, 89, 0.35)'} 
                 />
                 <Text style={[styles.navButtonText, selectedProductoIndex === 0 && styles.navButtonTextDisabled]}>
                   Anterior
@@ -493,7 +515,7 @@ export default function ArtesanoProducts() {
                 <MaterialCommunityIcons 
                   name="chevron-right" 
                   size={24} 
-                  color={selectedProductoIndex === productos.length - 1 ? '#ccc' : '#333'} 
+                  color={selectedProductoIndex === productos.length - 1 ? 'rgba(238, 3, 89, 0.35)' : '#9D046D'} 
                 />
               </TouchableOpacity>
             </View>
@@ -582,7 +604,7 @@ export default function ArtesanoProducts() {
                   onPress={selectProductImage}
                   disabled={editLoading}
                 >
-                  <MaterialCommunityIcons name="camera-plus" size={20} color="#177eaaff" />
+                  <MaterialCommunityIcons name="camera-plus" size={20} color="#9D046D" />
                   <Text style={styles.changeImageButtonText}>
                     {editLoading ? 'Procesando...' : 'Cambiar imagen'}
                   </Text>
@@ -736,6 +758,7 @@ const styles = StyleSheet.create({
     padding: 8,
     paddingTop: 0,
     paddingBottom: 80,
+    paddingBottom1: 90, // Aumentado para más espacio inferior
   },
   emptyList: {
     flexGrow: 1,
@@ -764,7 +787,7 @@ const styles = StyleSheet.create({
   createButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2575fc',
+    backgroundColor: '#9D046D',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 25,
@@ -949,7 +972,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#2196f3',
+    backgroundColor: '#9D046D',
     paddingVertical: 12,
     borderRadius: 8,
   },
@@ -1012,7 +1035,7 @@ const styles = StyleSheet.create({
     margin: 20,
     borderRadius: 8,
     borderLeftWidth: 4,
-    borderLeftColor: '#17a2b8',
+    borderLeftColor: '#9D046D',
   },
   noteText: {
     fontSize: 14,
@@ -1040,7 +1063,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#28a745',
+    backgroundColor: '#9D046D',
     paddingVertical: 12,
     borderRadius: 8,
     marginLeft: 5,
@@ -1093,7 +1116,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
-    backgroundColor: '#e3f2fd',
+    backgroundColor: '#FEE6F7',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
@@ -1101,7 +1124,7 @@ const styles = StyleSheet.create({
   changeImageButtonText: {
     marginLeft: 8,
     fontSize: 14,
-    color: '#177eaaff',
+    color: '#9D046D',
     fontWeight: '600',
   },
 });
