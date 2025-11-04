@@ -7,6 +7,7 @@ import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert,TouchableO
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Importar los componentes de expo-vector-icons
 import { useRouter } from 'expo-router'; // Importar el router de expo-router
 import AsyncStorage from '@react-native-async-storage/async-storage'; // Importar AsyncStorage para persistencia
+import { LinearGradient } from 'expo-linear-gradient'; // Importar para el fondo degradado
 import { supabase } from '../../src/supabase/client'; // Importar el cliente de supabase
 import { getClientProfile, editClientProfile, uploadAvatar, changeClientPassword, validateCurrentPassword, validateNewPassword, deleteClientProfile, deleteGoogleClientProfile } from '../../src/services/profileInfo'; // Importar los servicios de perfil de cliente
 import { useAuth } from '../../src/context/AuthContext'; // Importar el contexto de autenticación
@@ -857,7 +858,7 @@ export default function ClientProfile() { // Exportar la función ClientProfile
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2575fc" />
+        <ActivityIndicator size="large" color="#9D046D" />
         <Text style={styles.loadingText}>Cargando perfil...</Text>
       </View>
     );
@@ -867,7 +868,7 @@ export default function ClientProfile() { // Exportar la función ClientProfile
     return (
       <View style={styles.errorContainer}>
         <MaterialCommunityIcons name="alert-circle" size={48} color="#db4437" />
-        <Text style={styles.errorText}>No se pudo cargar el perfil</Text>
+        <Text style={styles.errorText}>No se pudo cargar el perfil.</Text>
         <TouchableOpacity style={styles.retryButton} onPress={fetchProfile}>
           <Text style={styles.retryButtonText}>Reintentar</Text>
         </TouchableOpacity>
@@ -876,7 +877,12 @@ export default function ClientProfile() { // Exportar la función ClientProfile
   }
 
   return ( // Retornar el componente ScrollView
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={['rgba(157, 4, 109, 0.1)', 'rgba(129, 4, 157, 0.05)', '#f5f5f5']}
+        style={StyleSheet.absoluteFillObject} // Hace que el gradiente cubra todo el fondo
+      />
+      <ScrollView showsVerticalScrollIndicator={false}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
@@ -895,7 +901,7 @@ export default function ClientProfile() { // Exportar la función ClientProfile
             <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
           ) : (
             <View style={styles.avatarPlaceholder}>
-              <MaterialCommunityIcons name="account" size={48} color="#999" />
+              <MaterialCommunityIcons name="account" size={64} color="#999" />
             </View>
           )}
         </TouchableOpacity>
@@ -907,15 +913,19 @@ export default function ClientProfile() { // Exportar la función ClientProfile
       {/* Profile Information */}
       <View style={styles.infoSection}>
         <View style={styles.infoItem}>
-          <MaterialCommunityIcons name="email" size={20} color="#2575fc" />
+          <MaterialCommunityIcons name="email" size={20} color="#9D046D" />
           <View style={styles.infoContent}>
             <Text style={styles.infoLabel}>Correo electrónico</Text>
-            <Text style={styles.infoValue}>{profile.email}</Text>
+            <TextInput
+              style={[styles.editInput, styles.disabledInput]}
+              value={profile.email}
+              editable={false}
+            />
           </View>
         </View>
 
         <View style={styles.infoItem}>
-          <MaterialCommunityIcons name="account" size={20} color="#2575fc" />
+          <MaterialCommunityIcons name="account" size={20} color="#9D046D" />
           <View style={styles.infoContent}>
             <Text style={styles.infoLabel}>Nombre completo</Text>
             {isEditing ? (
@@ -933,7 +943,7 @@ export default function ClientProfile() { // Exportar la función ClientProfile
         </View>
 
         <View style={styles.infoItem}>
-          <MaterialCommunityIcons name="phone" size={20} color="#2575fc" />
+          <MaterialCommunityIcons name="phone" size={20} color="#9D046D" />
           <View style={styles.infoContent}>
             <Text style={styles.infoLabel}>Teléfono</Text>
             {isEditing ? (
@@ -952,32 +962,36 @@ export default function ClientProfile() { // Exportar la función ClientProfile
         </View>
 
         <View style={styles.infoItem}>
-          <MaterialCommunityIcons name="calendar" size={20} color="#2575fc" />
+          <MaterialCommunityIcons name="calendar" size={20} color="#9D046D" />
           <View style={styles.infoContent}>
             <Text style={styles.infoLabel}>Miembro desde</Text>
-            <Text style={styles.infoValue}>
-              {new Date(profile.created_at).toLocaleDateString('es-ES', {
+            <TextInput
+              style={[styles.editInput, styles.disabledInput]}
+              value={new Date(profile.created_at).toLocaleDateString('es-ES', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
               })}
-            </Text>
+              editable={false}
+            />
           </View>
         </View>
 
         <View style={styles.infoItem}>
-          <MaterialCommunityIcons name="update" size={20} color="#28a745" />
+          <MaterialCommunityIcons name="update" size={20} color="#9D046D" />
           <View style={styles.infoContent}>
             <Text style={styles.infoLabel}>Última actualización</Text>
-            <Text style={styles.infoValue}>
-              {new Date(profile.updated_at).toLocaleDateString('es-ES', {
+            <TextInput
+              style={[styles.editInput, styles.disabledInput]}
+              value={new Date(profile.updated_at).toLocaleDateString('es-ES', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit'
               })}
-            </Text>
+              editable={false}
+            />
           </View>
         </View>
       </View>
@@ -1271,14 +1285,14 @@ export default function ClientProfile() { // Exportar la función ClientProfile
           </View>
         </View>
       )}
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   loadingContainer: {
     flex: 1,
@@ -1305,7 +1319,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   retryButton: {
-    backgroundColor: '#2575fc',
+    backgroundColor: '#9D046D',
+    marginTop: 20,
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
@@ -1322,7 +1337,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
@@ -1336,46 +1350,57 @@ const styles = StyleSheet.create({
   },
   avatarSection: {
     alignItems: 'center',
-    paddingVertical: 30,
-    backgroundColor: '#fff',
-    marginBottom: 20,
+    zIndex: 1, // Asegura que el avatar esté sobre la tarjeta
   },
   avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
     borderWidth: 3,
-    borderColor: '#2575fc',
+    borderColor: '#9D046D',
   },
   avatarPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
     backgroundColor: '#e1e1e1',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
-    borderColor: '#2575fc',
+    borderColor: '#9D046D',
   },
   avatarLabel: {
-    marginTop: 10,
+    marginTop: 12,
     fontSize: 14,
     color: '#666',
+    textAlign: 'center',
+  },
+  profileCard: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    marginHorizontal: 16,
+    marginTop: -75, // Tira de la tarjeta hacia arriba para que el avatar se superponga
+    paddingTop: 85, // Espacio para el avatar superpuesto
+    paddingBottom: 20,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
   },
   infoSection: {
-    backgroundColor: '#fff',
-    marginBottom: 20,
-    paddingVertical: 20,
   },
   infoItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    alignItems: 'flex-start',
     paddingHorizontal: 20,
     paddingVertical: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
   infoContent: {
+    marginTop: 5,
     marginLeft: 15,
     flex: 1,
   },
@@ -1383,6 +1408,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginBottom: 4,
+    fontWeight: 'bold',
   },
   infoValue: {
     fontSize: 16,
@@ -1394,7 +1420,8 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
   },
   editButton: {
-    backgroundColor: '#2575fc',
+    marginTop: 20,
+    backgroundColor: '#9D046D',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1413,6 +1440,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   editInput: {
+    marginTop: 5,
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
@@ -1421,6 +1449,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#fff',
     marginTop: 4,
+  },
+  disabledInput: {
+    backgroundColor: '#f0f0f0',
+    color: '#888',
+    borderColor: '#e0e0e0',
   },
   editButtonsContainer: {
     flexDirection: 'row',
@@ -1473,7 +1506,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   changePasswordButton: {
-    backgroundColor: '#ff6b35',
+    marginTop: 20,
+    backgroundColor: '#81049D',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1642,7 +1676,8 @@ const styles = StyleSheet.create({
   },
   // Estilos para botón de verificación
   verifyButton: {
-    backgroundColor: '#007bff',
+    marginTop: 20,
+    backgroundColor: '#9D046D',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

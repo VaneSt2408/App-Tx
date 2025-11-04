@@ -73,11 +73,22 @@ const FeedPage = () => {
     return result;
   };
 
+  // Función para manejar el guardado de una publicación
+  const handleSave = async (postId) => {
+    // Aquí iría la lógica para llamar al servicio que guarda la publicación.
+    // Por ahora, simulamos una respuesta exitosa.
+    console.log(`Guardando/quitando publicación ${postId}`);
+    // Devolvemos un objeto que indica que la operación fue exitosa
+    // En una app real, el backend devolvería el nuevo estado de 'guardado'
+    return { success: true };
+  };
+
   // Función para renderizar cada publicación
   const renderPost = ({ item }) => (
     <PostCard 
       post={item} 
       onLike={handleLike}
+      onSave={handleSave} // Pasamos la nueva función
     />
   );
 

@@ -20,6 +20,7 @@ export default function ArtesanoList() {
   const [loading, setLoading] = useState(true); // Estado para guardar el estado de carga
   const [error, setError] = useState(null); // Estado para guardar el estado de error
   const [searchQuery, setSearchQuery] = useState(''); // Estado para guardar la consulta de búsqueda
+  const [pressedArtesanoId, setPressedArtesanoId] = useState(null); // Estado para el efecto de presionado
 
   // Función para cargar la lista de artesanos
   const loadArtesanos = async () => {
@@ -86,8 +87,13 @@ export default function ArtesanoList() {
   // Función para renderizar cada artesano en la lista
   const renderArtesano = ({ item }) => (
     <TouchableOpacity 
-      style={styles.card} 
+      style={[
+        styles.card,
+        pressedArtesanoId === item.user_id && styles.cardPressed // Aplica estilo cuando está presionado
+      ]} 
       onPress={() => navigateToProfile(item.user_id)}
+      onPressIn={() => setPressedArtesanoId(item.user_id)} // Marca como presionado
+      onPressOut={() => setPressedArtesanoId(null)} // Quita el estado presionado
       activeOpacity={0.7}
     >
       <View style={styles.header}>
@@ -129,7 +135,7 @@ export default function ArtesanoList() {
           style={styles.arrowButton}
           onPress={() => navigateToProfile(item.user_id)}
         >
-          <MaterialCommunityIcons name="chevron-right" size={24} color="#177eaaff" />
+          <MaterialCommunityIcons name="chevron-right" size={24} color="#9D046D" />
         </TouchableOpacity>
       </View>
       
@@ -317,6 +323,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    borderWidth: 1,
+    borderColor: '#81049D',
+  },
+  cardPressed: {
+    backgroundColor: 'rgba(157, 4, 109, 0.1)', // Color de fondo al presionar (#9D046D con opacidad)
+    borderColor: '#9D046D',
   },
   header: {
     flexDirection: 'row',
@@ -388,7 +400,7 @@ const styles = StyleSheet.create({
   },
   tapHint: {
     fontSize: 12,
-    color: '#177eaaff',
+    color: '#9D046D',
     fontStyle: 'italic',
     marginTop: 4,
   },

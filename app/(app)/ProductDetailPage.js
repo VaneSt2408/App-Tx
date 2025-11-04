@@ -1,10 +1,10 @@
 // En: app/(app)/ProductDetailPage.js -> Archivo de detalle de producto (Frontend)
 // Este archivo es el encargado de mostrar el detalle de un producto en la aplicación.
-// Muestra el detalle de un producto registrado en la base de datos y permite guardar el producto, contactar al artesano y compartir el producto.
+// Muestra el detalle de un producto, permite guardarlo, compartirlo y ahora, calificarlo y dejar reseñas.
 
 // Importaciones
 import React, { useState, useEffect } from 'react';
-import {View,Text,Image,ScrollView,TouchableOpacity,StyleSheet,ActivityIndicator,Alert,} from 'react-native';
+import {View,Text,Image,ScrollView,TouchableOpacity,StyleSheet,ActivityIndicator,Alert,TextInput,KeyboardAvoidingView,Platform} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import MarketplaceService from '../../src/services/MarketplaceService';
@@ -16,6 +16,12 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState(null); // Establecer el estado del producto
   const [loading, setLoading] = useState(true); // Establecer el estado de carga
   const [saved, setSaved] = useState(false); // Establecer el estado de guardado
+  
+  // --- NUEVOS ESTADOS PARA RESEÑAS ---
+  const [reviews, setReviews] = useState([]); // Para guardar las reseñas del producto
+  const [myRating, setMyRating] = useState(0); // Calificación del usuario actual (0 = sin calificar)
+  const [myReviewText, setMyReviewText] = useState(''); // Texto de la reseña del usuario
+  const [isSubmitting, setIsSubmitting] = useState(false); // Para el estado de carga al enviar reseña
 
   // Cargar el detalle del producto
   useEffect(() => {
@@ -30,6 +36,15 @@ export default function ProductDetailPage() {
       
       if (result.success) {
         setProduct(result.data);
+        // --- SIMULACIÓN DE CARGA DE RESEÑAS ---
+        // En una implementación real, esto vendría del servicio
+        const mockReviews = [
+          { id: 1, user_name: 'Ana Pérez', rating: 5, comment: '¡Excelente calidad! Me encantó el diseño y los colores. Llegó muy rápido.' },
+          { id: 2, user_name: 'Carlos Gómez', rating: 4, comment: 'Muy bonito producto, aunque un poco más pequeño de lo que esperaba. Aún así, lo recomiendo.' },
+          { id: 3, user_name: 'Sofía Rodríguez', rating: 5, comment: 'Artesanía de primera. Se nota el cuidado en cada detalle.' },
+        ];
+        setReviews(mockReviews);
+        // -----------------------------------------
       } else {
         Alert.alert('Error', 'No se pudo cargar el producto');
         router.back();
@@ -92,11 +107,74 @@ export default function ProductDetailPage() {
     }
   };
 
+  // --- NUEVAS FUNCIONES PARA RESEÑAS ---
+
+  // Función para renderizar las estrellas (para input y para mostrar)
+  const renderStars = (rating, onStarPress = null) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      const iconName = i <= rating ? 'star' : 'star-outline';
+      const starColor = i <= rating ? '#FFC700' : '#ccc';
+      
+      if (onStarPress) { // Si es para input, se envuelve en un TouchableOpacity
+        stars.push(
+          <TouchableOpacity key={i} onPress={() => onStarPress(i)} disabled={isSubmitting}>
+            <MaterialCommunityIcons name={iconName} size={32} color={starColor} style={styles.star} />
+          </TouchableOpacity>
+        );
+      } else { // Si es solo para mostrar
+        stars.push(
+          <MaterialCommunityIcons key={i} name={iconName} size={18} color={starColor} style={styles.readOnlyStar} onPress={null} />
+        );
+      }
+    }
+    return <View style={styles.starsContainer}>{stars}</View>;
+  };
+
+  // Función para manejar el envío de la reseña
+  const handleSubmitReview = async () => {
+    if (myRating === 0) {
+      Alert.alert('Calificación requerida', 'Por favor, selecciona una calificación de estrellas.');
+      return;
+    }
+    if (!myReviewText.trim()) {
+      Alert.alert('Comentario requerido', 'Por favor, escribe un comentario sobre el producto.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // --- SIMULACIÓN DE LLAMADA AL SERVICIO ---
+      // En una implementación real, aquí llamarías a un servicio:
+      // await MarketplaceService.submitReview(productId, myRating, myReviewText);
+      await new Promise(resolve => setTimeout(resolve, 1500)); // Simular espera de red
+
+      // Añadir la nueva reseña a la lista (simulación)
+      const newReview = {
+        id: Math.random(),
+        user_name: 'Mi Reseña', // En una app real, obtendrías el nombre del usuario actual
+        rating: myRating,
+        comment: myReviewText,
+      };
+      setReviews(prev => [newReview, ...prev]);
+      
+      // Limpiar el formulario
+      setMyRating(0);
+      setMyReviewText('');
+
+      Alert.alert('¡Gracias!', 'Tu reseña ha sido publicada.');
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo enviar tu reseña. Inténtalo de nuevo.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Renderizar el componente
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2575fc" />
+        <ActivityIndicator size="large" color="#9D046D" />
         <Text style={styles.loadingText}>Cargando producto...</Text>
       </View>
     );
@@ -112,7 +190,10 @@ export default function ProductDetailPage() {
   }
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
       <ScrollView 
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
@@ -162,9 +243,9 @@ export default function ProductDetailPage() {
               onPress={handleSave}
             >
               <MaterialCommunityIcons 
-                name={saved ? "bookmark" : "bookmark-outline"}
+                name={saved ? "heart" : "heart-outline"}
                 size={20}
-                color={saved ? "#2575fc" : "#666"}
+                color={saved ? "#9D046D" : "#666"}
               />
               <Text style={[styles.actionButtonText, saved && styles.savedButtonText]}>
                 {saved ? "Guardado" : "Guardar"}
@@ -172,18 +253,11 @@ export default function ProductDetailPage() {
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={[styles.actionButton, styles.contactButton]}
-              onPress={handleContact}
-            >
-              <MaterialCommunityIcons name="message-text-outline" size={20} color="#fff" />
-              <Text style={styles.contactButtonText}>Contactar</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
               style={[styles.actionButton, styles.shareButton]}
               onPress={handleShare}
             >
-              <MaterialCommunityIcons name="share-variant-outline" size={20} color="#666" />
+              <MaterialCommunityIcons name="share-variant" size={20} color="#fff" />
+              <Text style={styles.contactButtonText}>Compartir</Text>
             </TouchableOpacity>
           </View>
 
@@ -203,7 +277,7 @@ export default function ProductDetailPage() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Categoría</Text>
             <View style={styles.categoryTag}>
-              <MaterialCommunityIcons name="tag-outline" size={16} color="#2575fc" />
+              <MaterialCommunityIcons name="tag-outline" size={16} color="#9D046D" />
               <Text style={styles.categoryText}>{product.categoria || 'General'}</Text>
             </View>
           </View>
@@ -246,6 +320,56 @@ export default function ProductDetailPage() {
           {/* Separador */}
           <View style={styles.separator} />
 
+          {/* --- NUEVA SECCIÓN DE RESEÑAS --- */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Calificaciones y Reseñas</Text>
+
+            {/* Formulario para dejar una reseña */}
+            <View style={styles.reviewForm}>
+              <Text style={styles.reviewFormTitle}>Deja tu calificación</Text>
+              {renderStars(myRating, setMyRating)}
+              <TextInput
+                style={styles.reviewInput}
+                placeholder="Escribe tu opinión sobre este producto..."
+                placeholderTextColor="#999"
+                multiline
+                value={myReviewText}
+                onChangeText={setMyReviewText}
+                editable={!isSubmitting}
+              />
+              <TouchableOpacity 
+                style={[styles.submitReviewButton, isSubmitting && styles.submitReviewButtonDisabled]}
+                onPress={handleSubmitReview}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.submitReviewButtonText}>Enviar Reseña</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            {/* Lista de reseñas existentes */}
+            {reviews.length > 0 && (
+              <View style={styles.reviewsList}>
+                {reviews.map((review) => (
+                  <View key={review.id} style={styles.reviewCard}>
+                    <View style={styles.reviewHeader}>
+                      <Text style={styles.reviewUserName}>{review.user_name}</Text>
+                      {renderStars(review.rating)}
+                    </View>
+                    <Text style={styles.reviewComment}>{review.comment}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+          {/* --- FIN DE LA SECCIÓN DE RESEÑAS --- */}
+
+          {/* Separador */}
+          <View style={styles.separator} />
+
           {/* Ubicación */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Ubicación</Text>
@@ -261,7 +385,7 @@ export default function ProductDetailPage() {
           <View style={styles.bottomSpacer} />
         </View>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -357,8 +481,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   savedButton: {
-    backgroundColor: '#e3f2fd',
-    borderColor: '#2575fc',
+    backgroundColor: 'rgba(157, 4, 109, 0.1)',
+    borderColor: '#9D046D',
   },
   actionButtonText: {
     fontSize: 14,
@@ -367,12 +491,7 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
   savedButtonText: {
-    color: '#2575fc',
-  },
-  contactButton: {
-    flex: 2,
-    backgroundColor: '#2575fc',
-    borderColor: '#2575fc',
+    color: '#9D046D',
   },
   contactButtonText: {
     fontSize: 14,
@@ -381,8 +500,9 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
   shareButton: {
-    paddingHorizontal: 12,
-    backgroundColor: '#fff',
+    flex: 2,
+    backgroundColor: '#81049D',
+    borderColor: '#81049D',
   },
   separator: {
     height: 1,
@@ -407,14 +527,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: '#e3f2fd',
+    backgroundColor: 'rgba(157, 4, 109, 0.1)',
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 16,
   },
   categoryText: {
     fontSize: 14,
-    color: '#2575fc',
+    color: '#9D046D',
     fontWeight: '500',
     marginLeft: 6,
   },
@@ -468,5 +588,83 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 32,
+  },
+  // --- NUEVOS ESTILOS PARA RESEÑAS ---
+  starsContainer: {
+    flexDirection: 'row',
+  },
+  star: {
+    marginHorizontal: 4,
+  },
+  readOnlyStar: {
+    marginHorizontal: 1,
+  },
+  reviewForm: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  reviewFormTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  reviewInput: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 12,
+    minHeight: 100,
+    textAlignVertical: 'top',
+    fontSize: 15,
+    marginTop: 16,
+    marginBottom: 12,
+  },
+  submitReviewButton: {
+    backgroundColor: '#9D046D',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  submitReviewButtonDisabled: {
+    backgroundColor: '#aaa',
+  },
+  submitReviewButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  reviewsList: {
+    marginTop: 16,
+  },
+  reviewCard: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+  },
+  reviewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  reviewUserName: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#1a1a1a',
+  },
+  reviewComment: {
+    fontSize: 14,
+    color: '#333',
+    lineHeight: 20,
   },
 });

@@ -96,10 +96,10 @@ export default function PostDetail() {
         <View style={styles.contentContainer}>
           {itemType === 'publicaciones' && (
             <View style={styles.actionsContainer}>
-              <TouchableOpacity style={styles.actionButton}>
+              <TouchableOpacity style={styles.actionButton} onPress={() => { /* Lógica de like */ }}>
                 <MaterialCommunityIcons name="heart-outline" size={28} color="#333" />
               </TouchableOpacity>
-              <Text style={styles.likesText}>{item.likes_count || 0} Me gusta</Text>
+              <Text style={styles.likesText}>{item.likes_count || 0} Me gusta</Text> 
             </View>
           )}
 

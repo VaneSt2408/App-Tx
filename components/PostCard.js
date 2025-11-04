@@ -7,17 +7,20 @@ import { useRouter } from 'expo-router';
 /**
  * Componente de tarjeta de publicación (estilo Facebook)
  */
-const PostCard = ({ post, onLike }) => {
+const PostCard = ({ post, onLike, onSave }) => {
   const router = useRouter();
   const [liked, setLiked] = useState(post.liked_by_user);
   const [likesCount, setLikesCount] = useState(post.likes_count);
   const [isLiking, setIsLiking] = useState(false);
+  const [saved, setSaved] = useState(post.saved_by_user); // Estado para guardado
+  const [isSaving, setIsSaving] = useState(false); // Estado de carga para guardado
 
   // Sincronizar estado cuando cambia el post (útil al recargar)
   useEffect(() => {
     setLiked(post.liked_by_user);
     setLikesCount(post.likes_count);
-  }, [post.id, post.liked_by_user, post.likes_count]);
+    setSaved(post.saved_by_user);
+  }, [post.id, post.liked_by_user, post.likes_count, post.saved_by_user]);
 
   // Formatear fecha relativa
   const getTimeAgo = (dateString) => {
@@ -78,6 +81,32 @@ const PostCard = ({ post, onLike }) => {
     }
   };
 
+  // Manejar guardado
+  const handleSave = async () => {
+    if (isSaving || !onSave) return;
+
+    setIsSaving(true);
+
+    // Actualización optimista
+    const wasSaved = saved;
+    setSaved(prevState => !prevState);
+
+    try {
+      const result = await onSave(post.id);
+      
+      if (!result.success) {
+        // Revertir en caso de error
+        setSaved(wasSaved);
+      }
+      // Si es exitoso, la UI ya está actualizada
+    } catch (error) {
+      // Revertir en caso de error
+      setSaved(wasSaved);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <View style={styles.card}>
       {/* Header: Avatar + Nombre + Tiempo */}
@@ -134,33 +163,39 @@ const PostCard = ({ post, onLike }) => {
         </View>
       )}
 
-      {/* Footer: Likes */}
+      {/* Footer: Acciones */}
       <View style={styles.footer}>
-        <TouchableOpacity 
-          style={styles.likeButton}
-          onPress={handleLike}
-          disabled={isLiking}
-          activeOpacity={0.7}
-        >
-          <MaterialCommunityIcons 
-            name={liked ? "heart" : "heart-outline"} 
-            size={24} 
-            color={liked ? "#e74c3c" : "#666"}
-          />
-          <Text style={[styles.likeCount, liked && styles.likeCountActive]}>
-            {likesCount}
-          </Text>
-        </TouchableOpacity>
+        {/* Acciones Izquierda: Like y Compartir */}
+        <View style={styles.leftActions}>
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={handleLike}
+            disabled={isLiking}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons 
+              name={liked ? "heart" : "heart-outline"} 
+              size={24} 
+              color={liked ? "#e74c3c" : "#666"}
+            />
+            <Text style={[styles.actionText, liked && styles.likeCountActive]}>{likesCount}</Text>
+          </TouchableOpacity>
 
-        {/* Placeholders para futuras funciones */}
-        <TouchableOpacity style={styles.actionButton} disabled>
-          <MaterialCommunityIcons name="comment-outline" size={22} color="#ccc" />
-          <Text style={styles.actionText}>0</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.actionButton} disabled>
+            <MaterialCommunityIcons name="share-outline" size={24} color="#666" />
+          </TouchableOpacity>
+        </View>
 
-        <TouchableOpacity style={styles.actionButton} disabled>
-          <MaterialCommunityIcons name="share-outline" size={22} color="#ccc" />
-        </TouchableOpacity>
+        {/* Acción Derecha: Guardar */}
+        <View style={styles.rightActions}>
+          <TouchableOpacity style={styles.actionButton} onPress={handleSave} disabled={isSaving}>
+            <MaterialCommunityIcons 
+              name={saved ? "bookmark" : "bookmark-outline"} 
+              size={24} 
+              color={saved ? "#9D046D" : "#666"}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -241,17 +276,23 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderTopWidth: 1,
     borderTopColor: '#f0f0f0',
-    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  likeButton: {
+  leftActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 20,
-    paddingVertical: 5,
-    paddingHorizontal: 8,
-    borderRadius: 20,
   },
-  likeCount: {
+  rightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 24,
+    paddingVertical: 5,
+  },
+  actionText: {
     marginLeft: 6,
     fontSize: 14,
     color: '#666',
@@ -260,18 +301,6 @@ const styles = StyleSheet.create({
   likeCountActive: {
     color: '#e74c3c',
     fontWeight: '600',
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 20,
-    paddingVertical: 5,
-    paddingHorizontal: 8,
-  },
-  actionText: {
-    marginLeft: 6,
-    fontSize: 14,
-    color: '#ccc',
   },
 });
 

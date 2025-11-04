@@ -314,7 +314,6 @@ export default function ArtesanoProducts() {
   if (loading && productos.length === 0) {
     return (
       <View style={styles.loadingContainer}>
-
         <ActivityIndicator size="large" color="#9D046D" />
         <Text style={styles.loadingText}>Cargando productos...</Text>
       </View>
@@ -361,7 +360,6 @@ export default function ArtesanoProducts() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-
             colors={['#9D046D']}
             tintColor="#9D046D"
           />
@@ -427,27 +425,27 @@ export default function ArtesanoProducts() {
                   {/* Información */}
                   <View style={styles.modalInfo}>
                     <View style={styles.infoRow}>
-                      <MaterialCommunityIcons name="tag" size={20} color="#2575fc" />
+                      <MaterialCommunityIcons name="tag" size={20} color="#9D046D" />
                       <Text style={styles.infoLabel}>Nombre:</Text>
                       <Text style={styles.infoValue}>{selectedProducto.nombre || 'Sin nombre'}</Text>
                     </View>
 
                     <View style={styles.infoRow}>
-                      <MaterialCommunityIcons name="currency-usd" size={20} color="#28a745" />
+                      <MaterialCommunityIcons name="currency-usd" size={20} color="#9D046D" />
                       <Text style={styles.infoLabel}>Precio:</Text>
                       <Text style={styles.infoValue}>{formatPrice(selectedProducto.precio)}</Text>
                     </View>
 
                     {selectedProducto.categoria && (
                       <View style={styles.infoRow}>
-                        <MaterialCommunityIcons name="tag-outline" size={20} color="#ff9800" />
+                        <MaterialCommunityIcons name="tag-outline" size={20} color="#9D046D" />
                         <Text style={styles.infoLabel}>Categoría:</Text>
                         <Text style={styles.infoValue}>{selectedProducto.categoria}</Text>
                       </View>
                     )}
 
                     <View style={styles.infoRow}>
-                      <MaterialCommunityIcons name="calendar" size={20} color="#2196f3" />
+                      <MaterialCommunityIcons name="calendar" size={20} color="#9D046D" />
                       <Text style={styles.infoLabel}>Fecha:</Text>
                       <Text style={styles.infoValue}>{formatDate(selectedProducto.created_at)}</Text>
                     </View>
@@ -764,7 +762,7 @@ const styles = StyleSheet.create({
   createButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2575fc',
+    backgroundColor: '#9D046D',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 25,
@@ -949,7 +947,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#2196f3',
+    backgroundColor: '#81049D',
     paddingVertical: 12,
     borderRadius: 8,
   },
@@ -958,7 +956,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f44336',
+    backgroundColor: '#9D046D',
     paddingVertical: 12,
     borderRadius: 8,
   },
@@ -1101,8 +1099,7 @@ const styles = StyleSheet.create({
   changeImageButtonText: {
     marginLeft: 8,
     fontSize: 14,
-    color: '#177eaaff',
+    color: '#9D046D',
     fontWeight: '600',
   },
 });
-
