@@ -47,7 +47,7 @@ function ClientPage() {
                     paddingTop: 8,
                 },
                 tabBarLabelStyle: {
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: '500',
                 },
                 headerShown: false,
