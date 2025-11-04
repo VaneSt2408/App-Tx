@@ -79,13 +79,13 @@ export default function ArtesanoSettings() {
             onPress={option.onPress}
           >
             <View style={styles.optionIcon}>
-              <MaterialCommunityIcons name={option.icon} size={24} color="#2575fc" />
+              <MaterialCommunityIcons name={option.icon} size={24} color="#9D046D" />
             </View>
             <View style={styles.optionContent}>
               <Text style={styles.optionTitle}>{option.title}</Text>
               <Text style={styles.optionDescription}>{option.description}</Text>
             </View>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="#ccc" />
+            <MaterialCommunityIcons name="chevron-right" size={24} color="rgba(157, 4, 109,100)" />
           </TouchableOpacity>
         ))}
       </View>
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#e3f2fd',
+    backgroundColor: 'rgba(157, 4, 109,0.10)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,

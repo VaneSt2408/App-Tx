@@ -8,10 +8,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {View,Text,FlatList,Image,TouchableOpacity,StyleSheet,TextInput,ActivityIndicator,RefreshControl,} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useAuth } from '../../src/context/AuthContext';
 import MarketplaceService from '../../src/services/MarketplaceService';
 
 // Componente principal
 export default function MarketplacePage() {
+  const { session } = useAuth(); // Obtener la sesión del usuario actual
   const router = useRouter(); // Obtener el router
   const [productos, setProductos] = useState([]); // Establecer el estado de los productos
   const [loading, setLoading] = useState(true); // Establecer el estado de carga
@@ -75,8 +77,10 @@ export default function MarketplacePage() {
         setHasMore(result.hasMore);
         setCurrentPage(page);
       } else {
+        console.error('Error al cargar productos:', result.error);
       }
     } catch (error) {
+      console.error('Error en loadProductos:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -113,13 +117,17 @@ export default function MarketplacePage() {
     });
   };
 
-  const renderProduct = ({ item }) => (
-    <TouchableOpacity 
-      style={styles.productCard} 
-      onPress={() => navigateToProduct(item.id)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.imageContainer}>
+  const renderProduct = ({ item }) => {
+    // Determinar si el producto es del artesano logueado
+    const isOwnProduct = session?.user?.id === item.artesano?.id;
+
+    return (
+      <TouchableOpacity 
+        style={[styles.productCard, isOwnProduct && styles.ownProductCard]} 
+        onPress={() => navigateToProduct(item.id)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.imageContainer}>
         {item.imagen_url ? (
           <Image source={{ uri: item.imagen_url }} style={styles.productImage} />
         ) : (
@@ -128,7 +136,7 @@ export default function MarketplacePage() {
           </View>
         )}
       </View>
-
+  
       <View style={styles.productInfo}>
         <Text style={styles.productName} numberOfLines={2}>
           {item.nombre}
@@ -145,7 +153,8 @@ export default function MarketplacePage() {
         )}
       </View>
     </TouchableOpacity>
-  );
+    );
+  };
 
   const renderFooter = () => {
     if (!hasMore) return null;
@@ -290,8 +299,8 @@ const styles = StyleSheet.create({
   },
   list: {
     padding: 8,
-    paddingTop: 0,
-    paddingBottom: 80,
+    paddingTop: 8,
+    paddingBottom: 90, // Aumentado para más espacio inferior
   },
   emptyList: {
     flexGrow: 1,
@@ -328,6 +337,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
   },
+  ownProductCard: {
+    borderColor: '#9D046D',
+    borderWidth: 2,
+  },
   imageContainer: {
     width: '100%',
     aspectRatio: 1,
@@ -357,7 +370,7 @@ const styles = StyleSheet.create({
   productPrice: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#2575fc',
+    color: '#9D046D',
     marginBottom: 8,
   },
   artesanoInfo: {

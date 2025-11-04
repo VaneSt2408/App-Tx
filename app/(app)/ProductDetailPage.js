@@ -96,7 +96,7 @@ export default function ProductDetailPage() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2575fc" />
+        <ActivityIndicator size="large" color="#9D046D" />
         <Text style={styles.loadingText}>Cargando producto...</Text>
       </View>
     );
@@ -164,7 +164,7 @@ export default function ProductDetailPage() {
               <MaterialCommunityIcons 
                 name={saved ? "bookmark" : "bookmark-outline"}
                 size={20}
-                color={saved ? "#2575fc" : "#666"}
+                color={saved ? "#9D046D" : "#666"}
               />
               <Text style={[styles.actionButtonText, saved && styles.savedButtonText]}>
                 {saved ? "Guardado" : "Guardar"}
@@ -183,7 +183,7 @@ export default function ProductDetailPage() {
               style={[styles.actionButton, styles.shareButton]}
               onPress={handleShare}
             >
-              <MaterialCommunityIcons name="share-variant-outline" size={20} color="#666" />
+              <MaterialCommunityIcons name="share-variant-outline" size={20} color="#29297A" />
             </TouchableOpacity>
           </View>
 
@@ -203,7 +203,7 @@ export default function ProductDetailPage() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Categoría</Text>
             <View style={styles.categoryTag}>
-              <MaterialCommunityIcons name="tag-outline" size={16} color="#2575fc" />
+              <MaterialCommunityIcons name="tag-outline" size={16} color="#9D046D" />
               <Text style={styles.categoryText}>{product.categoria || 'General'}</Text>
             </View>
           </View>
@@ -239,7 +239,7 @@ export default function ProductDetailPage() {
                   </Text>
                 )}
               </View>
-              <MaterialCommunityIcons name="chevron-right" size={24} color="#999" />
+              <MaterialCommunityIcons name="chevron-right" size={24} color="#9D046D" />
             </TouchableOpacity>
           </View>
 
@@ -250,7 +250,7 @@ export default function ProductDetailPage() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Ubicación</Text>
             <View style={styles.locationContainer}>
-              <MaterialCommunityIcons name="map-marker" size={20} color="#666" />
+              <MaterialCommunityIcons name="map-marker" size={20} color="#F54927" />
               <Text style={styles.locationText}>
                 {product.artesano.ubicacion || 'Ubicación no especificada'}
               </Text>
@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#1a1a1a',
+    color: '#9D046D',
     marginBottom: 8,
   },
   title: {
@@ -357,8 +357,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   savedButton: {
-    backgroundColor: '#e3f2fd',
-    borderColor: '#2575fc',
+    backgroundColor: '#FBDAF4',
+    borderColor: '#9D046D',
   },
   actionButtonText: {
     fontSize: 14,
@@ -367,12 +367,12 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
   savedButtonText: {
-    color: '#2575fc',
+    color: '#9D046D',
   },
   contactButton: {
     flex: 2,
-    backgroundColor: '#2575fc',
-    borderColor: '#2575fc',
+    backgroundColor: '#9D046D',
+    borderColor: '#9D046D',
   },
   contactButtonText: {
     fontSize: 14,
@@ -407,21 +407,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: '#e3f2fd',
+    backgroundColor: '#e3f2',
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 16,
   },
   categoryText: {
     fontSize: 14,
-    color: '#2575fc',
+    color: '#9D046D',
     fontWeight: '500',
     marginLeft: 6,
   },
   artesanoCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f8f9',
     padding: 12,
     borderRadius: 12,
   },
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
   avatarPlaceholder: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#e0e0e0',
+    backgroundColor: '#9D046D',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
   },
   artesanoCategory: {
     fontSize: 13,
-    color: '#666',
+    color: '',
   },
   locationContainer: {
     flexDirection: 'row',

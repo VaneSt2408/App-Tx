@@ -8,20 +8,20 @@ import { MaterialCommunityIcons } from '@expo/vector-icons'; // Importar los com
 import { useRouter, useLocalSearchParams } from 'expo-router'; // Importar el router de expo-router
 import { artesanoService } from '../../src/services/artesanoService'; // Importar el servicio de artesano
 import { supabase } from '../../src/supabase/client'; // Importar el cliente de supabase
-import { useAuth, signOut } from '../../src/context/AuthContext'; // Importar el contexto de autenticación
-import * as ImagePicker from 'expo-image-picker'; // Importar el selector de imágenes
+import { useAuth } from '../../src/context/AuthContext'; // Importar el contexto de autenticación
+import * as ImagePicker from 'expo-image-picker'; // Importar el selector de imágenes 
 import { updatePerfilArtesanoCompleto, eliminarPerfilArtesano, subirAvatarArtesano } from '../../src/services/ArtesanoProfileService'; // Importar los servicios de perfil
 import ChangePasswordModal from '../../components/ChangePasswordModal'; // Importar el modal de cambio de contraseña
 import AsyncStorage from '@react-native-async-storage/async-storage'; // Importar AsyncStorage para persistencia
 import { validateCurrentPassword } from '../../src/services/profileInfo'; // Importar validación de contraseña
 
 const { width } = Dimensions.get('window'); // Obtener el ancho de la ventana
-const imageSize = (width - 60) / 3; // Para grid de 3 columnas
+const imageSize = (width - 10) / 3; // Para grid de 3 columnas
 
 export default function ArtesanoProfile() { // Exportar la función ArtesanoProfile
   const router = useRouter(); // Obtener el router
   const { userId, tab } = useLocalSearchParams(); // Obtener el id del usuario y la tab
-  const { session } = useAuth(); // Obtener la sesión
+  const { session, signOut } = useAuth(); // Obtener la sesión
   const [artesano, setArtesano] = useState(null); // Establecer el estado del artesano
   const [publicaciones, setPublicaciones] = useState([]); // Establecer el estado de las publicaciones
   const [productos, setProductos] = useState([]); // Establecer el estado de los productos
@@ -31,21 +31,23 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
   const [showEditModal, setShowEditModal] = useState(false); // Establecer el estado del modal de edición
   const [showPasswordModal, setShowPasswordModal] = useState(false); // Establecer el estado del modal de cambio de contraseña
   const [showAvatarMenu, setShowAvatarMenu] = useState(false); // Establecer el estado del modal de cambio de foto de perfil
-  const [editData, setEditData] = useState({ nombre: '', telefono: '', ubicacion: '', descripcion: '', avatar_url: null }); // Establecer el estado de los datos de edición
   const [uploadingAvatar, setUploadingAvatar] = useState(false); // Establecer el estado de subida de foto de perfil
   const [selectedImage, setSelectedImage] = useState(null); // Establecer el estado de la imagen seleccionada
   const isOwnProfile = session?.user?.id === userId; // Verificar si el usuario es el propio
 
   // Estados para eliminación de perfil con validación de contraseña
   const [showDeleteProfile, setShowDeleteProfile] = useState(false); // Modal de eliminación de perfil
-  const [deletePasswordData, setDeletePasswordData] = useState({ currentPassword: '' }); // Datos de contraseña de eliminación
+  const [deletePasswordData, setDeletePasswordData] = useState({ currentPassword: '' }); // Estado para la contraseña de eliminación
+  const [editData, setEditData] = useState({ nombre: '', telefono: '', ubicacion: '', descripcion: '', avatar_url: null }); // Establecer el estado de los datos de edición
   const [deletePasswordValidated, setDeletePasswordValidated] = useState(false); // Contraseña de eliminación validada
+  const [selectedPublication, setSelectedPublication] = useState(null); // Estado para la publicación seleccionada
   const [deletePasswordAttempts, setDeletePasswordAttempts] = useState(0); // Intentos de contraseña de eliminación
   const [deletePasswordLoading, setDeletePasswordLoading] = useState(false); // Carga de eliminación
   const [deletePasswordBlocked, setDeletePasswordBlocked] = useState(false); // Bloqueo por intentos fallidos
   const [deleteBlockTimeRemaining, setDeleteBlockTimeRemaining] = useState(0); // Tiempo restante de bloqueo
   const [showDeletePassword, setShowDeletePassword] = useState(false); // Mostrar/ocultar contraseña
   const [totalFailedAttempts, setTotalFailedAttempts] = useState(0); // Intentos fallidos totales (compartido con cambio de contraseña)
+
 
   // Refs para evitar race conditions en contadores
   const deletePasswordAttemptsRef = useRef(0); // Ref para intentos de contraseña de eliminación
@@ -56,6 +58,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
   const [selectedProductoIndex, setSelectedProductoIndex] = useState(0);
   const [showProductoModal, setShowProductoModal] = useState(false);
   const productoSliderAnim = React.useRef(new Animated.Value(0)).current;
+
 
   useEffect(() => { // Efecto para cargar el perfil del artesano
     if (userId) { // Si hay id de usuario
@@ -73,7 +76,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
   // Funciones AsyncStorage para persistencia de intentos fallidos
   const loadFailedAttempts = async () => {
     try {
-      const stored = await AsyncStorage.getItem('artesanoFailedAttempts');
+      const stored = await AsyncStorage.getItem('failedAttempts');
       if (stored !== null) {
         const attempts = parseInt(stored, 10);
         totalFailedAttemptsRef.current = attempts;
@@ -86,7 +89,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
   // Función para guardar los intentos fallidos
   const saveFailedAttempts = async (attempts) => {
     try {
-      await AsyncStorage.setItem('artesanoFailedAttempts', attempts.toString());
+      await AsyncStorage.setItem('failedAttempts', attempts.toString());
     } catch (error) {
     }
   };
@@ -94,7 +97,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
   // Función para limpiar los intentos fallidos
   const clearFailedAttempts = async () => {
     try {
-      await AsyncStorage.removeItem('artesanoFailedAttempts');
+      await AsyncStorage.removeItem('failedAttempts');
     } catch (error) {
     }
   };
@@ -102,7 +105,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
   // Función para guardar los intentos de eliminación
   const saveDeleteAttempts = async (attempts) => {
     try {
-      await AsyncStorage.setItem('artesanoDeleteAttempts', attempts.toString());
+      await AsyncStorage.setItem('deleteAttempts', attempts.toString());
     } catch (error) {
     }
   };
@@ -110,7 +113,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
   // Función para cargar los intentos de eliminación
   const loadDeleteAttempts = async () => {
     try {
-      const stored = await AsyncStorage.getItem('artesanoDeleteAttempts');
+      const stored = await AsyncStorage.getItem('deleteAttempts');
       if (stored !== null) {
         const attempts = parseInt(stored, 10);
         deletePasswordAttemptsRef.current = attempts;
@@ -123,7 +126,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
   // Función para limpiar los intentos de eliminación
   const clearDeleteAttempts = async () => {
     try {
-      await AsyncStorage.removeItem('artesanoDeleteAttempts');
+      await AsyncStorage.removeItem('deleteAttempts');
     } catch (error) {
     }
   };
@@ -163,7 +166,6 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
           nombre: data.artesano.nombre || '', 
           telefono: data.artesano.telefono || '', 
           ubicacion: data.artesano.ubicacion || '', 
-          descripcion: data.artesano.descripcion || '',
           avatar_url: data.artesano.avatar_url || null
         }); // Establecer el estado de los datos de edición
       }
@@ -206,7 +208,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
 
   // Funciones para eliminación de perfil
   const handleDeleteProfile = () => {
-    if (deletePasswordBlocked) {
+    if (deletePasswordBlocked) { // Si la contraseña de eliminación está bloqueada
       Alert.alert(
         'Acceso bloqueado',
         `Has excedido el número de intentos. Inténtalo de nuevo en ${Math.ceil(deleteBlockTimeRemaining / 60)} minutos.`
@@ -224,10 +226,10 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
 
   // Función para cancelar la eliminación de perfil
   const handleCancelDeleteProfile = () => {
-    setShowDeleteProfile(false);
+    setShowDeleteProfile(false); // Ocultar el modal de eliminación
     setDeletePasswordData({ currentPassword: '' });
-    setDeletePasswordValidated(false);
-    setDeletePasswordAttempts(0);
+    setDeletePasswordValidated(false); // Establecer el estado de la validación de la contraseña de eliminación
+    setDeletePasswordAttempts(0); // Establecer el contador de intentos de la contraseña de eliminación a 0
     deletePasswordAttemptsRef.current = 0;
   };
 
@@ -235,7 +237,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
   const handleDeletePasswordInputChange = (value) => {
     setDeletePasswordData(prev => ({
       ...prev,
-      currentPassword: value
+      currentPassword: value // Establecer el valor del input
     }));
   };
 
@@ -243,12 +245,12 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
   const handleVerifyDeletePassword = async () => {
     if (!deletePasswordData.currentPassword.trim()) {
       Alert.alert('Error', 'Por favor ingresa tu contraseña actual');
-      return;
+      return; // Detener la ejecución si la contraseña está vacía
     }
     if (deletePasswordData.currentPassword.length < 8) {
       Alert.alert('Error', 'La contraseña debe tener al menos 8 caracteres');
-      return;
-    }
+      return; // Detener la ejecución si la contraseña es demasiado corta
+    }    
     try {
       const { data, error } = await validateCurrentPassword(deletePasswordData.currentPassword);
       if (data) {
@@ -256,7 +258,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         setDeletePasswordAttempts(0);
         deletePasswordAttemptsRef.current = 0;
         await clearDeleteAttempts();
-        await clearFailedAttempts();
+        await clearFailedAttempts(); // Limpiar contador compartido
         setTotalFailedAttempts(0);
         Alert.alert('Éxito', 'Contraseña verificada. Procediendo con la eliminación...');
       } else {
@@ -331,7 +333,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
       }
     } catch (error) {
       Alert.alert('Error', 'Ocurrió un error al verificar la contraseña');
-    }
+    }    
   };
 
   // Función para confirmar la eliminación de perfil
@@ -558,21 +560,21 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         
         {artesano?.ubicacion && (
           <View style={styles.infoRow}>
-            <MaterialCommunityIcons name="map-marker" size={16} color="#666" />
+            <MaterialCommunityIcons name="map-marker" size={16} color="#E93C25" />
             <Text style={styles.infoText}>{artesano.ubicacion}</Text>
           </View>
         )}
         
         {artesano?.categoria && (
           <View style={styles.infoRow}>
-            <MaterialCommunityIcons name="tag" size={16} color="#666" />
+            <MaterialCommunityIcons name="tag" size={16} color="#7B480A" />
             <Text style={styles.infoText}>{artesano.categoria}</Text>
           </View>
         )}
         
         {artesano?.telefono && (
           <View style={styles.infoRow}>
-            <MaterialCommunityIcons name="phone" size={16} color="#666" />
+            <MaterialCommunityIcons name="phone" size={16} color="#0F951E" />
             <Text style={styles.infoText}>{artesano.telefono}</Text>
           </View>
         )}
@@ -593,7 +595,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         <MaterialCommunityIcons 
           name="image-multiple" 
           size={20} 
-          color={activeTab === 'publicaciones' ? '#177eaaff' : '#666'} 
+          color={activeTab === 'publicaciones' ? '#9D046D' : '#666'} 
         />
         <Text style={[styles.tabText, activeTab === 'publicaciones' && styles.activeTabText]}>
           Publicaciones
@@ -607,7 +609,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         <MaterialCommunityIcons 
           name="package-variant" 
           size={20} 
-          color={activeTab === 'productos' ? '#177eaaff' : '#666'} 
+          color={activeTab === 'productos' ? '#9D046D' : '#666'} 
         />
         <Text style={[styles.tabText, activeTab === 'productos' && styles.activeTabText]}>
           Productos
@@ -698,15 +700,17 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
   };
 
   const renderPublicacion = ({ item }) => (
-    <View style={styles.gridItem}>
-      {item.imagen_url ? (
-        <Image source={{ uri: item.imagen_url }} style={styles.gridImage} />
-      ) : (
-        <View style={styles.placeholderImage}>
-          <MaterialCommunityIcons name="image" size={30} color="#ccc" />
-        </View>
-      )}
-    </View>
+    <TouchableOpacity style={styles.gridItem} onPress={() => setSelectedPublication(item)}>
+      <View>
+        {item.imagen_url ? (
+          <Image source={{ uri: item.imagen_url }} style={styles.gridImage} />
+        ) : (
+          <View style={styles.placeholderImage}>
+            <MaterialCommunityIcons name="image" size={30} color="#ccc" />
+          </View>
+        )}
+      </View>
+    </TouchableOpacity>
   );
 
   const renderProducto = ({ item, index }) => (
@@ -774,7 +778,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
       <SafeAreaView style={styles.container}>
         {renderHeader()}
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#177eaaff" />
+          <ActivityIndicator size="large" color="#9D046D" />
           <Text style={styles.loadingText}>Cargando perfil...</Text>
         </View>
       </SafeAreaView>
@@ -801,6 +805,41 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         {renderTabs()}
         {renderContent()}
       </View>
+
+      {/* Modal para mostrar la publicación en grande */}
+      <Modal
+        visible={selectedPublication !== null}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setSelectedPublication(null)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setSelectedPublication(null)}
+        >
+          <View style={styles.publicationModalContent}>
+            {selectedPublication?.imagen_url ? (
+              <Image
+                source={{ uri: selectedPublication.imagen_url }}
+                style={styles.publicationModalImage}
+                resizeMode="contain"
+              />
+            ) : (
+              <View style={styles.publicationModalPlaceholder}>
+                <MaterialCommunityIcons name="image" size={80} color="#ccc" />
+              </View>
+            )}
+            <View style={styles.publicationModalFooter}>
+              <MaterialCommunityIcons name="heart" size={24} color="#e74c3c" />
+              <Text style={styles.publicationModalLikes}>
+                {selectedPublication?.likes_count || 0} Me gusta
+              </Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
 
       {/* Modal de Menú de Ajustes */}
       <Modal
@@ -905,7 +944,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
                     <Image source={{ uri: artesano.avatar_url }} style={styles.avatarPreview} />
                   ) : (
                     <View style={styles.avatarPlaceholder}>
-                      <MaterialCommunityIcons name="camera" size={30} color="#666" />
+                      <MaterialCommunityIcons name="camera" size={30} color="rgba(157, 4, 109,0.25)" />
                     </View>
                   )}
                 </TouchableOpacity>
@@ -914,7 +953,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
                   onPress={selectAvatarImageFromEdit}
                   disabled={uploadingAvatar}
                 >
-                  <MaterialCommunityIcons name="camera-plus" size={20} color="#177eaaff" />
+                  <MaterialCommunityIcons name="camera-plus" size={20} color="#9D046D" />
                   <Text style={styles.changeAvatarButtonText}>
                     {uploadingAvatar ? 'Subiendo...' : 'Cambiar foto'}
                   </Text>
@@ -1202,7 +1241,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
                   {/* Información */}
                   <View style={styles.modalInfo}>
                     <View style={styles.infoRowModal}>
-                      <MaterialCommunityIcons name="tag" size={20} color="#2575fc" />
+                      <MaterialCommunityIcons name="tag" size={20} color="#7B480A" />
                       <Text style={styles.infoLabel}>Nombre:</Text>
                       <Text style={styles.infoValue}>{selectedProducto.nombre || 'Sin nombre'}</Text>
                     </View>
@@ -1417,7 +1456,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   activeTab: {
-    borderBottomColor: '#177eaaff',
+    borderBottomColor: '#9D046D',
   },
   tabText: {
     fontSize: 14,
@@ -1425,7 +1464,7 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
   activeTabText: {
-    color: '#177eaaff',
+    color: '#9D046D',
     fontWeight: 'bold',
   },
   gridContainer: {
@@ -1479,6 +1518,41 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 16,
   },
+  // Estilos para el modal de la publicación
+  publicationModalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    width: '90%',
+    maxWidth: 500,
+    maxHeight: '80%',
+    overflow: 'hidden',
+  },
+  publicationModalImage: {
+    width: '100%',
+    height: 400,
+    backgroundColor: '#f0f0f0',
+  },
+  publicationModalPlaceholder: {
+    width: '100%',
+    height: 400,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  publicationModalFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+  },
+  publicationModalLikes: {
+    fontSize: 16,
+    color: '#333',
+    marginLeft: 8,
+    fontWeight: 'bold',
+  },
+
   // Estilos para Modales
   modalOverlay: {
     position: 'absolute',
@@ -1587,7 +1661,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#e0e0e0',
   },
   saveButton: {
-    backgroundColor: '#177eaaff',
+    backgroundColor: '#9D046D',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
@@ -1742,7 +1816,7 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   verifyButton: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#9D046D',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1832,6 +1906,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: 8,
   },
+   // Estilos para el modal
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   // Estilos para edición de avatar en modal
   avatarEditSection: {
     marginBottom: 20,
@@ -1845,7 +1926,7 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     borderWidth: 3,
-    borderColor: '#177eaaff',
+    borderColor: '#9D046D',
   },
   avatarPlaceholder: {
     width: 100,
@@ -1855,7 +1936,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
-    borderColor: '#177eaaff',
+    borderColor: '#9D046D',
   },
   changeAvatarButton: {
     flexDirection: 'row',
@@ -1869,11 +1950,11 @@ const styles = StyleSheet.create({
   changeAvatarButtonText: {
     marginLeft: 8,
     fontSize: 14,
-    color: '#177eaaff',
+    color: '#9D046D',
     fontWeight: '600',
   },
   // Estilos para modal de productos
-  modalContainer: {
+  modalContainer1: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
