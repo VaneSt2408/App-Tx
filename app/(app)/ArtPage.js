@@ -34,7 +34,7 @@ function ArtPage() {
                     return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
                 },
                 tabBarActiveTintColor: '#9D046D',
-                tabBarInactiveTintColor: '#666',
+                tabBarInactiveTintColor: '#2222',
                 tabBarStyle: {
                     backgroundColor: '#fff',
                     borderTopWidth: 1,
