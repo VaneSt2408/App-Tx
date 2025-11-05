@@ -11,6 +11,7 @@ import FeedPage from './FeedPage';
 import MarketplacePage from './MarketplacePage';
 import ArtesanoList from './ArtesanoList';
 import ClientProfile from './clientProfile';
+import Estadisticas from './estadisticas';
 
 const Tab = createBottomTabNavigator(); // Crear el tab navigator
 
@@ -29,6 +30,8 @@ function ClientPage() {
                         iconName = focused ? 'store' : 'store-outline';
                     } else if (route.name === 'Artesanos') {
                         iconName = focused ? 'account-group' : 'account-group-outline';
+                    } else if (route.name === 'Estadisticas') {
+                        iconName = focused ? 'chart-bar' : 'chart-bar-stacked';
                     } else if (route.name === 'Profile') {
                         iconName = focused ? 'account-circle' : 'account-circle-outline';
                     }
@@ -39,7 +42,9 @@ function ClientPage() {
                 tabBarActiveTintColor: '#9D046D',
                 tabBarInactiveTintColor: '#666',
                 tabBarStyle: {
-                    backgroundColor: '#f9f9f9ff',
+
+                    backgroundColor: '#fff',
+
                     borderTopWidth: 1,
                     borderTopColor: '#e1e8ed',
                     height: 60,
@@ -72,6 +77,13 @@ function ClientPage() {
                 component={ArtesanoList}
                 options={{
                     tabBarLabel: 'Artesanos',
+                }}
+            />
+            <Tab.Screen 
+                name="Estadisticas" 
+                component={Estadisticas}
+                options={{
+                    tabBarLabel: 'Estadísticas',
                 }}
             />
             <Tab.Screen 

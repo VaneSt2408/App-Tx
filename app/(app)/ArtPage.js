@@ -11,6 +11,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import FeedPage from './FeedPage';
 import MarketplacePage from './MarketplacePage';
 import ArtesanoSettings from './ArtesanoSettings';
+import Estadisticas from './estadisticas';
 
 const Tab = createBottomTabNavigator(); // Crear el tab navigator
 
@@ -27,6 +28,8 @@ function ArtPage() {
                         iconName = focused ? 'home' : 'home-outline';
                     } else if (route.name === 'Marketplace') {
                         iconName = focused ? 'store' : 'store-outline';
+                    } else if (route.name === 'Estadisticas') {
+                        iconName = focused ? 'chart-bar' : 'chart-bar-stacked';
                     } else if (route.name === 'Settings') {
                         iconName = focused ? 'account-circle' : 'account-circle-outline';
                     }
@@ -62,6 +65,13 @@ function ArtPage() {
                 component={MarketplacePage}
                 options={{
                     tabBarLabel: 'Marketplace',
+                }}
+            />
+            <Tab.Screen 
+                name="Estadisticas" 
+                component={Estadisticas}
+                options={{
+                    tabBarLabel: 'Estadísticas',
                 }}
             />
             <Tab.Screen 
