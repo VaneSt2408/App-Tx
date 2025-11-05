@@ -54,6 +54,10 @@ function PageAdmin() { // Asegúrate de que el nombre del componente coincida co
             <Text style={styles.textoDelBoton}>Estadisticas</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity style={styles.botonPersonalizado4} onPress={() =>router.push('./Eventos')}>
+            <Text style={styles.textoDelBoton}>Eventos</Text>
+            </TouchableOpacity>
+
         </View>
     );
 }
