@@ -1,4 +1,8 @@
-// src/components/PostCard.js
+// En: components/PostCard.js -> Archivo de la tarjeta de publicación (Frontend)
+// Este archivo es el encargado de mostrar la tarjeta de publicación en la aplicación.
+// Muestra la tarjeta de publicación registrada en la base de datos y permite navegar a la página del artesano y realizar likes.
+
+// Importaciones
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';

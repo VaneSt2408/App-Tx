@@ -50,8 +50,12 @@ function PageAdmin() { // Asegúrate de que el nombre del componente coincida co
             <Text style={styles.textoDelBoton}>Lista de artesanos</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.botonPersonalizado3} onPress={() => console.log('Estadísticas')}>
+            <TouchableOpacity style={styles.botonPersonalizado3} onPress={() => router.push('./estadisticas')}>
             <Text style={styles.textoDelBoton}>Estadisticas</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.botonPersonalizado4} onPress={() =>router.push('./Eventos')}>
+            <Text style={styles.textoDelBoton}>Eventos</Text>
             </TouchableOpacity>
 
         </View>

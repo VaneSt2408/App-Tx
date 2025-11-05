@@ -1,42 +1,15 @@
-// src/navigation/MainTabsNavigator.js
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { View, Text, StyleSheet } from 'react-native';
 
-
 // Importar pantallas
 import FeedPage from '../pages/FeedPage';
 import ClientPage from '../pages/ClientPage';
-<<<<<<< HEAD
-//import MarketplacePage from '../pages/MarketplacePage'; // Placeholder por ahora
-=======
-<<<<<<< HEAD
 import MarketplacePage from '../pages/MarketplacePage';
-=======
-//import MarketplacePage from '../pages/MarketplacePage'; // Placeholder por ahora
->>>>>>> 12a071477fe6baec4f5a0feebf34e3b489f9604c
->>>>>>> 0944f5e7c0761bb475dd36b398ae1b0869f56b67
-//import ProfilePage from '../pages/ProfilePage'; // Placeholder por ahora
+import EstadisticasPage from '../../app/(app)/estadisticas';
 
 const Tab = createBottomTabNavigator();
-
-// Componentes placeholder para las pantallas que aún no están implementadas
-const PlaceholderScreen = ({ name, icon }) => (
-  <View style={styles.placeholderContainer}>
-    <MaterialCommunityIcons name={icon} size={64} color="#ccc" />
-    <Text style={styles.placeholderTitle}>{name}</Text>
-    <Text style={styles.placeholderText}>Próximamente...</Text>
-  </View>
-);
-
-const MarketplacePlaceholder = () => (
-  <PlaceholderScreen name="Marketplace" icon="store" />
-);
-
-const ProfilePlaceholder = () => (
-  <PlaceholderScreen name="Perfil" icon="account-circle" />
-);
 
 const MainTabsNavigator = () => {
   return (
@@ -51,6 +24,8 @@ const MainTabsNavigator = () => {
             iconName = focused ? 'store' : 'store-outline';
           } else if (route.name === 'Profile') {
             iconName = focused ? 'account-circle' : 'account-circle-outline';
+          } else if (route.name === 'Estadisticas') {
+            iconName = focused ? 'chart-bar' : 'chart-bar-stacked';
           }
 
           return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
@@ -81,15 +56,7 @@ const MainTabsNavigator = () => {
       />
       <Tab.Screen 
         name="Marketplace" 
-<<<<<<< HEAD
-        component={MarketplacePlaceholder}
-=======
-<<<<<<< HEAD
         component={MarketplacePage}
-=======
-        component={MarketplacePlaceholder}
->>>>>>> 12a071477fe6baec4f5a0feebf34e3b489f9604c
->>>>>>> 0944f5e7c0761bb475dd36b398ae1b0869f56b67
         options={{
           tabBarLabel: 'Marketplace',
         }}
@@ -99,6 +66,13 @@ const MainTabsNavigator = () => {
         component={ClientPage}
         options={{
           tabBarLabel: 'Perfil',
+        }}
+      />
+      <Tab.Screen 
+        name="Estadisticas" 
+        component={EstadisticasPage}
+        options={{
+          tabBarLabel: 'Clasificación',
         }}
       />
     </Tab.Navigator>

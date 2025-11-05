@@ -19,6 +19,15 @@ function RootLayoutNav() {
   const router = useRouter();
 
   useEffect(() => {
+    // Log para depuración: nos dice el estado actual en cada render.
+    console.log('Auth Check:', { 
+      authLoading, 
+      hasSession: !!session?.user, 
+      role,
+      profile,
+      segments,
+      isPasswordRecovery
+    });
 
     // Si el estado de autenticación aún está cargando, no hacemos nada.
     if (authLoading) {
@@ -27,10 +36,10 @@ function RootLayoutNav() {
 
     const inAuthGroup = segments[0] === '(auth)';
     const inCompleteProfile = segments[0] === 'completeProfile';
-    const inCompleteArtesanoProfile = segments[0] === 'completeArtesanoProfile';
 
     // Si estamos en modo de recuperación de contraseña, no redirigir automáticamente
     if (isPasswordRecovery) {
+      console.log('🔑 Modo de recuperación de contraseña activo - no redirigiendo');
       return;
     }
 
@@ -45,6 +54,7 @@ function RootLayoutNav() {
     else {
       // Verificar si es un cliente que necesita completar su perfil
       if (role === 'cliente' && profile && !profile.nombre_completo) {
+        console.log('👤 Cliente necesita completar perfil - redirigiendo a completeProfile');
         if (!inCompleteProfile) {
           router.replace('/completeProfile' as Href);
         }
@@ -53,35 +63,9 @@ function RootLayoutNav() {
 
       // Si estamos en completeProfile pero ya no necesitamos completar el perfil
       if (inCompleteProfile && role === 'cliente' && profile?.nombre_completo) {
+        console.log('✅ Perfil completo - redirigiendo a app principal');
         router.replace('/(app)' as Href);
         return;
-      }
-
-      // Verificar si es un artesano que necesita completar su perfil
-      // (falta descripcion o avatar_url)
-      if (role === 'artesano' && profile) {
-        const tieneDescripcion = !!profile.descripcion;
-        const tieneAvatar = !!profile.avatar_url;
-        const perfilCompleto = tieneDescripcion && tieneAvatar;
-
-        if (!perfilCompleto) {
-          if (!inCompleteArtesanoProfile) {
-            router.replace('/completeArtesanoProfile' as Href);
-          }
-          return;
-        }
-      }
-
-      // Si estamos en completeArtesanoProfile pero ya no necesitamos completar el perfil
-      if (inCompleteArtesanoProfile && role === 'artesano' && profile) {
-        const tieneDescripcion = !!profile.descripcion;
-        const tieneAvatar = !!profile.avatar_url;
-        const perfilCompleto = tieneDescripcion && tieneAvatar;
-
-        if (perfilCompleto) {
-          router.replace('/(app)' as Href);
-          return;
-        }
       }
 
       // Si estamos en el grupo de autenticación (ej. en la pantalla de login),
@@ -92,7 +76,7 @@ function RootLayoutNav() {
         router.replace('/(app)' as Href); 
       }
     }
-  }, [session, role, profile, authLoading, segments, isPasswordRecovery, router]); // Dependemos de los estados clave incluyendo profile.
+  }, [session, role, profile, authLoading, segments, isPasswordRecovery]); // Dependemos de los estados clave incluyendo profile.
 
   // Mientras carga la sesión, mostramos el indicador.
   if (authLoading) {
