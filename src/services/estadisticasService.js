@@ -42,6 +42,19 @@ export const estadisticasService = {
     return sortedArtesanos;
   },
 
+  /**
+   * Obtener los 5 artesanos con mayor número de likes.
+   * Reutiliza la consulta getArtesanosByLikes y devuelve los primeros 5.
+   * Retorna null en caso de error o un arreglo (posiblemente vacío) cuando hay datos.
+   */
+  async getTop5ArtesanosByLikes() {
+    // Reutilizamos la función ya definida que devuelve los artesanos ordenados por likes
+    const sorted = await this.getArtesanosByLikes();
+    if (!sorted) return null;
+    // Devolver sólo los primeros 5
+    return sorted.slice(0, 5);
+  },
+
 
   // Obtener el conteo de productos por artesano
   async getProductsCountByArtesano() {
@@ -107,3 +120,4 @@ export const estadisticasService = {
     return sortedByOldest;
   }
 };
+

@@ -8,6 +8,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {View,FlatList,RefreshControl,ActivityIndicator,StyleSheet,Text,TouchableOpacity,} from 'react-native';
 import FeedService from '../../src/services/FeedService';
 import PostCard from '../../components/PostCard';
+import FeaturedSection from '../../components/FeaturedSection';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
@@ -103,10 +104,13 @@ const FeedPage = () => {
     );
   };
 
-  // Renderizar header
+  // Renderizar header (incluye sección de destacados encima del título)
   const renderHeader = () => (
-    <View style={styles.headerContainer}>
-      <Text style={styles.headerTitle}>Publicaciones</Text>
+    <View>
+      <FeaturedSection />
+      <View style={styles.headerContainer}>
+        <Text style={styles.headerTitle}>Publicaciones</Text>
+      </View>
     </View>
   );
 
