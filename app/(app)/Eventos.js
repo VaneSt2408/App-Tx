@@ -1,21 +1,23 @@
 // app/(app)/Eventos.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback} from 'react';
 import { View, Text as DefaultText, FlatList, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
-import { useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter, useFocusEffect } from 'expo-router';
 import EventCard from '../../components/FeaturedCard'; // Reutilizamos el mismo componente de la FeedPage
 import useCustomFonts from '../../hooks/useFonts'; 
 
+// Aseguramos que las fuentes personalizadas estén cargadas
 const Text = (props) => (
     <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
   );
 import { getEvents, deleteEvent } from '../../src/services/eventsService';
 
+// Página de gestión de eventos
 const EventosPage = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
    const [events, setEvents] = useState([]);
 
+   // Cargar eventos desde la API
   const loadEvents = async () => {
     const result = await getEvents();
     if (result.success) {
@@ -23,11 +25,15 @@ const EventosPage = () => {
     }
     setLoading(false);
   };
-
-  useEffect(() => {
+// Cargar eventos al montar el componente
+useFocusEffect(
+  useCallback(() => {
     loadEvents();
-  }, []);
+    return () => { };
+  }, [])
+);
 
+  // Manejar eliminación de evento
   const handleDeleteEvent = async (eventId) => {
     Alert.alert(
       '¿Eliminar evento?',
@@ -50,6 +56,11 @@ const EventosPage = () => {
     );
   };
 
+  const handleEditEvent = (eventId) => {
+    router.push({ pathname: './EditEventPage', params: { event: JSON.stringify(events.find(ev => ev.id === eventId))} });
+  }
+
+  // Manejar edición de evento (navegar a la página de edición)
   const renderEvent = ({ item }) => (
     <View className="mb-3 bg-white rounded-xl overflow-hidden shadow-sm p-4">
       <EventCard type="evento" item={item} />
@@ -60,7 +71,7 @@ const EventosPage = () => {
         >
           <Text style={{fontFamily: 'Alan Sans'}} className="text-white text-sm font-medium">Eliminar</Text>
         </TouchableOpacity>
-        
+
         {/* Botón de Editar (NUEVO) */}
         <TouchableOpacity
           className="bg-blue-500 px-3 py-1.5 rounded-lg mr-2" // Añadimos margen a la derecha
