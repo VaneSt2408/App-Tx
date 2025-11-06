@@ -8,6 +8,7 @@
     "scheme": "txapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    
     "ios": {
       "supportsTablet": true
     },
@@ -43,6 +44,7 @@
       ],
       "expo-web-browser",
       "expo-font"
+      
     ],
     "experiments": {
       "typedRoutes": true,

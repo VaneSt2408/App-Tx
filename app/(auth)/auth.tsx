@@ -13,6 +13,7 @@ import useCustomFonts from '../../hooks/useFonts';
 
 
 
+
 const Text = (props: TextProps) => (
     <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
   );

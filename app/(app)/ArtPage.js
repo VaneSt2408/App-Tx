@@ -30,7 +30,7 @@ function ArtPage() {
                         iconName = focused ? 'store' : 'store-outline';
                     } else if (route.name === 'Estadisticas') {
                         iconName = focused ? 'chart-bar' : 'chart-bar-stacked';
-                    } else if (route.name === 'Settings') {
+                    } else if (route.name === 'Perfil') {
                         iconName = focused ? 'account-circle' : 'account-circle-outline';
                     }
 
@@ -75,10 +75,10 @@ function ArtPage() {
                 }}
             />
             <Tab.Screen 
-                name="Settings" 
+                name="Perfil" 
                 component={ArtesanoSettings}
                 options={{
-                    tabBarLabel: 'Ajustes',
+                    tabBarLabel: 'Perfil',
                 }}
             />
         </Tab.Navigator>
