@@ -6,12 +6,17 @@
 
 // Importaciones
 import React, { useState, useEffect } from 'react';
-import {View,Text,FlatList,Image,TouchableOpacity,StyleSheet,ActivityIndicator,RefreshControl,Alert,Dimensions,Modal,ScrollView,TextInput,PanResponder,Animated } from 'react-native';
+import {View,Text as DefaultText,FlatList,Image,TouchableOpacity,StyleSheet,ActivityIndicator,RefreshControl,Alert,Dimensions,Modal,ScrollView,TextInput,PanResponder,Animated } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import { getPublicacionesByArtesano, deletePublication, updatePublication } from '../../src/services/PublicacionService';
+import useCustomFonts from '../../hooks/useFonts';
 
+
+const Text = (props) => (
+    <DefaultText {...props} style={[{ fontFamily: 'AlanSans' }, props.style]} />
+  );
 const { width } = Dimensions.get('window'); // Obtener el ancho de la ventana
 const imageSize = (width - 40) / 3; // Para grid de 3 columnas
 
@@ -245,7 +250,7 @@ export default function ArtesanoPublications() {
       <View style={styles.overlay}>
         <View style={styles.overlayContent}>
           <MaterialCommunityIcons name="heart" size={14} color="#fff" />
-          <Text style={styles.overlayText}>{item.likes_count || 0}</Text>
+          <Text style={[styles.overlayText,{fontFamily: 'Alan Sans'}]}>{item.likes_count || 0}</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -265,10 +270,10 @@ export default function ArtesanoPublications() {
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
       <MaterialCommunityIcons name="image-multiple-outline" size={80} color="#ccc" />
-      <Text style={styles.emptyText}>
+      <Text style={[styles.emptyText,{fontFamily: 'Alan Sans'}]}>
         {isOwnProfile ? 'No tienes publicaciones aún' : 'No hay publicaciones'}
       </Text>
-      <Text style={styles.emptySubtext}>
+      <Text style={[styles.emptySubtext,{fontFamily: 'Alan Sans'}]}>
         {isOwnProfile 
           ? 'Crea tu primera publicación para compartir tu trabajo'
           : 'Este artesano aún no ha compartido publicaciones'
@@ -280,7 +285,7 @@ export default function ArtesanoPublications() {
           onPress={() => router.push('/CreatePostPage')}
         >
           <MaterialCommunityIcons name="plus" size={20} color="#fff" />
-          <Text style={styles.createButtonText}>Crear Publicación</Text>
+          <Text style={[styles.createButtonText,{fontFamily: 'Alan Sans'}]}>Crear Publicación</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -290,7 +295,7 @@ export default function ArtesanoPublications() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#9D046D" />
-        <Text style={styles.loadingText}>Cargando publicaciones...</Text>
+        <Text style={[styles.loadingText,{fontFamily: 'Alan Sans'}]}>Cargando publicaciones...</Text>
       </View>
     );
   }
@@ -305,10 +310,10 @@ export default function ArtesanoPublications() {
           <MaterialCommunityIcons name="arrow-left" size={28} color="#333" />
         </TouchableOpacity>
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>
+          <Text style={[styles.headerTitle,{fontFamily: 'Alan Sans'}]}>
             {isOwnProfile ? 'Mis Publicaciones' : 'Publicaciones'}
           </Text>
-          <Text style={styles.headerSubtitle}>
+          <Text style={[styles.headerSubtitle,{fontFamily: 'Alan Sans'}]}>
             {totalCount} {totalCount === 1 ? 'publicación' : 'publicaciones'}
           </Text>
         </View>
@@ -362,7 +367,7 @@ export default function ArtesanoPublications() {
                     <MaterialCommunityIcons name="chevron-left" size={24} color="#333" />
                   </TouchableOpacity>
                 )}
-                <Text style={styles.modalTitle}>
+                <Text style={[styles.modalTitle,{fontFamily: 'Alan Sans'}]}>
                   Publicación {selectedIndex + 1} de {publicaciones.length}
                 </Text>
               </View>
@@ -403,21 +408,21 @@ export default function ArtesanoPublications() {
                   <View style={styles.modalInfo}>
                     <View style={styles.infoRow}>
                       <MaterialCommunityIcons name="heart" size={20} color="#e91e63" />
-                      <Text style={styles.infoLabel}>Likes:</Text>
-                      <Text style={styles.infoValue}>{selectedPublication.likes_count || 0}</Text>
+                      <Text style={[styles.infoLabel,{fontFamily: 'Alan Sans'}]}>Likes:</Text>
+                      <Text style={[styles.infoValue,{fontFamily: 'Alan Sans'}]}>{selectedPublication.likes_count || 0}</Text>
                     </View>
 
                     <View style={styles.infoRow}>
                       <MaterialCommunityIcons name="calendar" size={20} color="#2196f3" />
-                      <Text style={styles.infoLabel}>Fecha:</Text>
-                      <Text style={styles.infoValue}>{formatDate(selectedPublication.created_at)}</Text>
+                      <Text style={[styles.infoLabel,{fontFamily: 'Alan Sans'}]}>Fecha:</Text>
+                      <Text style={[styles.infoValue,{fontFamily: 'Alan Sans'}]}>{formatDate(selectedPublication.created_at)}</Text>
                     </View>
 
                     {/* Texto de la publicación */}
                     {selectedPublication.texto && (
                       <View style={styles.textSection}>
-                        <Text style={styles.textLabel}>Descripción:</Text>
-                        <Text style={styles.textContent}>{selectedPublication.texto}</Text>
+                        <Text style={[styles.textLabel,{fontFamily: 'Alan Sans'}]}>Descripción:</Text>
+                        <Text style={[styles.textContent,{fontFamily: 'Alan Sans'}]}>{selectedPublication.texto}</Text>
                       </View>
                     )}
                   </View>
@@ -438,7 +443,7 @@ export default function ArtesanoPublications() {
                   size={24} 
                   color={selectedIndex === 0 ? '#9D046D' : 'rgba(238, 3, 89, 0.35)'} 
                 />
-                <Text style={[styles.navButtonText, selectedIndex === 0 && styles.navButtonTextDisabled]}>
+                <Text style={[styles.navButtonText,{fontFamily: 'Alan Sans', fontSize: 15}, selectedIndex === 0 && styles.navButtonTextDisabled]}>
                   Anterior
                 </Text>
               </TouchableOpacity>
@@ -448,7 +453,7 @@ export default function ArtesanoPublications() {
                 onPress={handleNextPublication}
                 disabled={selectedIndex === publicaciones.length - 1}
               >
-                <Text style={[styles.navButtonText, selectedIndex === publicaciones.length - 1 && styles.navButtonTextDisabled]}>
+                <Text style={[styles.navButtonText, {fontFamily: 'Alan Sans', fontSize: 15},selectedIndex === publicaciones.length - 1 && styles.navButtonTextDisabled]}>
                   Siguiente
                 </Text>
                 <MaterialCommunityIcons 
@@ -475,7 +480,7 @@ export default function ArtesanoPublications() {
                   }}
                 >
                   <MaterialCommunityIcons name="pencil" size={20} color="#fff" />
-                  <Text style={styles.buttonText}>Editar</Text>
+                  <Text style={[styles.buttonText,{fontFamily: 'Alan Sans', fontSize: 18}]}>Editar</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -483,7 +488,7 @@ export default function ArtesanoPublications() {
                   onPress={() => handleDeletePublication(selectedPublication?.id)}
                 >
                   <MaterialCommunityIcons name="delete" size={20} color="#fff" />
-                  <Text style={styles.buttonText}>Eliminar</Text>
+                  <Text style={[styles.buttonText,{fontFamily: 'Alan Sans', fontSize: 18}]}>Eliminar</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -501,7 +506,7 @@ export default function ArtesanoPublications() {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Editar Publicación</Text>
+              <Text style={[styles.modalTitle,{fontFamily: 'Alan Sans', fontSize: 21}]}>Editar Publicación</Text>
               <TouchableOpacity onPress={handleCloseEditModal}>
                 <MaterialCommunityIcons name="close" size={24} color="#333" />
               </TouchableOpacity>

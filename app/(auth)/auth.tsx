@@ -6,9 +6,16 @@ import { BlurView } from 'expo-blur';
 import { StatusBar } from 'expo-status-bar';
 import { MotiText, MotiView } from 'moti';
 import React, { useState } from 'react';
-import { Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text as DefaultText, TextInput, TouchableOpacity, View, TextProps } from 'react-native';
 import {Alert} from 'react-native';
 import { signInWithPassword, signInWithGoogle, signUpWithEmail } from '../../src/services/authService';
+import useCustomFonts from '../../hooks/useFonts';
+
+
+
+const Text = (props: TextProps) => (
+    <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
+  );
 // --- COMPONENTE AUXILIAR PARA MOSTRAR CADA REQUISITO ---
 // Este componente muestra un ícono de check o 'x' y el texto del requisito.
 const PasswordRequirement = ({ met, text }: { met: boolean; text: string }) => (
@@ -174,6 +181,7 @@ export default function AuthScreen() {
             showsVerticalScrollIndicator={false}
           >
           <MotiText
+            style={{fontFamily: 'Alan Sans'}}
             from={{ opacity: 0, translateY: -50 }} 
             animate={{ opacity: 1, translateY: 0 }}
             transition={{ type: 'timing', duration: 900 }}
@@ -199,12 +207,12 @@ export default function AuthScreen() {
                 ) : (
                   <View className="items-center">
                     <Feather name="camera" size={32} color="#4B5563" />
-                    <Text className="text-gray-700 text-center mt-2 text-xs">Añadir foto</Text>
+                    <Text style={{fontFamily: 'Alan Sans',}} className="text-gray-700 text-center mt-2 text-xs">Añadir foto</Text>
                   </View>
                 )}
               </TouchableOpacity> 
               {errors.profileImage && (
-                <Text style={[styles.errorText, { alignSelf: 'center', marginTop: 4 }]}>{errors.profileImage}</Text>
+                <Text style={[styles.errorText,  { alignSelf: 'center', marginTop: 4 }]}>{errors.profileImage}</Text>
               )}
             </MotiView>
           )}
@@ -227,7 +235,7 @@ export default function AuthScreen() {
             
             <TouchableOpacity onPress={() => setAuthMode('login')} className="flex-1 py-2 items-center rounded-full">
               <Text 
-                style={{ color: authMode === 'login' ? 'white' : '#EE0359' }}
+                style={{ color: authMode === 'login' ? 'white' : '#EE0359', fontFamily: 'Alan Sans'}}
                 className="font-bold text-base"
               >
                 Inicia Sesion
@@ -236,7 +244,7 @@ export default function AuthScreen() {
             
             <TouchableOpacity onPress={() => setAuthMode('signup')} className="flex-1 py-2 items-center rounded-full">
               <Text 
-                style={{ color: authMode === 'signup' ? 'white' : '#EE0359' }}
+                style={{ color: authMode === 'signup' ? 'white' : '#EE0359', fontFamily: 'Alan Sans'}}
                 className="font-bold text-base "
               >Registrate</Text>
             </TouchableOpacity> 
@@ -258,6 +266,7 @@ export default function AuthScreen() {
               >
                 <Feather name="mail" size={20} color="#9D046D" style={{ marginRight: 10 }} />
                 <TextInput
+                  style={{fontFamily: 'Alan Sans',}}
                   key="email-input"
                   onFocus={() => setFocusedInput('email')}
                   onBlur={() => setFocusedInput(null)}
@@ -295,6 +304,7 @@ export default function AuthScreen() {
               >
                 <Feather name="lock" size={20} color="#9D046D" style={{ marginRight: 10 }} />
               <TextInput
+              style={{fontFamily: 'Alan Sans',}}
                 key="email-input"
                 onFocus={() => setFocusedInput('password')}
                 onBlur={() => setFocusedInput(null)}
@@ -324,10 +334,10 @@ export default function AuthScreen() {
               transition={{ type: 'timing', delay: 300 }}
             >
               {errors.password && authMode === 'signup' && (
-                <Text style={[styles.errorText, { marginBottom: 4 }]}>{errors.password}</Text>
+                <Text style={[styles.errorText,{ marginBottom: 4 }]}>{errors.password}</Text>
               )}
               <PasswordRequirement met={password.length >= 8} text="Al menos 8 caracteres" />
-              <PasswordRequirement met={/[A-Z]/.test(password)} text="Al menos una mayúscula" />
+              <PasswordRequirement met={/[A-Z]/.test(password)} text= "Al menos una mayúscula" />
               <PasswordRequirement met={/[a-z]/.test(password)} text="Al menos una minúscula" />
               <PasswordRequirement met={/[0-9]/.test(password)} text="Al menos un número" />
               <PasswordRequirement met={/[^A-Za-z0-9]/.test(password)} text="Al menos un caracter especial" />
@@ -347,6 +357,7 @@ export default function AuthScreen() {
                >
                  <Feather name="lock" size={20} color="#9D046D" style={{ marginRight: 10 }} />
                  <TextInput
+                 style={{fontFamily: 'Alan Sans',}}
                    key="confirm-password-input"
                    onFocus={() => setFocusedInput('confirmPassword')}
                    onBlur={() => setFocusedInput(null)}
@@ -374,7 +385,7 @@ export default function AuthScreen() {
             className="w-full top-2"
           >
             <TouchableOpacity onPress={authMode === 'login' ? handleLogin : handleSignUp} style={{backgroundColor: '#9D046D'}} className="w-full p-4 rounded-2xl items-center mb-6 shadow-lg shadow-black/20">
-              <Text className="text-white text-xl font-bold">
+              <Text style={{fontFamily: 'Alan Sans'}} className="text-white text-xl font-bold">
                 {authMode === 'login' ? 'Inicia Sesion' : 'Registrate'}
               </Text>
             </TouchableOpacity>
@@ -388,7 +399,7 @@ export default function AuthScreen() {
           >
             <View className="flex-row items-center w-full mb-6">
               <View className="flex-1 h-px bg-white/30" />
-              <Text className="text-black mx-4">
+              <Text style={{fontFamily: 'Alan Sans'}} className="text-black mx-4">
                 {authMode === 'login' ? 'o inicia sesión con' : 'o regístrate con'} 
               </Text>
               <View className="flex-1 h-px bg-white" />
@@ -399,15 +410,15 @@ export default function AuthScreen() {
                 source={{ uri: 'https://img.icons8.com/color/48/google-logo.png' }} 
                 className="w-6 h-6 mr-3"
               />
-              <Text className="text-white text-lg font-semibold mx-2">Google</Text>
+              <Text style={{fontFamily: 'Alan Sans'}} className="text-white text-lg font-semibold mx-2">Google</Text>
             </TouchableOpacity>
 
                   {authMode === 'login' && (
                       <Link href="/recuperacioncontrasena" asChild>
                           <TouchableOpacity className="mb-4 p-2"> 
                               <Text 
-                                  className="text-base font-semibold underline" 
-                                  style={{ color: '#9D046D' }} 
+                                  className=" text-lg font-semibold underline" 
+                                  style={{ color: '#9D046D' , fontFamily: 'Alan Sans'}} 
                               >
                                   ¿Olvidaste tu contraseña?
                               </Text>
@@ -418,7 +429,7 @@ export default function AuthScreen() {
 
           <Link href = "/" asChild>
               <TouchableOpacity style={{backgroundColor: '#9D046D'}} className='text-zinc-500 text-lg mb-1 w-10/12 p-4 rounded-full items-center'>
-                <Text className='text-white text-2xl font-semibold'>Regresar</Text>
+                <Text style={{fontFamily: 'Alan Sans',}} className='text-white text-2xl font-semibold'>Regresar</Text>
               </TouchableOpacity>
               </Link>
           </ScrollView>

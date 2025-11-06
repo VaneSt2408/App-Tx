@@ -9,7 +9,7 @@ import useCustomFonts from '../../hooks/useFonts';
 
 
 const Text = (props: TextProps) => (
-    <DefaultText {...props} style={[{ fontFamily: 'AlanSans' }, props.style]} />
+    <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
   );
 
 // Creamos un componente Animated a partir de LinearGradient para poder animar sus props
@@ -120,6 +120,7 @@ export default function Index() {
             from={{ opacity: 0, translateY: 40 }}
             animate={{ opacity: 1, translateY: 0 }}
             transition={{ type: 'timing', duration: 800, delay: 300 }}
+            style={{fontFamily: 'Alan Sans'}}
           >
             Tx Guide
           </MotiText>
@@ -133,7 +134,7 @@ export default function Index() {
         >
           <Link href="/auth" asChild replace>
             <TouchableOpacity className="w-11/12 bg-white/20 p-5 rounded-3xl items-center mb-8 border border-white/30">
-              <Text className="text-white text-2xl font-semibold">
+              <Text style={{fontFamily: 'Alan Sans', fontSize:20,}} className="text-white font-semibold">
                 BIENVENIDO DE VUELTA →
               </Text>
             </TouchableOpacity>

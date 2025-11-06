@@ -19,7 +19,7 @@ export default function ProductDetailPage() {
   const [saved, setSaved] = useState(false); // Establecer el estado de guardado
 
   const Text = (props) => (
-      <DefaultText {...props} style={[{ fontFamily: 'AlanSans' }, props.style]} />
+      <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
     );
 
   // Cargar el detalle del producto

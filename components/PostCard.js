@@ -4,13 +4,19 @@
 
 // Importaciones
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text as DefaultText, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import useCustomFonts from '../hooks/useFonts';
 
 /**
  * Componente de tarjeta de publicación (estilo Facebook)
  */
+const Text = (props) => (
+    <DefaultText {...props} style={[{ fontFamily: 'AlanSans' }, props.style]} />
+  );
+
+  
 const PostCard = ({ post, onLike }) => {
   const router = useRouter();
   const [liked, setLiked] = useState(post.liked_by_user);
@@ -105,17 +111,17 @@ const PostCard = ({ post, onLike }) => {
 
         <View style={styles.headerInfo}>
           <TouchableOpacity onPress={handleNavigateToProfile} activeOpacity={0.7}>
-            <Text style={styles.artesanoNombre}>{post.artesano.nombre}</Text>
+            <Text style={[styles.artesanoNombre,{fontFamily: 'Alan Sans'}]}>{post.artesano.nombre}</Text>
           </TouchableOpacity>
           <View style={styles.metaInfo}>
             {post.artesano.ubicacion && (
-              <Text style={styles.metaText}>
+              <Text style={[styles.metaText,{fontFamily: 'Alan Sans'}]}>
                 <MaterialCommunityIcons name="map-marker" size={12} color="#666" />
-                {' '}{post.artesano.ubicacion}
+                {` ${post.artesano.ubicacion}`}
               </Text>
             )}
             <Text style={styles.separator}>•</Text>
-            <Text style={styles.metaText}>{getTimeAgo(post.created_at)}</Text>
+            <Text style={[styles.metaText,{fontFamily: 'Alan Sans'}]}>{getTimeAgo(post.created_at)}</Text>
           </View>
         </View>
       </View>

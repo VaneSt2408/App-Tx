@@ -1,9 +1,14 @@
 // app/(app)/Eventos.js
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text as DefaultText, FlatList, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import EventCard from '../../components/FeaturedCard'; // Reutilizamos el mismo componente de la FeedPage
+import useCustomFonts from '../../hooks/useFonts'; 
+
+const Text = (props) => (
+    <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
+  );
 
 const EVENTOS_KEY = '@eventos_admin';
 
@@ -61,7 +66,7 @@ const EventosPage = () => {
           className="bg-red-500 px-3 py-1.5 rounded-lg"
           onPress={() => handleDeleteEvent(item.id)}
         >
-          <Text className="text-white text-sm font-medium">Eliminar</Text>
+          <Text style={{fontFamily: 'Alan Sans'}} className="text-white text-sm font-medium">Eliminar</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -70,7 +75,7 @@ const EventosPage = () => {
   return (
     <View className="flex-1 bg-gray-100 p-4">
       <View className="flex-row justify-between items-center mb-4">
-        <Text className="text-xl font-bold text-gray-900">Gestión de Eventos</Text>
+        <Text style={{fontFamily: 'Alan Sans'}} className="text-xl font-bold text-gray-900">Gestión de Eventos</Text>
         <TouchableOpacity
           className="w-10 h-10 bg-[#9D046D] rounded-full justify-center items-center"
           onPress={() => router.push('./CreateEventPage')}

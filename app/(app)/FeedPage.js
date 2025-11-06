@@ -25,7 +25,7 @@ const FeedPage = () => {
   }, []);
 
   const Text = (props) => (
-    <DefaultText {...props} style={[{ fontFamily: 'AlanSans' }, props.style]} />
+    <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
   );
 
   const loadFeed = async (page = 0) => {
@@ -77,7 +77,7 @@ const FeedPage = () => {
 
   const renderPostsHeader = () => (
     <View className="bg-white py-3 px-4 border-b border-gray-200 mb-3">
-      <Text className="text-lg font-semibold text-gray-900">Mis Publicaciones</Text>
+      <Text style={{fontFamily: 'Alan Sans', fontSize: 22}} className=" font-semibold text-gray-900">Mis Publicaciones</Text>
     </View>
   );
 
@@ -95,7 +95,7 @@ const FeedPage = () => {
     return (
       <View className="flex-1 justify-center items-center px-10">
         <MaterialCommunityIcons name="post-outline" size={64} color="#ccc" />
-        <Text className="mt-4 text-lg font-semibold text-gray-600 text-center">
+        <Text style={{fontFamily: 'Alan Sans'}} className="mt-4 text-lg font-semibold text-gray-600 text-center">
           No hay publicaciones aún
         </Text>
         <Text className="mt-2 text-sm text-gray-500 text-center">

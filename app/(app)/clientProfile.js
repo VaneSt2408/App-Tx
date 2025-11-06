@@ -303,7 +303,7 @@ export default function ClientProfile() {
         <TouchableOpacity className="p-2" onPress={() => router.back()}>
           <MaterialCommunityIcons name="chevron-left" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={{fontFamily: 'AlanSans', fontSize:20, fontWeight: 'bold'}} className="text-2xl text-gray-700">Mi Cuenta</Text>
+        <Text style={{fontFamily: 'Alan Sans', fontSize:24, fontWeight: 'bold'}} className="text-2xl text-gray-700">Mi Cuenta</Text>
         <TouchableOpacity className="p-2">
           <MaterialCommunityIcons name="dots-vertical" size={24} color="#333" />
         </TouchableOpacity>
@@ -316,12 +316,12 @@ export default function ClientProfile() {
             {profile.avatar_url ? (
               <Image source={{ uri: profile.avatar_url }} className="w-12 h-12 rounded-full" />
             ) : (
-              <MaterialCommunityIcons name="account" size={24} color="#666" />
+              <MaterialCommunityIcons name="account" size={24} color="#666"/>
             )}
           </View>
           <View className="flex-1">
-            <Text className="text-base font-semibold text-gray-900">{profile.nombre_completo}</Text>
-            <Text style={{fontFamily: 'AlanSans', fontSize:15}} className=" text-[#9D046D] text-semibold">Ver mi perfil</Text>
+            <Text style={{fontFamily: 'Alan Sans', fontSize:20,}} className="text-base font-semibold text-gray-900">{profile.nombre_completo}</Text>
+            <Text style={{fontFamily: 'Alan Sans', fontSize:15}} className=" text-[#9D046D] text-semibold">Ver mi perfil</Text>
           </View>
           <MaterialCommunityIcons name="chevron-right" size={20} color="#ccc" />
         </TouchableOpacity>
@@ -330,7 +330,7 @@ export default function ClientProfile() {
       {/* Sección Gestión */}
       <View className="bg-white mb-4">
         <View className="px-4 py-3 border-b border-gray-200">
-          <Text style={{fontFamily: 'AlanSans', fontSize:20,}} className="text-lg font-bold text-gray-700">Gestión</Text>
+          <Text style={{fontFamily: 'Alan Sans', fontSize:20,}} className="text-lg font-bold text-gray-700">Gestión</Text>
         </View>
         <TouchableOpacity
           className="flex-row items-center px-4 py-3 border-b border-gray-200"
@@ -340,7 +340,7 @@ export default function ClientProfile() {
             <MaterialCommunityIcons name="account-circle-outline" size={26} color="#000" />
           </View>
           <View className="flex-1">
-            <Text className="font-bold text-gray-900">Gestión de la Cuenta</Text>
+            <Text style={{fontFamily: 'Alan Sans', fontSize:15,}} className="font-bold text-gray-900">Gestión de la Cuenta</Text>
           </View>
           <MaterialCommunityIcons name="chevron-right" size={20} color="#000" />
         </TouchableOpacity>
@@ -352,7 +352,7 @@ export default function ClientProfile() {
             <MaterialCommunityIcons name="bell-ring-outline" size={26} color="#000" />
           </View>
           <View className="flex-1">
-            <Text className="font-bold text-gray-900">Notificaciones</Text>
+            <Text style={{fontFamily: 'Alan Sans', fontSize:15,}} className="font-bold text-gray-900">Notificaciones</Text>
           </View>
           <MaterialCommunityIcons name="chevron-right" size={20} color="#000" />
         </TouchableOpacity>
@@ -364,7 +364,7 @@ export default function ClientProfile() {
             <MaterialCommunityIcons name="tune" size={26} color="#000" />
           </View>
           <View className="flex-1">
-            <Text className="font-bold text-gray-900">Configuración de la App</Text>
+            <Text style={{fontFamily: 'Alan Sans', fontSize:15,}} className="font-bold text-gray-900">Configuración de la App</Text>
           </View>
           <MaterialCommunityIcons name="chevron-right" size={20} color="#000" />
         </TouchableOpacity>
@@ -373,7 +373,7 @@ export default function ClientProfile() {
       {/* Sección Soporte */}
       <View className="bg-white mb-4">
         <View className="px-4 py-3 border-b border-gray-200">
-          <Text className="text-lg font-bold text-gray-700">Soporte</Text>
+          <Text style={{fontFamily: 'Alan Sans', fontSize:20,}} className="text-lg font-bold text-gray-700">Soporte</Text>
         </View>
         <TouchableOpacity
           className="flex-row items-center px-4 py-3 border-b border-gray-200"
@@ -383,7 +383,7 @@ export default function ClientProfile() {
             <MaterialCommunityIcons name="information-outline" size={26} color="#000" />
           </View>
           <View className="flex-1">
-            <Text style={{fontFamily: 'AlanSans', fontSize:15,}} className="font-bold text-gray-900">Ayuda y Soporte</Text>
+            <Text style={{fontFamily: 'Alan Sans', fontSize:15,}} className="font-bold text-gray-900">Ayuda y Soporte</Text>
           </View>
           <MaterialCommunityIcons name="chevron-right" size={20} color="#000" />
         </TouchableOpacity>
@@ -395,7 +395,7 @@ export default function ClientProfile() {
             <MaterialCommunityIcons name="file-document-outline" size={26} color="#000" />
           </View>
           <View className="flex-1">
-            <Text style={{fontFamily: 'AlanSans', fontSize:15,}} className="font-bold text-gray-900">Términos y Condiciones</Text>
+            <Text style={{fontFamily: 'Alan Sans', fontSize:15,}} className="font-bold text-gray-900">Términos y Condiciones</Text>
           </View>
           <MaterialCommunityIcons name="chevron-right" size={20} color="#000" />
         </TouchableOpacity>
@@ -408,7 +408,7 @@ export default function ClientProfile() {
           onPress={handleLogout}
         >
           <MaterialCommunityIcons name="logout" size={20} color="#9D046D" />
-          <Text style={{fontFamily: 'AlanSans', fontSize:20,}} className="ml-2 font-bold text-[#9D046D]">Cerrar Sesión</Text>
+          <Text style={{fontFamily: 'Alan Sans', fontSize:20,}} className="ml-2 font-bold text-[#9D046D]">Cerrar Sesión</Text>
         </TouchableOpacity>
       </View>
     </View>
