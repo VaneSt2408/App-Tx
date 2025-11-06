@@ -11,8 +11,6 @@ const Text = (props) => (
   );
 import { getEvents, deleteEvent } from '../../src/services/eventsService';
 
-const EVENTOS_KEY = '@eventos_admin'; 
-
 const EventosPage = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -61,6 +59,14 @@ const EventosPage = () => {
           onPress={() => handleDeleteEvent(item.id)}
         >
           <Text style={{fontFamily: 'Alan Sans'}} className="text-white text-sm font-medium">Eliminar</Text>
+        </TouchableOpacity>
+        
+        {/* Botón de Editar (NUEVO) */}
+        <TouchableOpacity
+          className="bg-blue-500 px-3 py-1.5 rounded-lg mr-2" // Añadimos margen a la derecha
+          onPress={() => handleEditEvent(item.id)} // Necesitarás crear esta función
+        >
+          <Text className="text-white text-sm font-medium">Editar</Text>
         </TouchableOpacity>
       </View>
     </View>
