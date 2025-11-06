@@ -21,7 +21,7 @@ const MarketplacePage = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filter, setFilter] = useState('todos'); // 'todos', 'publicados', 'vendidos', 'borrados'
+  const [filter, setFilter] = useState('todos'); // 'todos', 'publicados', 'vendidos', 'borrados', 'mis-compras'
   const [filteredProductos, setFilteredProductos] = useState([]);
 
   // Cargar productos inicial
@@ -48,6 +48,10 @@ const MarketplacePage = () => {
       // Asumimos que no hay un campo "estado" para borrados, por lo tanto, este filtro podría ser para productos con "estado" = "inactivo"
       // filtered = filtered.filter(p => p.estado === 'inactivo');
     }
+    // El filtro 'mis-compras' se maneja en `loadProductos` ya que requiere una consulta diferente.
+    // Aquí solo nos aseguramos de no aplicar otros filtros de estado si 'mis-compras' está activo.
+    else if (filter === 'mis-compras') {
+    }
     // Para 'todos', no aplicamos filtro adicional
 
     // Aplicar filtro de búsqueda
@@ -73,16 +77,25 @@ const MarketplacePage = () => {
 
   const loadProductos = async (page = 0) => {
     try {
-      if (page === 0) setLoading(true);
-      const result = await MarketplaceService.getProductos(20, page);
+      if (page === 0) {
+        setLoading(true);
+        setProductos([]); // Limpiar productos al cambiar de filtro o refrescar
+      }
+
+      let result;
+      if (filter === 'mis-compras') {
+        result = await MarketplaceService.getMisCompras(session?.user?.id, 20, page);
+      } else {
+        result = await MarketplaceService.getProductos(20, page);
+      }
+
       if (result.success) {
         if (page === 0) {
           setProductos(result.data);
         } else {
-          setProductos(prev => [...prev, ...result.data]);
+          setProductos(prev => (prev ? [...prev, ...result.data] : result.data));
         }
         setHasMore(result.hasMore);
-        setCurrentPage(page);
       }
     } catch (error) {
       console.error('Error en loadProductos:', error);
@@ -91,6 +104,11 @@ const MarketplacePage = () => {
       setRefreshing(false);
     }
   };
+
+  // Recargar productos cuando el filtro cambia
+  useEffect(() => {
+    loadProductos(0);
+  }, [filter]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -204,16 +222,22 @@ const MarketplacePage = () => {
     <View className="flex-1 bg-gray-100">
       {/* Header */}
       <View className="bg-white pb-3">
-        <View className="px-4 flex-row items-center justify-between">
+        <View className="px-4 flex-row items-center justify-between pt-2">
+          <View style={{ width: 40 }} /> 
           <Text className="text-xl font-bold text-gray-900">Marketplace</Text>
-          <TouchableOpacity className="p-2" onPress={() => { /* Lógica futura para filtros avanzados */ }}>
-            <MaterialCommunityIcons name="filter-variant" size={24} color="#333" />
+          <TouchableOpacity 
+            className="p-2" 
+            onPress={() => setFilter('mis-compras')}
+          >
+            <MaterialCommunityIcons 
+              name={filter === 'mis-compras' ? "shopping" : "shopping-outline"} 
+              size={26} color={filter === 'mis-compras' ? '#9D046D' : '#333'} />
           </TouchableOpacity>
         </View>
 
         {/* Barra de Búsqueda */}
         <View className="px-4 mt-2">
-          <View className="flex-row items-center bg-gray-200 rounded-full px-4 py-2">
+          <View className="flex-row items-center bg-gray-200 rounded-xl px-4 py-2 border-2 border-[#9D046D]/50">
             <MaterialCommunityIcons name="magnify" size={20} color="#666" />
             <TextInput
               className="flex-1 ml-2 text-base"
