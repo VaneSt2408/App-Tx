@@ -223,7 +223,11 @@ const MarketplacePage = () => {
       {/* Header */}
       <View className="bg-white pb-3">
         <View className="px-4 flex-row items-center justify-between pt-2">
-          <View style={{ width: 40 }} /> 
+          <TouchableOpacity 
+            className="p-2" 
+            onPress={() => { /* Lógica para abrir el menú lateral */ }}>
+            <MaterialCommunityIcons name="menu" size={26} color="#333" />
+          </TouchableOpacity>
           <Text className="text-xl font-bold text-gray-900">Marketplace</Text>
           <TouchableOpacity 
             className="p-2" 
@@ -251,15 +255,21 @@ const MarketplacePage = () => {
         {/* Filtros */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4 mt-2">
           <TouchableOpacity
-            className={`px-4 py-2 mr-2 rounded-full ${
+            className={`flex-row items-center px-4 py-2 mr-2 rounded-xl ${
               filter === 'todos' ? 'bg-[#9D046D] text-white' : 'bg-gray-200 text-gray-800'
             }`}
             onPress={() => setFilter('todos')}
           >
-            <Text className={`font-medium ${filter === 'todos' ? 'text-white' : 'text-gray-800'}`}>Todos</Text>
+            <Text className={`font-medium mr-2 ${filter === 'todos' ? 'text-white' : 'text-gray-800'}`}>
+              Filtros
+            </Text>
+          <MaterialCommunityIcons 
+          name={'tune'} // <-- Cambiado a 'tune'
+          size={20} 
+          color={filter === 'todos' ? '#fff' : '#333'} />
           </TouchableOpacity>
           <TouchableOpacity
-            className={`px-4 py-2 mr-2 rounded-full ${
+            className={`px-4 py-2 mr-2 rounded-xl ${
               filter === 'publicados' ? 'bg-[#9D046D] text-white' : 'bg-gray-200 text-gray-800'
             }`}
             onPress={() => setFilter('publicados')}
@@ -267,7 +277,7 @@ const MarketplacePage = () => {
             <Text className={`font-medium ${filter === 'publicados' ? 'text-white' : 'text-gray-800'}`}>Publicados</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            className={`px-4 py-2 mr-2 rounded-full ${
+            className={`px-4 py-2 mr-2 rounded-xl ${
               filter === 'vendidos' ? 'bg-[#9D046D] text-white' : 'bg-gray-200 text-gray-800'
             }`}
             onPress={() => setFilter('vendidos')}
@@ -275,7 +285,7 @@ const MarketplacePage = () => {
             <Text className={`font-medium ${filter === 'vendidos' ? 'text-white' : 'text-gray-800'}`}>Vendidos</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            className={`px-4 py-2 mr-2 rounded-full ${
+            className={`px-4 py-2 mr-2 rounded-xl ${
               filter === 'borrados' ? 'bg-[#9D046D] text-white' : 'bg-gray-200 text-gray-800'
             }`}
             onPress={() => setFilter('borrados')}
