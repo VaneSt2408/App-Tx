@@ -1,8 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, Image, TouchableOpacity } from 'react-native';
+import { View, Text as DefaultText, FlatList, StyleSheet, ActivityIndicator, Image, TouchableOpacity } from 'react-native';
 import { estadisticasService } from '../../src/services/estadisticasService';
+import useCustomFonts from '../../hooks/useFonts';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+
+//Componente de texto alan sans
+const Text = (props) => (
+  <DefaultText {...props} style={[{ fontFamily: 'AlanSans' }, props.style]} />
+);
 
 // Componente principal
 export default function EstadisticasPage() {

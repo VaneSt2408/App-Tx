@@ -4,11 +4,16 @@
 
 // Importaciones
 import React, { useState } from 'react';
-import { View, TextInput, Button, Image, StyleSheet, Alert, ActivityIndicator, ScrollView, Text, TouchableOpacity } from 'react-native';
+import { View, TextInput, Button, Image, StyleSheet, Alert, ActivityIndicator, ScrollView, Text as DefaultText, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import { createPostForCurrentUser } from '../../src/services/PublicacionService';
+import useCustomFonts from '../../hooks/useFonts';
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Para el icono de imagen
+
+const Text = (props) => (
+    <DefaultText {...props} style={[{ fontFamily: 'AlanSans' }, props.style]} />
+  );
 
 // Componente principal
 export default function CreatePostPage() {

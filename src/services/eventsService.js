@@ -325,9 +325,76 @@ export const getEvents = async () => {
             return { success: false, error: error.message };
         }
 
-        return { success: true, data: data || [] };
+        // Normalizar: si no existe 'hora', extraerla desde 'fecha' (timestampz)
+        const normalized = (data || []).map(ev => {
+            // copia para no mutar directamente si prefieres
+            const out = { ...ev };
+
+            // Si ya existe hora y no es vacío, mantenla
+            if (out.hora) return out;
+
+            const fecha = out.fecha;
+            if (!fecha) {
+                out.hora = null;
+                return out;
+            }
+
+            try {
+                // Algunos motores no parsean 'YYYY-MM-DD HH:MM:SS+00' sin la 'T'
+                let iso = fecha;
+                if (typeof iso === 'string' && iso.includes(' ') && !iso.includes('T')) {
+                    iso = iso.replace(' ', 'T');
+                }
+
+                const d = new Date(iso);
+                if (!isNaN(d)) {
+                    // Mostrar hora en formato local "HH:MM"
+                    // Nota: toLocaleTimeString convertirá a la zona del dispositivo.
+                    out.hora = d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+                } else {
+                    // Fallback: intentar extraer substring si el formato es predecible
+                    const match = String(fecha).match(/(\d{2}:\d{2})/);
+                    out.hora = match ? match[1] : null;
+                }
+            } catch (e) {
+                out.hora = null;
+            }
+
+            return out;
+        });
+
+        return { success: true, data: normalized };
     } catch (error) {
         return { success: false, error: error.message };
+    }
+};
+
+
+/**
+ * Eliminar un evento existente
+ * NOTA: Solo los administradores pueden eliminar eventos
+ * @param {string} eventoId - ID del evento a eliminar
+ * @returns {Promise<{success: boolean, error?: string}>} - Resultado de la operación
+ */
+export const deleteEvent = async (eventoId) => {
+    try {
+        if(!eventoId) {
+            return { success: false, error: 'El ID del evento es requerido' };
+        }
+
+        const { data: {user} } = await supabase.auth.getUser();
+        if (!user || !(await isAdmin(user.id))) {
+            return { success: false, error: 'Solo los administradores pueden eliminar eventos' };
+        }
+
+        const {error} = await supabase.from('eventos').delete().eq('id', eventoId);
+        if (error) {
+            return { success: false, error: 'Error al eliminar el evento: ' + error.message };
+        }
+        return { success: true };
+        
+    } catch (error) {
+        return { success: false, error: error.message }; 
     }
 };
 
@@ -337,7 +404,9 @@ export const eventsService = {
     createEventForCurrentUser,
     updateEvent,
     updateEventForCurrentUser,
-    getEvents
+    getEvents,
+    deleteEvent
 };
+
 
 export default eventsService;

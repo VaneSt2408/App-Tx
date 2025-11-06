@@ -1,73 +1,80 @@
-// En: app/(app)/MarketplacePage.js -> Archivo de marketplace (Frontend)
-// Este archivo es el encargado de mostrar el marketplace en la aplicación.
-// Muestra los productos del marketplace registrados en la base de datos y permite buscarlos por nombre, categoría o ubicación.
-// También permite navegar al perfil del artesano y ver su información completa.
-
-// Importaciones
+// app/(app)/MarketplacePage.js
 import React, { useState, useEffect, useMemo } from 'react';
-import {View,Text,FlatList,Image,TouchableOpacity,StyleSheet,TextInput,ActivityIndicator,RefreshControl,} from 'react-native';
+import { View, FlatList, Image, TouchableOpacity, Text as DefaultText, TextInput, ActivityIndicator, RefreshControl, ScrollView } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
+import useCustomFonts from '../../hooks/useFonts';
 import MarketplaceService from '../../src/services/MarketplaceService';
 
-// Componente principal
-export default function MarketplacePage() {
-  const { session } = useAuth(); // Obtener la sesión del usuario actual
-  const router = useRouter(); // Obtener el router
-  const [productos, setProductos] = useState([]); // Establecer el estado de los productos
-  const [loading, setLoading] = useState(true); // Establecer el estado de carga
-  const [refreshing, setRefreshing] = useState(false); // Establecer el estado de refresco
-  const [currentPage, setCurrentPage] = useState(0); // Establecer el estado de la página actual
-  const [hasMore, setHasMore] = useState(true); // Establecer el estado de si hay más productos
-  const [searchQuery, setSearchQuery] = useState(''); // Establecer el estado de la consulta de búsqueda
-  const [filteredProductos, setFilteredProductos] = useState([]); // Establecer el estado de los productos filtrados
+const Text = (props) => (
+  <DefaultText {...props} style={[{ fontFamily: 'AlanSans' }, props.style]} />
+);
+
+
+const MarketplacePage = () => {
+  const { session } = useAuth();
+  const router = useRouter();
+  const [productos, setProductos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filter, setFilter] = useState('todos'); // 'todos', 'publicados', 'vendidos', 'borrados'
+  const [filteredProductos, setFilteredProductos] = useState([]);
 
   // Cargar productos inicial
   useEffect(() => {
     loadProductos();
   }, []);
 
-  // Filtro de búsqueda local
+  // Filtro de búsqueda local y por estado
   useEffect(() => {
     filterProductos();
-  }, [searchQuery, productos]);
+  }, [searchQuery, productos, filter]);
 
-  // Función para filtrar los productos
   const filterProductos = () => {
-    if (!searchQuery.trim()) {
-      setFilteredProductos(productos);
-      return;
+    let filtered = [...productos];
+
+    // Aplicar filtro por estado
+    if (filter === 'publicados') {
+      filtered = filtered.filter(p => p.estado === 'activo');
+    } else if (filter === 'vendidos') {
+      // Asumimos que no hay un campo "estado" para vendidos, por lo tanto, este filtro podría ser para productos con "cantidad_disponible" = 0
+      // Si tu modelo de datos tiene un campo específico para "vendido", cámbialo aquí.
+      // filtered = filtered.filter(p => p.cantidad_disponible === 0);
+    } else if (filter === 'borrados') {
+      // Asumimos que no hay un campo "estado" para borrados, por lo tanto, este filtro podría ser para productos con "estado" = "inactivo"
+      // filtered = filtered.filter(p => p.estado === 'inactivo');
     }
+    // Para 'todos', no aplicamos filtro adicional
 
-    // Filtrar los productos
-    const query = searchQuery.toLowerCase().trim();
-    const filtered = productos.filter(producto => {
-      const nombre = (producto.nombre || '').toLowerCase();
-      const descripcion = (producto.descripcion || '').toLowerCase();
-      const categoria = (producto.categoria || '').toLowerCase();
-      const artesanoNombre = (producto.artesano?.nombre || '').toLowerCase();
-      const artesanoCategoria = (producto.artesano?.categoria || '').toLowerCase();
+    // Aplicar filtro de búsqueda
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(producto => {
+        const nombre = (producto.nombre || '').toLowerCase();
+        const descripcion = (producto.descripcion || '').toLowerCase();
+        const categoria = (producto.categoria || '').toLowerCase();
+        const artesanoNombre = (producto.artesano?.nombre || '').toLowerCase();
+        const artesanoCategoria = (producto.artesano?.categoria || '').toLowerCase();
 
-      return nombre.includes(query) ||
-             descripcion.includes(query) ||
-             categoria.includes(query) ||
-             artesanoNombre.includes(query) ||
-             artesanoCategoria.includes(query);
-    });
+        return nombre.includes(query) ||
+               descripcion.includes(query) ||
+               categoria.includes(query) ||
+               artesanoNombre.includes(query) ||
+               artesanoCategoria.includes(query);
+      });
+    }
 
     setFilteredProductos(filtered);
   };
 
-  // Función para cargar los productos
   const loadProductos = async (page = 0) => {
     try {
-      if (page === 0) {
-        setLoading(true);
-      }
-
+      if (page === 0) setLoading(true);
       const result = await MarketplaceService.getProductos(20, page);
-
       if (result.success) {
         if (page === 0) {
           setProductos(result.data);
@@ -76,8 +83,6 @@ export default function MarketplacePage() {
         }
         setHasMore(result.hasMore);
         setCurrentPage(page);
-      } else {
-        console.error('Error al cargar productos:', result.error);
       }
     } catch (error) {
       console.error('Error en loadProductos:', error);
@@ -87,20 +92,17 @@ export default function MarketplacePage() {
     }
   };
 
-  // Función para refrescar los productos
   const onRefresh = () => {
     setRefreshing(true);
     loadProductos(0);
   };
 
-  // Función para cargar más productos
   const loadMore = () => {
     if (hasMore && !loading) {
       loadProductos(currentPage + 1);
     }
   };
 
-  // Función para formatear el precio
   const formatPrice = (price) => {
     return new Intl.NumberFormat('es-MX', {
       style: 'currency',
@@ -109,7 +111,6 @@ export default function MarketplacePage() {
     }).format(price);
   };
 
-  // Función para navegar al detalle del producto
   const navigateToProduct = (productId) => {
     router.push({
       pathname: '/ProductDetailPage',
@@ -118,71 +119,70 @@ export default function MarketplacePage() {
   };
 
   const renderProduct = ({ item }) => {
-    // Determinar si el producto es del artesano logueado
     const isOwnProduct = session?.user?.id === item.artesano?.id;
 
     return (
-      <TouchableOpacity 
-        style={[styles.productCard, isOwnProduct && styles.ownProductCard]} 
+      <TouchableOpacity
+        className={`flex-1 m-2 bg-white rounded-xl overflow-hidden shadow-sm ${isOwnProduct ? 'border-2 border-[#9D046D]' : ''}`}
         onPress={() => navigateToProduct(item.id)}
         activeOpacity={0.7}
       >
-        <View style={styles.imageContainer}>
-        {item.imagen_url ? (
-          <Image source={{ uri: item.imagen_url }} style={styles.productImage} />
-        ) : (
-          <View style={styles.placeholderImage}>
-            <MaterialCommunityIcons name="package-variant" size={40} color="#ccc" />
-          </View>
-        )}
-      </View>
-  
-      <View style={styles.productInfo}>
-        <Text style={styles.productName} numberOfLines={2}>
-          {item.nombre}
-        </Text>
-        <Text style={styles.productPrice}>{formatPrice(item.precio)}</Text>
-        
-        {item.artesano && (
-          <View style={styles.artesanoInfo}>
-            <MaterialCommunityIcons name="account" size={14} color="#666" />
-            <Text style={styles.artesanoName} numberOfLines={1}>
-              {item.artesano.nombre}
-            </Text>
-          </View>
-        )}
-      </View>
-    </TouchableOpacity>
+        {/* Imagen */}
+        <View className="w-full aspect-square bg-gray-100">
+          {item.imagen_url ? (
+            <Image source={{ uri: item.imagen_url }} className="w-full h-full object-cover" />
+          ) : (
+            <View className="w-full h-full justify-center items-center bg-gray-200">
+              <MaterialCommunityIcons name="package-variant" size={40} color="#ccc" />
+            </View>
+          )}
+        </View>
+
+        {/* Información */}
+        <View className="p-3">
+          <Text className="text-sm font-semibold text-gray-900 mb-1" numberOfLines={2}>
+            {item.nombre}
+          </Text>
+          <Text className="text-lg font-bold text-[#9D046D]">{formatPrice(item.precio)}</Text>
+          {item.artesano && (
+            <View className="flex-row items-center mt-1">
+              <MaterialCommunityIcons name="account" size={12} color="#666" />
+              <Text className="ml-1 text-xs text-gray-600" numberOfLines={1}>
+                {item.artesano.nombre}
+              </Text>
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
     );
   };
 
   const renderFooter = () => {
     if (!hasMore) return null;
     return (
-      <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color="#2575fc" />
+      <View className="py-5 items-center">
+        <ActivityIndicator size="small" color="#9D046D" />
       </View>
     );
   };
 
   const renderEmpty = () => {
     const isSearching = searchQuery.trim().length > 0;
-    
     return (
-      <View style={styles.emptyContainer}>
-        <MaterialCommunityIcons 
-          name={isSearching ? "magnify" : "store-off-outline"} 
-          size={80} 
-          color="#ccc" 
+      <View className="flex-1 justify-center items-center px-10 py-20">
+        <MaterialCommunityIcons
+          name={isSearching ? "magnify" : "store-off-outline"}
+          size={80}
+          color="#ccc"
         />
-        <Text style={styles.emptyText}>
-          {isSearching 
+        <Text className="mt-4 text-lg font-semibold text-gray-600 text-center">
+          {isSearching
             ? `No se encontraron productos para "${searchQuery}"`
             : 'No hay productos disponibles'
           }
         </Text>
-        <Text style={styles.emptySubtext}>
-          {isSearching 
+        <Text className="mt-2 text-sm text-gray-500 text-center">
+          {isSearching
             ? 'Intenta con otra búsqueda'
             : 'Próximamente habrá productos para ti'
           }
@@ -193,39 +193,65 @@ export default function MarketplacePage() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2575fc" />
-        <Text style={styles.loadingText}>Cargando marketplace...</Text>
+      <View className="flex-1 justify-center items-center bg-gray-100">
+        <ActivityIndicator size="large" color="#9D046D" />
+        <Text className="mt-3 text-sm text-gray-600">Cargando marketplace...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Marketplace</Text>
-        
-        {/* Barra de búsqueda */}
-        <View style={styles.searchContainer}>
-          <View style={styles.searchInputContainer}>
-            <MaterialCommunityIcons name="magnify" size={20} color="#666" />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Busca un producto, categoría, artesano ..."
-              placeholderTextColor="#000"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              returnKeyType="search"
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <MaterialCommunityIcons name="close-circle" size={20} color="#666" />
-              </TouchableOpacity>
-            )}
-          </View>
+    <View className="flex-1 bg-gray-100">
+      {/* Header */}
+      <View className="bg-white pb-3">
+        <View className="px-4 flex-row items-center justify-between">
+          <TouchableOpacity className="p-2">
+            
+          </TouchableOpacity>
+          <Text className="text-xl font-bold text-gray-900">Mis Productos</Text>
+          <TouchableOpacity className="p-2">
+            <MaterialCommunityIcons name="magnify" size={24} color="#333" />
+          </TouchableOpacity>
         </View>
+
+        {/* Filtros */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4 mt-2">
+          <TouchableOpacity
+            className={`px-4 py-2 mr-2 rounded-full ${
+              filter === 'todos' ? 'bg-[#9D046D] text-white' : 'bg-gray-200 text-gray-800'
+            }`}
+            onPress={() => setFilter('todos')}
+          >
+            <Text className={`font-medium ${filter === 'todos' ? 'text-white' : 'text-gray-800'}`}>Todos</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className={`px-4 py-2 mr-2 rounded-full ${
+              filter === 'publicados' ? 'bg-[#9D046D] text-white' : 'bg-gray-200 text-gray-800'
+            }`}
+            onPress={() => setFilter('publicados')}
+          >
+            <Text className={`font-medium ${filter === 'publicados' ? 'text-white' : 'text-gray-800'}`}>Publicados</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className={`px-4 py-2 mr-2 rounded-full ${
+              filter === 'vendidos' ? 'bg-[#9D046D] text-white' : 'bg-gray-200 text-gray-800'
+            }`}
+            onPress={() => setFilter('vendidos')}
+          >
+            <Text className={`font-medium ${filter === 'vendidos' ? 'text-white' : 'text-gray-800'}`}>Vendidos</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className={`px-4 py-2 mr-2 rounded-full ${
+              filter === 'borrados' ? 'bg-[#9D046D] text-white' : 'bg-gray-200 text-gray-800'
+            }`}
+            onPress={() => setFilter('borrados')}
+          >
+            <Text className={`font-medium ${filter === 'borrados' ? 'text-white' : 'text-gray-800'}`}>Borrados</Text>
+          </TouchableOpacity>
+        </ScrollView>
       </View>
 
+      {/* Lista de Productos */}
       <FlatList
         data={filteredProductos}
         renderItem={renderProduct}
@@ -233,159 +259,33 @@ export default function MarketplacePage() {
         numColumns={2}
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
-        contentContainerStyle={filteredProductos.length === 0 ? styles.emptyList : styles.list}
+        contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 90 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#2575fc']}
-            tintColor="#2575fc"
+            colors={['#9D046D']}
+            tintColor="#9D046D"
           />
         }
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
       />
+
+      {/* Botón Flotante (FAB) - SOLO PARA EL ARTESANO */}
+      {session?.user?.role === 'artesano' && (
+        <TouchableOpacity
+          className="absolute right-5 bottom-5 w-14 h-14 bg-[#9D046D] rounded-full justify-center items-center shadow-lg"
+          onPress={() => {
+            router.push('/CreateProductPage'); // Asegúrate de que esta ruta exista
+          }}
+        >
+          <MaterialCommunityIcons name="plus" size={28} color="white" />
+        </TouchableOpacity>
+      )}
     </View>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: '#666',
-  },
-  header: {
-    backgroundColor: '#fff',
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 12,
-  },
-  searchContainer: {
-    paddingHorizontal: 16,
-  },
-  searchInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    borderRadius: 25,
-    paddingHorizontal: 15,
-    height: 44,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: '#333',
-    marginLeft: 10,
-  },
-  list: {
-    padding: 8,
-    paddingTop: 8,
-    paddingBottom: 90, // Aumentado para más espacio inferior
-  },
-  emptyList: {
-    flexGrow: 1,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-    paddingVertical: 60,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#666',
-    marginTop: 16,
-    textAlign: 'center',
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#999',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  productCard: {
-    flex: 1,
-    margin: 8,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    overflow: 'hidden',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  ownProductCard: {
-    borderColor: '#9D046D',
-    borderWidth: 2,
-  },
-  imageContainer: {
-    width: '100%',
-    aspectRatio: 1,
-    backgroundColor: '#f0f0f0',
-  },
-  productImage: {
-    width: '100%',
-    height: '100%',
-  },
-  placeholderImage: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  productInfo: {
-    padding: 12,
-  },
-  productName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1a1a1a',
-    marginBottom: 6,
-    minHeight: 40,
-  },
-  productPrice: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#9D046D',
-    marginBottom: 8,
-  },
-  artesanoInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  artesanoName: {
-    fontSize: 12,
-    color: '#666',
-    marginLeft: 4,
-    flex: 1,
-  },
-  footerLoader: {
-    paddingVertical: 20,
-    alignItems: 'center',
-  },
-});
+export default MarketplacePage;

@@ -4,11 +4,12 @@
 
 // Importaciones
 import React, { useState, useEffect } from 'react';
-import {View,Text,Image,ScrollView,TouchableOpacity,StyleSheet,ActivityIndicator,Alert,} from 'react-native';
+import {View,Text as DefaultText,Image,ScrollView,TouchableOpacity,StyleSheet,ActivityIndicator,Alert,} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router'; 
 import MarketplaceService from '../../src/services/MarketplaceService';
 import { toggleLikeProduct  } from '../../src/services/productService';
+import useCustomFonts from '../../hooks/useFonts';
 
 // Componente principal
 export default function ProductDetailPage() {
@@ -18,6 +19,11 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true); // Establecer el estado de carga
   const [saved, setSaved] = useState(false); // Establecer el estado de guardado
   const [isLiked, setIsLiked] = useState(false); // Estado para controlar si el producto tiene like
+  const [likesCount, setLikesCount] = useState(0); // Estado para contar los likes
+
+  const Text = (props) => (
+      <DefaultText {...props} style={[{ fontFamily: 'AlanSans' }, props.style]} />
+    );
 
   // Cargar el detalle del producto
   useEffect(() => {
@@ -33,6 +39,7 @@ export default function ProductDetailPage() {
       if (result.success) {
         setProduct(result.data);
         setIsLiked(result.data.is_liked || false);
+        setLikesCount(result.data.likes_count || 0); // Agregar esta línea
       } else {
         Alert.alert('Error', 'No se pudo cargar el producto');
         router.back();
@@ -77,19 +84,21 @@ export default function ProductDetailPage() {
   };
 
   // Función dar like al producto
-  const handleLike = async (productID) => {
-    try {
-      const result = await toggleLikeProduct(productID);
-      if (result.success) {
-        setIsLiked(result.liked);
-      } else {
-        Alert.alert('Error', 'No se pudo marcar como favorito');
-      }
-    } catch (error) {
-      console.error('Error toggling like:', error);
+const handleLike = async (productID) => {
+  try {
+    const result = await toggleLikeProduct(productID);
+    if (result.success) {
+      setIsLiked(result.liked);
+      // Usar el contador que viene en la respuesta
+      setLikesCount(result.likes_count);
+    } else {
       Alert.alert('Error', 'No se pudo marcar como favorito');
     }
-  };
+  } catch (error) {
+    console.error('Error toggling like:', error);
+    Alert.alert('Error', 'No se pudo marcar como favorito');
+  }
+};
 
   // Función para navegar al perfil del artesano
   const handleArtesanoPress = () => {
@@ -210,6 +219,7 @@ export default function ProductDetailPage() {
                 size={20} 
                 color="#FF69B4" 
               />
+              <Text style={styles.likeCountText}>{likesCount}</Text>
             </TouchableOpacity>
           </View>
 
@@ -495,4 +505,10 @@ const styles = StyleSheet.create({
   bottomSpacer: {
     height: 32,
   },
+
+  likeCountText: {
+  fontSize: 14,
+  color: '#666',
+  marginLeft: 4,
+},
 });
