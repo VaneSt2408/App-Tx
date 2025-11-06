@@ -21,7 +21,7 @@ const MarketplacePage = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filter, setFilter] = useState('todos'); // 'todos', 'publicados', 'vendidos', 'borrados'
+  const [filter, setFilter] = useState('todos'); // 'todos', 'publicados', 'vendidos', 'borrados', 'mis-compras'
   const [filteredProductos, setFilteredProductos] = useState([]);
 
   // Cargar productos inicial
@@ -41,12 +41,13 @@ const MarketplacePage = () => {
     if (filter === 'publicados') {
       filtered = filtered.filter(p => p.estado === 'activo');
     } else if (filter === 'vendidos') {
-      // Asumimos que no hay un campo "estado" para vendidos, por lo tanto, este filtro podría ser para productos con "cantidad_disponible" = 0
-      // Si tu modelo de datos tiene un campo específico para "vendido", cámbialo aquí.
-      // filtered = filtered.filter(p => p.cantidad_disponible === 0);
+      filtered = filtered.filter(p => p.estado === 'vendido');
     } else if (filter === 'borrados') {
-      // Asumimos que no hay un campo "estado" para borrados, por lo tanto, este filtro podría ser para productos con "estado" = "inactivo"
-      // filtered = filtered.filter(p => p.estado === 'inactivo');
+      filtered = filtered.filter(p => p.estado === 'inactivo');
+    }
+    // El filtro 'mis-compras' se maneja en `loadProductos` ya que requiere una consulta diferente.
+    // Aquí solo nos aseguramos de no aplicar otros filtros de estado si 'mis-compras' está activo.
+    else if (filter === 'mis-compras') {
     }
     // Para 'todos', no aplicamos filtro adicional
 
@@ -73,16 +74,25 @@ const MarketplacePage = () => {
 
   const loadProductos = async (page = 0) => {
     try {
-      if (page === 0) setLoading(true);
-      const result = await MarketplaceService.getProductos(20, page);
+      if (page === 0) {
+        setLoading(true);
+        setProductos([]); // Limpiar productos al cambiar de filtro o refrescar
+      }
+
+      let result;
+      if (filter === 'mis-compras') {
+        result = await MarketplaceService.getMisCompras(session?.user?.id, 20, page);
+      } else {
+        result = await MarketplaceService.getProductos(20, page);
+      }
+
       if (result.success) {
         if (page === 0) {
           setProductos(result.data);
         } else {
-          setProductos(prev => [...prev, ...result.data]);
+          setProductos(prev => (prev ? [...prev, ...result.data] : result.data));
         }
         setHasMore(result.hasMore);
-        setCurrentPage(page);
       }
     } catch (error) {
       console.error('Error en loadProductos:', error);
@@ -91,6 +101,11 @@ const MarketplacePage = () => {
       setRefreshing(false);
     }
   };
+
+  // Recargar productos cuando el filtro cambia
+  useEffect(() => {
+    loadProductos(0);
+  }, [filter]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -123,7 +138,7 @@ const MarketplacePage = () => {
 
     return (
       <TouchableOpacity
-        className={`flex-1 m-2 bg-white rounded-xl overflow-hidden shadow-sm ${isOwnProduct ? 'border-2 border-[#9D046D]' : ''}`}
+        className={`flex-1 m-2 bg-white rounded-xl overflow-hidden shadow-sm border-[#9D046D] ${isOwnProduct ? 'border-2' : 'border'}`}
         onPress={() => navigateToProduct(item.id)}
         activeOpacity={0.7}
       >
@@ -204,28 +219,50 @@ const MarketplacePage = () => {
     <View className="flex-1 bg-gray-100">
       {/* Header */}
       <View className="bg-white pb-3">
-        <View className="px-4 flex-row items-center justify-between">
-          <TouchableOpacity className="p-2">
-            
+        <View className="px-4 flex-row items-center justify-between pt-2">
+          <View className="w-10 h-10" />
+          <Text className="text-xl font-bold text-gray-900">Marketplace</Text>
+          <TouchableOpacity 
+            className="p-2" 
+            onPress={() => setFilter('mis-compras')}
+          >
+            <MaterialCommunityIcons 
+              name={filter === 'mis-compras' ? "shopping" : "shopping-outline"} 
+              size={26} color={filter === 'mis-compras' ? '#9D046D' : '#333'} />
           </TouchableOpacity>
-          <Text className="text-xl font-bold text-gray-900">Mis Productos</Text>
-          <TouchableOpacity className="p-2">
-            <MaterialCommunityIcons name="magnify" size={24} color="#333" />
-          </TouchableOpacity>
+        </View>
+
+        {/* Barra de Búsqueda */}
+        <View className="px-4 mt-2">
+          <View className="flex-row items-center bg-gray-200 rounded-xl px-4 py-2 border-2 border-[#9D046D]/50">
+            <MaterialCommunityIcons name="magnify" size={20} color="#666" />
+            <TextInput
+              className="flex-1 ml-2 text-base"
+              placeholder="Buscar productos, artesanos, categorías..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+          </View>
         </View>
 
         {/* Filtros */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4 mt-2">
           <TouchableOpacity
-            className={`px-4 py-2 mr-2 rounded-full ${
+            className={`flex-row items-center px-4 py-2 mr-2 rounded-xl ${
               filter === 'todos' ? 'bg-[#9D046D] text-white' : 'bg-gray-200 text-gray-800'
             }`}
-            onPress={() => setFilter('todos')}
+            onPress={() => router.push('/MarketplaceFilters')}
           >
-            <Text className={`font-medium ${filter === 'todos' ? 'text-white' : 'text-gray-800'}`}>Todos</Text>
+            <Text className={`font-medium mr-2 ${filter === 'todos' ? 'text-white' : 'text-gray-800'}`}>
+              Filtros
+            </Text>
+            <MaterialCommunityIcons 
+              name={'tune'} 
+              size={20} 
+              color={filter === 'todos' ? '#fff' : '#333'} />
           </TouchableOpacity>
           <TouchableOpacity
-            className={`px-4 py-2 mr-2 rounded-full ${
+            className={`px-4 py-2 mr-2 rounded-xl ${
               filter === 'publicados' ? 'bg-[#9D046D] text-white' : 'bg-gray-200 text-gray-800'
             }`}
             onPress={() => setFilter('publicados')}
@@ -233,20 +270,12 @@ const MarketplacePage = () => {
             <Text className={`font-medium ${filter === 'publicados' ? 'text-white' : 'text-gray-800'}`}>Publicados</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            className={`px-4 py-2 mr-2 rounded-full ${
+            className={`px-4 py-2 mr-2 rounded-xl ${
               filter === 'vendidos' ? 'bg-[#9D046D] text-white' : 'bg-gray-200 text-gray-800'
             }`}
             onPress={() => setFilter('vendidos')}
           >
             <Text className={`font-medium ${filter === 'vendidos' ? 'text-white' : 'text-gray-800'}`}>Vendidos</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className={`px-4 py-2 mr-2 rounded-full ${
-              filter === 'borrados' ? 'bg-[#9D046D] text-white' : 'bg-gray-200 text-gray-800'
-            }`}
-            onPress={() => setFilter('borrados')}
-          >
-            <Text className={`font-medium ${filter === 'borrados' ? 'text-white' : 'text-gray-800'}`}>Borrados</Text>
           </TouchableOpacity>
         </ScrollView>
       </View>
