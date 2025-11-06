@@ -62,7 +62,7 @@ const EventCarousel = ({ events = [], onEventPress }) => {
 
             {/* Contenido */}
             <View className="p-4">
-              <Text style={{fontFamily: 'AlanSans'}} className="text-base font-semibold text-gray-900 mb-2">{event.titulo}</Text>
+              <Text style={{fontFamily: 'AlanSans'}} className="text-base font-semibold text-gray-900 mb-2">{event.nombre}</Text>
               <View className="flex-row items-center mb-1">
                 <MaterialCommunityIcons name="calendar" size={14} color="#666" />
                 <Text style={{fontFamily: 'AlanSans'}} className="ml-1 text-xs text-gray-600">{formatDate(event.fecha)}</Text>

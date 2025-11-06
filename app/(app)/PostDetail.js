@@ -1,3 +1,7 @@
+// app/(app)/PostDetail.js  -> Archivo de detalle de publicación/producto (Frontend)
+// Este archivo es el encargado de mostrar el detalle de una publicación o producto específico.
+// Muestra la información detallada del ítem seleccionado, incluyendo imágenes, descripciones y opciones de interacción.
+
 import React, { useState, useEffect } from 'react';
 import {
   View,

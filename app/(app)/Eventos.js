@@ -9,24 +9,21 @@ import useCustomFonts from '../../hooks/useFonts';
 const Text = (props) => (
     <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
   );
+import { getEvents, deleteEvent } from '../../src/services/eventsService';
 
-const EVENTOS_KEY = '@eventos_admin';
+const EVENTOS_KEY = '@eventos_admin'; 
 
 const EventosPage = () => {
   const router = useRouter();
-  const [eventos, setEventos] = useState([]);
   const [loading, setLoading] = useState(true);
+   const [events, setEvents] = useState([]);
 
   const loadEvents = async () => {
-    try {
-      const storedEvents = await AsyncStorage.getItem(EVENTOS_KEY);
-      setEventos(storedEvents ? JSON.parse(storedEvents) : []);
-    } catch (error) {
-      console.error('Error al cargar eventos:', error);
-      Alert.alert('Error', 'No se pudieron cargar los eventos.');
-    } finally {
-      setLoading(false);
+    const result = await getEvents();
+    if (result.success) {
+      setEvents(result.data);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -43,14 +40,11 @@ const EventosPage = () => {
           text: 'Eliminar',
           style: 'destructive',
           onPress: async () => {
-            try {
-              const updatedEvents = eventos.filter(event => event.id !== eventId);
-              await AsyncStorage.setItem(EVENTOS_KEY, JSON.stringify(updatedEvents));
-              setEventos(updatedEvents);
-              Alert.alert('Éxito', 'El evento ha sido eliminado.');
-            } catch (error) {
-              console.error('Error al eliminar evento:', error);
-              Alert.alert('Error', 'No se pudo eliminar el evento.');
+            const result = await deleteEvent(eventId);
+            if (result.success) {
+              setEvents(prevEvents => prevEvents.filter(ev => ev.id !== eventId));
+            } else {
+              Alert.alert('Error', 'No se pudo eliminar el evento. Inténtalo de nuevo.');
             }
           },
         },
@@ -60,7 +54,7 @@ const EventosPage = () => {
 
   const renderEvent = ({ item }) => (
     <View className="mb-3 bg-white rounded-xl overflow-hidden shadow-sm p-4">
-      <EventCard event={item} />
+      <EventCard type="evento" item={item} />
       <View className="flex-row justify-end mt-2">
         <TouchableOpacity
           className="bg-red-500 px-3 py-1.5 rounded-lg"
@@ -88,13 +82,13 @@ const EventosPage = () => {
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#9D046D" />
         </View>
-      ) : eventos.length === 0 ? (
+      ) : events.length === 0 ? (
         <View className="flex-1 justify-center items-center">
           <Text className="text-gray-600">No hay eventos creados aún.</Text>
         </View>
       ) : (
         <FlatList
-          data={eventos}
+          data={events}
           renderItem={renderEvent}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}

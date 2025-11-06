@@ -1,3 +1,9 @@
+// components/FeaturedCard.js   
+// En: components/FeaturedCard.js -> Componente de tarjeta destacada (Frontend)
+// Este componente es una tarjeta reutilizable para mostrar artesanos, eventos o productos destacados.
+// Dependiendo del tipo, muestra información relevante y permite la navegación a detalles.
+
+
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
