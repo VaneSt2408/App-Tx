@@ -333,3 +333,108 @@ export const deleteProduct = async (productId) => {
     throw error;
   }
 };
+
+
+// --- Función para dar/tomar like a un producto ---
+export const toggleLikeProduct = async (productoId) => {
+  try {
+    // Log para debugging: entrada a toggleLikeProduct
+    console.log('[productService] toggleLikeProduct called', { productoId });
+
+    // Obtener usuario actual desde supabase.auth.getUser()
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError) {
+      return { success: false, error: userError.message || 'No se pudo obtener la sesión' };
+    }
+
+    const userId = user?.id || null;
+
+    if (!userId) {
+      return { success: false, error: 'Debes iniciar sesión para dar like' };
+    }
+
+    // Llamar directamente a la función auxiliar definida en este módulo
+    const result = await toggleLike(productoId, userId);
+
+    // Log resultado
+    console.log('[productService] toggleLikeProduct result', { productoId, userId, result });
+
+    return result;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+ // Función auxiliar para dar/tomar like
+  export const toggleLike = async(productoId, userId) => {
+    try {
+      console.log('[productService] toggleLike called', { productoId, userId });
+      // Verificar si ya existe el like
+      const { data: existingLike, error: checkError } = await supabase
+        .from('likes_productos')
+        .select('id')
+        .eq('producto_id', productoId)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (checkError) {
+        console.log('[productService] toggleLike checkError', { checkError });
+        return { success: false, error: checkError.message };
+      }
+
+      let liked;
+
+      if (existingLike) {
+        console.log('[productService] toggleLike existingLike found', { existingLike });
+        // Quitar like
+        const { error: deleteError } = await supabase
+          .from('likes_productos')
+          .delete()
+          .eq('producto_id', productoId)
+          .eq('user_id', userId);
+
+        if (deleteError) {
+          console.log('[productService] toggleLike deleteError', { deleteError });
+          return { success: false, error: deleteError.message };
+        }
+
+        liked = false;
+      } else {
+        console.log('[productService] toggleLike no existingLike, inserting');
+        // Dar like
+        const { error: insertError } = await supabase
+          .from('likes_productos')
+          .insert({
+            producto_id: productoId,
+            user_id: userId,
+          });
+
+        if (insertError) {
+          console.log('[productService] toggleLike insertError', { insertError });
+          return { success: false, error: insertError.message };
+        }
+
+        liked = true;
+      }
+
+      // Obtener el nuevo conteo de likes
+      const { count, error: countError } = await supabase
+        .from('likes_productos')
+        .select('*', { count: 'exact', head: true })
+        .eq('producto_id', productoId);
+
+      console.log('[productService] toggleLike countResult', { count, countError });
+      if (countError) {
+      }
+
+      return {
+        success: true,
+        liked,
+        likes_count: count || 0,
+      };
+
+    } catch (error) {
+      console.log('[productService] toggleLike caught error', { error });
+      return { success: false, error: error.message };
+    }
+  }

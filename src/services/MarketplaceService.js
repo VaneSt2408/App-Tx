@@ -109,6 +109,8 @@ export class MarketplaceService {
    */
   static async getProducto(productoId) {
     try {
+      // Obtener usuario actual una sola vez
+      const { data: { user } } = await supabase.auth.getUser();
 
       const { data: producto, error } = await supabase
         .from('productos')
@@ -138,6 +140,20 @@ export class MarketplaceService {
       if (error) {
         return { success: false, error: error.message };
       }
+      
+      // Verificar si el usuario actual ha dado like y obtener conteo total
+      const [userLikeResult, likesCountResult] = await Promise.all([
+        supabase
+          .from('likes_productos')
+          .select('id')
+          .eq('producto_id', productoId)
+          .eq('user_id', user?.id)
+          .maybeSingle(),
+        supabase
+          .from('likes_productos')
+          .select('id', { count: 'exact', head: true })
+          .eq('producto_id', productoId)
+      ]);
 
       const productoFormateado = {
         id: producto.id,
@@ -148,6 +164,8 @@ export class MarketplaceService {
         imagen_url: producto.imagen_url,
         estado: producto.estado,
         created_at: producto.created_at,
+        is_liked: !!userLikeResult.data,
+        likes_count: likesCountResult.count || 0,
         artesano: {
           id: producto.artesano_id,
           nombre: producto.artesanos?.nombre || 'Artesano',

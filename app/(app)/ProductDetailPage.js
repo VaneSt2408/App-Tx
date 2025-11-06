@@ -8,6 +8,7 @@ import {View,Text,Image,ScrollView,TouchableOpacity,StyleSheet,ActivityIndicator
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import MarketplaceService from '../../src/services/MarketplaceService';
+import { toggleLikeProduct  } from '../../src/services/productService';
 
 // Componente principal
 export default function ProductDetailPage() {
@@ -16,6 +17,7 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState(null); // Establecer el estado del producto
   const [loading, setLoading] = useState(true); // Establecer el estado de carga
   const [saved, setSaved] = useState(false); // Establecer el estado de guardado
+  const [isLiked, setIsLiked] = useState(false); // Estado para controlar si el producto tiene like
 
   // Cargar el detalle del producto
   useEffect(() => {
@@ -30,6 +32,7 @@ export default function ProductDetailPage() {
       
       if (result.success) {
         setProduct(result.data);
+        setIsLiked(result.data.is_liked || false);
       } else {
         Alert.alert('Error', 'No se pudo cargar el producto');
         router.back();
@@ -73,13 +76,19 @@ export default function ProductDetailPage() {
     );
   };
 
-  // Función para compartir el producto
-  const handleShare = () => {
-    Alert.alert(
-      'Compartir Producto',
-      'Próximamente podrás compartir este producto con tus contactos.',
-      [{ text: 'OK' }]
-    );
+  // Función dar like al producto
+  const handleLike = async (productID) => {
+    try {
+      const result = await toggleLikeProduct(productID);
+      if (result.success) {
+        setIsLiked(result.liked);
+      } else {
+        Alert.alert('Error', 'No se pudo marcar como favorito');
+      }
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      Alert.alert('Error', 'No se pudo marcar como favorito');
+    }
   };
 
   // Función para navegar al perfil del artesano
@@ -171,19 +180,36 @@ export default function ProductDetailPage() {
               </Text>
             </TouchableOpacity>
 
+            {/* Contactar al artesano */}
             <TouchableOpacity 
               style={[styles.actionButton, styles.contactButton]}
               onPress={handleContact}
             >
-              <MaterialCommunityIcons name="message-text-outline" size={20} color="#fff" />
+              <MaterialCommunityIcons name="phone" size={20} color="#fff" />
               <Text style={styles.contactButtonText}>Contactar</Text>
             </TouchableOpacity>
 
+            {/* Compartir */}
             <TouchableOpacity 
               style={[styles.actionButton, styles.shareButton]}
-              onPress={handleShare}
+              onPress={() => {
+                // Placeholder: implementar compartir (Share API)
+                Alert.alert('Compartir', 'Función de compartir próximamente.');
+              }}
             >
               <MaterialCommunityIcons name="share-variant-outline" size={20} color="#29297A" />
+            </TouchableOpacity>
+
+            {/* Me gusta / like */}
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.shareButton]}
+              onPress={() => handleLike(product.id ?? productId)}
+            >
+              <MaterialCommunityIcons 
+                name={isLiked ? "heart" : "heart-outline"} 
+                size={20} 
+                color="#FF69B4" 
+              />
             </TouchableOpacity>
           </View>
 
