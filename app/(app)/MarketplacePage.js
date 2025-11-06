@@ -41,12 +41,9 @@ const MarketplacePage = () => {
     if (filter === 'publicados') {
       filtered = filtered.filter(p => p.estado === 'activo');
     } else if (filter === 'vendidos') {
-      // Asumimos que no hay un campo "estado" para vendidos, por lo tanto, este filtro podría ser para productos con "cantidad_disponible" = 0
-      // Si tu modelo de datos tiene un campo específico para "vendido", cámbialo aquí.
-      // filtered = filtered.filter(p => p.cantidad_disponible === 0);
+      filtered = filtered.filter(p => p.estado === 'vendido');
     } else if (filter === 'borrados') {
-      // Asumimos que no hay un campo "estado" para borrados, por lo tanto, este filtro podría ser para productos con "estado" = "inactivo"
-      // filtered = filtered.filter(p => p.estado === 'inactivo');
+      filtered = filtered.filter(p => p.estado === 'inactivo');
     }
     // El filtro 'mis-compras' se maneja en `loadProductos` ya que requiere una consulta diferente.
     // Aquí solo nos aseguramos de no aplicar otros filtros de estado si 'mis-compras' está activo.
@@ -141,7 +138,7 @@ const MarketplacePage = () => {
 
     return (
       <TouchableOpacity
-        className={`flex-1 m-2 bg-white rounded-xl overflow-hidden shadow-sm ${isOwnProduct ? 'border-2 border-[#9D046D]' : ''}`}
+        className={`flex-1 m-2 bg-white rounded-xl overflow-hidden shadow-sm border-[#9D046D] ${isOwnProduct ? 'border-2' : 'border'}`}
         onPress={() => navigateToProduct(item.id)}
         activeOpacity={0.7}
       >
@@ -223,7 +220,7 @@ const MarketplacePage = () => {
       {/* Header */}
       <View className="bg-white pb-3">
         <View className="px-4 flex-row items-center justify-between pt-2">
-          <View style={{ width: 40 }} /> 
+          <View className="w-10 h-10" />
           <Text className="text-xl font-bold text-gray-900">Marketplace</Text>
           <TouchableOpacity 
             className="p-2" 
@@ -251,15 +248,21 @@ const MarketplacePage = () => {
         {/* Filtros */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4 mt-2">
           <TouchableOpacity
-            className={`px-4 py-2 mr-2 rounded-full ${
+            className={`flex-row items-center px-4 py-2 mr-2 rounded-xl ${
               filter === 'todos' ? 'bg-[#9D046D] text-white' : 'bg-gray-200 text-gray-800'
             }`}
-            onPress={() => setFilter('todos')}
+            onPress={() => router.push('/MarketplaceFilters')}
           >
-            <Text className={`font-medium ${filter === 'todos' ? 'text-white' : 'text-gray-800'}`}>Todos</Text>
+            <Text className={`font-medium mr-2 ${filter === 'todos' ? 'text-white' : 'text-gray-800'}`}>
+              Filtros
+            </Text>
+            <MaterialCommunityIcons 
+              name={'tune'} 
+              size={20} 
+              color={filter === 'todos' ? '#fff' : '#333'} />
           </TouchableOpacity>
           <TouchableOpacity
-            className={`px-4 py-2 mr-2 rounded-full ${
+            className={`px-4 py-2 mr-2 rounded-xl ${
               filter === 'publicados' ? 'bg-[#9D046D] text-white' : 'bg-gray-200 text-gray-800'
             }`}
             onPress={() => setFilter('publicados')}
@@ -267,20 +270,12 @@ const MarketplacePage = () => {
             <Text className={`font-medium ${filter === 'publicados' ? 'text-white' : 'text-gray-800'}`}>Publicados</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            className={`px-4 py-2 mr-2 rounded-full ${
+            className={`px-4 py-2 mr-2 rounded-xl ${
               filter === 'vendidos' ? 'bg-[#9D046D] text-white' : 'bg-gray-200 text-gray-800'
             }`}
             onPress={() => setFilter('vendidos')}
           >
             <Text className={`font-medium ${filter === 'vendidos' ? 'text-white' : 'text-gray-800'}`}>Vendidos</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className={`px-4 py-2 mr-2 rounded-full ${
-              filter === 'borrados' ? 'bg-[#9D046D] text-white' : 'bg-gray-200 text-gray-800'
-            }`}
-            onPress={() => setFilter('borrados')}
-          >
-            <Text className={`font-medium ${filter === 'borrados' ? 'text-white' : 'text-gray-800'}`}>Borrados</Text>
           </TouchableOpacity>
         </ScrollView>
       </View>
