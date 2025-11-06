@@ -205,13 +205,23 @@ const MarketplacePage = () => {
       {/* Header */}
       <View className="bg-white pb-3">
         <View className="px-4 flex-row items-center justify-between">
-          <TouchableOpacity className="p-2">
-            
+          <Text className="text-xl font-bold text-gray-900">Marketplace</Text>
+          <TouchableOpacity className="p-2" onPress={() => { /* Lógica futura para filtros avanzados */ }}>
+            <MaterialCommunityIcons name="filter-variant" size={24} color="#333" />
           </TouchableOpacity>
-          <Text className="text-xl font-bold text-gray-900">Mis Productos</Text>
-          <TouchableOpacity className="p-2">
-            <MaterialCommunityIcons name="magnify" size={24} color="#333" />
-          </TouchableOpacity>
+        </View>
+
+        {/* Barra de Búsqueda */}
+        <View className="px-4 mt-2">
+          <View className="flex-row items-center bg-gray-200 rounded-full px-4 py-2">
+            <MaterialCommunityIcons name="magnify" size={20} color="#666" />
+            <TextInput
+              className="flex-1 ml-2 text-base"
+              placeholder="Buscar productos, artesanos, categorías..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+          </View>
         </View>
 
         {/* Filtros */}
