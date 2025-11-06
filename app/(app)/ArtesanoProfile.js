@@ -3,7 +3,7 @@
 // Muestra el perfil del artesano registrado en la base de datos y permite editarlo, cambiar la contraseña, eliminar el perfil y cambiar la foto de perfil.
 
 import React, { useState, useEffect, useRef } from 'react'; // Importar los hooks de react
-import {View,Text,StyleSheet,ScrollView,Image,TouchableOpacity,SafeAreaView,ActivityIndicator,Alert,Dimensions,FlatList,Modal,TextInput,PanResponder,Animated} from 'react-native';
+import {View,Text as DefaultText,StyleSheet,ScrollView,Image,TouchableOpacity,SafeAreaView,ActivityIndicator,Alert,Dimensions,FlatList,Modal,TextInput,PanResponder,Animated} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Importar los componentes de expo-vector-icons
 import { useRouter, useLocalSearchParams } from 'expo-router'; // Importar el router de expo-router
 import { artesanoService } from '../../src/services/artesanoService'; // Importar el servicio de artesano
@@ -14,9 +14,13 @@ import { updatePerfilArtesanoCompleto, eliminarPerfilArtesano, subirAvatarArtesa
 import ChangePasswordModal from '../../components/ChangePasswordModal'; // Importar el modal de cambio de contraseña
 import AsyncStorage from '@react-native-async-storage/async-storage'; // Importar AsyncStorage para persistencia
 import { validateCurrentPassword } from '../../src/services/profileInfo'; // Importar validación de contraseña
+import useCustomFonts from '../../hooks/useFonts';
 
 const { width } = Dimensions.get('window'); // Obtener el ancho de la ventana
 const imageSize = (width - 10) / 3; // Para grid de 3 columnas
+const Text = (props) => (
+    <DefaultText {...props} style={[{ fontFamily: 'AlanSans' }, props.style]} />
+  );
 
 export default function ArtesanoProfile() { // Exportar la función ArtesanoProfile
   const router = useRouter(); // Obtener el router
@@ -48,7 +52,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
   const [showDeletePassword, setShowDeletePassword] = useState(false); // Mostrar/ocultar contraseña
   const [totalFailedAttempts, setTotalFailedAttempts] = useState(0); // Intentos fallidos totales (compartido con cambio de contraseña)
 
-
+  
   // Refs para evitar race conditions en contadores
   const deletePasswordAttemptsRef = useRef(0); // Ref para intentos de contraseña de eliminación
   const totalFailedAttemptsRef = useRef(0); // Ref para intentos fallidos totales (compartido)
@@ -480,7 +484,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Perfil</Text>
+        <Text style={{fontFamily: 'Alan Sans', fontWeight: 'bold', fontSize: 23}}>Perfil</Text>
         {isOwnProfile ? (
           <TouchableOpacity onPress={() => setShowSettingsMenu(true)} style={styles.backButton}>
             <MaterialCommunityIcons name="cog-outline" size={24} color="#333" />
@@ -541,15 +545,15 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
             <Text style={styles.statNumber}>{publicaciones.length}</Text>
-            <Text style={styles.statLabel}>Publicaciones</Text>
+            <Text style={{fontFamily: 'Alan Sans'}}>Publicaciones</Text>
           </View>
           <View style={styles.statItem}>
             <Text style={styles.statNumber}>{productos.length}</Text>
-            <Text style={styles.statLabel}>Productos</Text>
+            <Text style={{fontFamily: 'Alan Sans'}}>Productos</Text>
           </View>
           <View style={styles.statItem}>
             <Text style={styles.statNumber}>{artesano?.total_likes || 0}</Text>
-            <Text style={styles.statLabel}>Likes</Text>
+            <Text style={{fontFamily: 'Alan Sans'}}>Likes</Text>
           </View>
         </View>
       </View>
@@ -597,7 +601,9 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
           size={20} 
           color={activeTab === 'publicaciones' ? '#9D046D' : '#666'} 
         />
-        <Text style={[styles.tabText, activeTab === 'publicaciones' && styles.activeTabText]}>
+
+        
+        <Text style={[styles.tabText, activeTab === 'publicaciones' && styles.activeTabText, {fontFamily: 'Alan Sans', fontWeight: 'bold', fontSize: 14}]}>
           Publicaciones
         </Text>
       </TouchableOpacity>
@@ -611,7 +617,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
           size={20} 
           color={activeTab === 'productos' ? '#9D046D' : '#666'} 
         />
-        <Text style={[styles.tabText, activeTab === 'productos' && styles.activeTabText]}>
+        <Text style={[styles.tabText, activeTab === 'productos' && styles.activeTabText, {fontFamily: 'Alan Sans', fontWeight: 'bold', fontSize: 14}]}>
           Productos
         </Text>
       </TouchableOpacity>

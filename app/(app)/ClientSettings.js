@@ -1,17 +1,12 @@
-// En: app/(app)/ClientSettings.js -> Archivo de ajustes del cliente (Frontend)
-// Este archivo es el encargado de mostrar los ajustes del cliente en la aplicación.
-// Permite cerrar sesión, navegar al perfil del cliente, ver sus publicaciones y productos.
-
-// Importaciones
+// app/(app)/ClientSettings.js
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity,Alert} from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { signOut } from '../../src/services/authService';
 
-// Componente principal
-export default function ClientSettings() {
-  const router = useRouter(); // Obtener el router
+const ClientSettings = () => {
+  const router = useRouter();
 
   // Función para cerrar sesión
   const handleLogout = async () => {
@@ -23,16 +18,9 @@ export default function ClientSettings() {
     {
       id: 'profile',
       icon: 'account-circle',
-      title: 'Mi Perfil',
+      title: 'Gestión de la Cuenta',
       description: 'Ver y editar tu perfil de cliente',
       onPress: () => router.push('/clientProfile')
-    },
-    {
-      id: 'privacy',
-      icon: 'lock-outline',
-      title: 'Privacidad',
-      description: 'Gestiona tu privacidad y seguridad',
-      onPress: () => Alert.alert('Próximamente', 'Esta función estará disponible pronto')
     },
     {
       id: 'notifications',
@@ -42,122 +30,116 @@ export default function ClientSettings() {
       onPress: () => Alert.alert('Próximamente', 'Esta función estará disponible pronto')
     },
     {
-      id: 'about',
+      id: 'config',
+      icon: 'tune',
+      title: 'Configuración de la App',
+      description: 'Personaliza la aplicación',
+      onPress: () => Alert.alert('Próximamente', 'Esta función estará disponible pronto')
+    },
+  ];
+
+  const supportOptions = [
+    {
+      id: 'help',
       icon: 'information-outline',
-      title: 'Acerca de',
-      description: 'Información sobre la aplicación',
+      title: 'Ayuda y Soporte',
+      description: 'Obtén ayuda con la aplicación',
+      onPress: () => Alert.alert('Próximamente', 'Esta función estará disponible pronto')
+    },
+    {
+      id: 'terms',
+      icon: 'file-document-outline',
+      title: 'Términos y Condiciones',
+      description: 'Lee nuestros términos y condiciones',
       onPress: () => Alert.alert('Próximamente', 'Esta función estará disponible pronto')
     },
   ];
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Ajustes</Text>
+    <View className="flex-1 bg-gray-50">
+      {/* Header */}
+      <View className="bg-white py-4 px-4 flex-row items-center justify-between border-b border-gray-200">
+        <TouchableOpacity className="p-2" onPress={() => router.back()}>
+          <MaterialCommunityIcons name="chevron-left" size={24} color="#333" />
+        </TouchableOpacity>
+        <Text className="text-lg font-bold text-gray-900">Mi Cuenta</Text>
+        <TouchableOpacity className="p-2">
+          <MaterialCommunityIcons name="dots-vertical" size={24} color="#333" />
+        </TouchableOpacity>
       </View>
 
-      <View style={styles.section}>
+      {/* Sección de Perfil */}
+      <View className="bg-white p-4 mb-4">
+        <TouchableOpacity className="flex-row items-center">
+          <View className="w-12 h-12 bg-gray-300 rounded-full mr-3 justify-center items-center">
+            <MaterialCommunityIcons name="account" size={24} color="#666" />
+          </View>
+          <View className="flex-1">
+            <Text className="text-base font-semibold text-gray-900">Nombre del Artesano</Text>
+            <Text className="text-xs text-[#9D046D]">Ver mi perfil</Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={20} color="#ccc" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Sección Gestión */}
+      <View className="bg-white mb-4">
+        <View className="px-4 py-3 border-b border-gray-200">
+          <Text className="text-sm font-medium text-gray-700">Gestión</Text>
+        </View>
         {settingsOptions.map((option) => (
           <TouchableOpacity
             key={option.id}
-            style={styles.option}
+            className="flex-row items-center px-4 py-3 border-b border-gray-200"
             onPress={option.onPress}
           >
-            <View style={styles.optionIcon}>
-              <MaterialCommunityIcons name={option.icon} size={24} color="#2575fc" />
+            <View className="w-10 h-10 bg-blue-100 rounded-full mr-3 justify-center items-center">
+              <MaterialCommunityIcons name={option.icon} size={20} color="#2575fc" />
             </View>
-            <View style={styles.optionContent}>
-              <Text style={styles.optionTitle}>{option.title}</Text>
-              <Text style={styles.optionDescription}>{option.description}</Text>
+            <View className="flex-1">
+              <Text className="text-base font-medium text-gray-900">{option.title}</Text>
+              <Text className="text-xs text-gray-600">{option.description}</Text>
             </View>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="#ccc" />
+            <MaterialCommunityIcons name="chevron-right" size={20} color="#ccc" />
           </TouchableOpacity>
         ))}
       </View>
 
-      <View style={styles.section}>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <MaterialCommunityIcons name="logout" size={24} color="#fff" />
-          <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
+      {/* Sección Soporte */}
+      <View className="bg-white mb-4">
+        <View className="px-4 py-3 border-b border-gray-200">
+          <Text className="text-sm font-medium text-gray-700">Soporte</Text>
+        </View>
+        {supportOptions.map((option) => (
+          <TouchableOpacity
+            key={option.id}
+            className="flex-row items-center px-4 py-3 border-b border-gray-200"
+            onPress={option.onPress}
+          >
+            <View className="w-10 h-10 bg-blue-100 rounded-full mr-3 justify-center items-center">
+              <MaterialCommunityIcons name={option.icon} size={20} color="#2575fc" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-base font-medium text-gray-900">{option.title}</Text>
+              <Text className="text-xs text-gray-600">{option.description}</Text>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={20} color="#ccc" />
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Botón de Cerrar Sesión */}
+      <View className="px-4 pb-4">
+        <TouchableOpacity
+          className="py-3 px-4 bg-[#E8C6E8] rounded-xl flex-row items-center justify-center"
+          onPress={handleLogout}
+        >
+          <MaterialCommunityIcons name="logout" size={20} color="#9D046D" />
+          <Text className="ml-2 text-base font-semibold text-[#9D046D]">Cerrar Sesión</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+    </View>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    backgroundColor: '#fff',
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  section: {
-    marginTop: 20,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  optionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#e3f2fd',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  optionContent: {
-    flex: 1,
-  },
-  optionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-  },
-  optionDescription: {
-    fontSize: 14,
-    color: '#666',
-  },
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#db4437',
-    paddingVertical: 16,
-    marginHorizontal: 20,
-    marginVertical: 20,
-    borderRadius: 10,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-  },
-  logoutButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 8,
-  },
-});
+export default ClientSettings;

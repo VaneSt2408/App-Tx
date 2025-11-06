@@ -5,11 +5,16 @@
 
 // Importaciones
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity,Alert} from 'react-native';
+import { View, Text as DefaultText, StyleSheet, ScrollView, TouchableOpacity,Alert} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { signOut } from '../../src/services/authService';
 import { useAuth } from '../../src/context/AuthContext';
+import useCustomFonts from '../../hooks/useFonts';
+
+const Text = (props) => (
+    <DefaultText {...props} style={[{ fontFamily: 'AlanSans' }, props.style]} />
+  );
 
 // Componente principal
 export default function ArtesanoSettings() {

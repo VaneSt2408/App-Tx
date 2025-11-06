@@ -1,3 +1,9 @@
+// components/FeaturedSection.js
+// En: components/FeaturedSection.js -> Sección de destacados (Frontend)
+// Este componente muestra una sección con artesanos destacados y eventos.
+// Los artesanos destacados son los que tienen más likes en sus publicaciones.
+// Los eventos se muestran en un scroll horizontal y al hacer clic se abre un modal con más información.
+
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, StyleSheet } from 'react-native';
 import FeaturedCard from './FeaturedCard';
