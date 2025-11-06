@@ -4,10 +4,11 @@
 
 // Importaciones
 import React, { useState, useEffect } from 'react';
-import {View,Text,Image,ScrollView,TouchableOpacity,StyleSheet,ActivityIndicator,Alert,} from 'react-native';
+import {View,Text as DefaultText,Image,ScrollView,TouchableOpacity,StyleSheet,ActivityIndicator,Alert,} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import MarketplaceService from '../../src/services/MarketplaceService';
+import useCustomFonts from '../../hooks/useFonts';
 
 // Componente principal
 export default function ProductDetailPage() {
@@ -16,6 +17,10 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState(null); // Establecer el estado del producto
   const [loading, setLoading] = useState(true); // Establecer el estado de carga
   const [saved, setSaved] = useState(false); // Establecer el estado de guardado
+
+  const Text = (props) => (
+      <DefaultText {...props} style={[{ fontFamily: 'AlanSans' }, props.style]} />
+    );
 
   // Cargar el detalle del producto
   useEffect(() => {

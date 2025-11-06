@@ -1,10 +1,16 @@
-import { View, Text, SafeAreaView, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text as DefaultText, SafeAreaView, TouchableOpacity, StyleSheet, Image, type TextProps } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Link, router } from 'expo-router';
 import { MotiView, MotiText, MotiImage } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { useSharedValue, useAnimatedProps, withRepeat, withTiming, Easing, interpolateColor } from 'react-native-reanimated';
 import React from 'react';
+import useCustomFonts from '../../hooks/useFonts';
+
+
+const Text = (props: TextProps) => (
+    <DefaultText {...props} style={[{ fontFamily: 'AlanSans' }, props.style]} />
+  );
 
 // Creamos un componente Animated a partir de LinearGradient para poder animar sus props
 const AnimatedGradient = Animated.createAnimatedComponent(LinearGradient);
