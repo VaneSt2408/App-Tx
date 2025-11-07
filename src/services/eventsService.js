@@ -331,8 +331,17 @@ export const getEvents = async () => {
             return { success: false, error: error.message };
         }
 
-        // La normalización ya no es necesaria, la hora viene en su propio campo.
-        return { success: true, data: data || [] };
+        // Normalizar la fecha para que solo muestre YYYY-MM-DD
+        const normalizedData = (data || []).map(evento => {
+            if (evento.fecha && typeof evento.fecha === 'string') {
+                // Cortamos la cadena para obtener solo la parte de la fecha.
+                // "2026-05-13 12:00:00+00" -> "2026-05-13"
+                evento.fecha = evento.fecha.substring(0, 10);
+            }
+            return evento;
+        });
+
+        return { success: true, data: normalizedData };
     } catch (error) {
         return { success: false, error: error.message };
     }

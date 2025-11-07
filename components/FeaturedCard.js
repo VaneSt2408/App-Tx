@@ -39,7 +39,7 @@ const FeaturedCard = ({ type = 'artesano', item = {}, onPress }) => {
       }
 
       if (type === 'evento' && item.id) {
-        router.push({ pathname: '/EventDetail', params: { eventId: item.id.toString() } });
+        router.push({ pathname: '/NewEventDetailPage', params: { id: item.id.toString() } }); // Ejemplo de cambio de ruta
         return;
       }
     } catch (e) {

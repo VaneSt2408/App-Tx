@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback} from 'react';
 import { View, Text as DefaultText, FlatList, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import EventCard from '../../components/FeaturedCard'; // Reutilizamos el mismo componente de la FeedPage
+import EventsModal from '../../components/EventsModal'; // 1. Importar el modal
 import useCustomFonts from '../../hooks/useFonts'; 
 
 // Aseguramos que las fuentes personalizadas estén cargadas
@@ -15,7 +16,9 @@ import { getEvents, deleteEvent } from '../../src/services/eventsService';
 const EventosPage = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-   const [events, setEvents] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [selectedEvent, setSelectedEvent] = useState(null); // 2. Estado para el evento seleccionado
+  const [modalVisible, setModalVisible] = useState(false); // 3. Estado para la visibilidad del modal
 
    // Cargar eventos desde la API
   const loadEvents = async () => {
@@ -63,7 +66,12 @@ useFocusEffect(
   // Manejar edición de evento (navegar a la página de edición)
   const renderEvent = ({ item }) => (
     <View className="mb-3 bg-white rounded-xl overflow-hidden shadow-sm p-4">
-      <EventCard type="evento" item={item} />
+      {/* 4. Pasar la prop onPress para abrir el modal */}
+      <EventCard 
+        type="evento" 
+        item={item} 
+        onPress={() => { setSelectedEvent(item); setModalVisible(true); }}
+      />
       <View className="flex-row justify-end mt-2">
         <TouchableOpacity
           className="bg-red-500 px-3 py-1.5 rounded-lg"
@@ -111,6 +119,16 @@ useFocusEffect(
           showsVerticalScrollIndicator={false}
         />
       )}
+
+      {/* 5. Añadir el componente del modal a la pantalla */}
+      <EventsModal 
+        visible={modalVisible} 
+        event={selectedEvent} 
+        onClose={() => { 
+          setModalVisible(false); 
+          setSelectedEvent(null); 
+        }} 
+      />
     </View>
   );
 };

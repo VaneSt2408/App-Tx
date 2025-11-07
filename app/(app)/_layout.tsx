@@ -76,7 +76,8 @@ export default function AppLayout() {
       <Stack.Screen name="Eventos" options={{title: "Eventos"}}/>
       <Stack.Screen name="EditEventPage" options={{title: "Editar evento"}}/>
       <Stack.Screen name="CreateEventPage" options={{title: "Crear evento"}}/>
-      <Stack.Screen name="EventDetailPage" options={{title: "Detalle del evento"}}/>
+      <Stack.Screen name="ArtesanoSettings" options={{title: "Ajustes de perfil del artesano"}}/>
+      <Stack.Screen name="ArtesanoProfileVistaVisitante" options={{title: "Ver perfil como visitante", headerBackVisible: false}}/>
 
     </Stack>
   );

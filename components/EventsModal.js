@@ -55,7 +55,7 @@ const EventsModal = ({ visible = false, onClose = () => {}, event = null }) => {
 
               <View style={styles.metaRow}>
                 {date ? <View style={styles.chip}><Text style={styles.chipText}>📅 {formatDate(date)}</Text></View> : null}
-                {location ? <View style={[styles.chip, { marginLeft: 8 }]}><Text style={styles.chipText}>📍 {location}</Text></View> : null}
+                {location ? <View style={[styles.chip, { marginTop: 8 }]}><Text style={styles.chipText}>📍 {location}</Text></View> : null}
               </View>
 
               {description ? (
@@ -66,17 +66,7 @@ const EventsModal = ({ visible = false, onClose = () => {}, event = null }) => {
 
               <View style={styles.divider} />
 
-              <View style={styles.infoRow}>
-                <MaterialCommunityIcons name="account" size={18} color="#666" />
-                <Text style={styles.infoText}>{event.creador_id ? `Creado por: ${event.creador_id}` : 'Creador desconocido'}</Text>
-              </View>
 
-              {event.organizador ? (
-                <View style={styles.infoRow}>
-                  <MaterialCommunityIcons name="account-group" size={18} color="#666" />
-                  <Text style={styles.infoText}>Organizador: {event.organizador}</Text>
-                </View>
-              ) : null}
 
               <View style={styles.buttonsRow}>
                 <TouchableOpacity style={styles.primaryButton} onPress={() => { /* placeholder for action */ }}>
@@ -137,8 +127,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 12,
   },
   metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
     marginTop: 8,
     marginHorizontal: 12,
   },
