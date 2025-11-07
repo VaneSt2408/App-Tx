@@ -173,7 +173,7 @@ export default function ArtesanoProducts() {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
-        quality: 0.7,
+        quality: 0.8, // Calidad de la imagen reducida al 80%
         base64: true,
       });
 
