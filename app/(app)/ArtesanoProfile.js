@@ -408,7 +408,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         mediaTypes: ImagePicker.MediaTypeOptions.Images, // Tipo de media: imágenes
         allowsEditing: true, // Permitir edición
         aspect: [1, 1], // Aspecto cuadrado
-        quality: 0.5, // Calidad de la imagen
+        quality: 0.8, // Calidad de la imagen
         base64: true, // Convertir a base64
       });
       if (!result.canceled && result.assets && result.assets[0]) { // Si no se canceló y hay assets y el primer asset
