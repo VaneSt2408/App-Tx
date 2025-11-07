@@ -116,11 +116,12 @@ export default function Index() {
           />
 
           <MotiText
+            style={{fontFamily: 'Alan Sans'}}
             className="text-white text-4xl font-extralight tracking-wide shadow-md mb-9 shadow-black/50"
             from={{ opacity: 0, translateY: 40 }}
             animate={{ opacity: 1, translateY: 0 }}
             transition={{ type: 'timing', duration: 800, delay: 300 }}
-            style={{fontFamily: 'Alan Sans'}}
+            
           >
             Tx Guide
           </MotiText>
@@ -134,7 +135,7 @@ export default function Index() {
         >
           <Link href="/auth" asChild replace>
             <TouchableOpacity className="w-11/12 bg-white/20 p-5 rounded-3xl items-center mb-8 border border-white/30">
-              <Text style={{fontFamily: 'Alan Sans', fontSize:20,}} className="text-white font-semibold">
+              <Text style={{fontFamily: 'Alan Sans', fontSize: 20, fontWeight: 'bold'}} className="text-white">
                 BIENVENIDO DE VUELTA →
               </Text>
             </TouchableOpacity>
