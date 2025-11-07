@@ -56,8 +56,8 @@ useFocusEffect(
     );
   };
 
-  const handleEditEvent = (eventId) => {
-    router.push({ pathname: './EditEventPage', params: { event: JSON.stringify(events.find(ev => ev.id === eventId))} });
+  const handleEditEvent = (item) => {
+    router.push({ pathname: './EditEventPage', params: item });
   }
 
   // Manejar edición de evento (navegar a la página de edición)
@@ -75,7 +75,7 @@ useFocusEffect(
         {/* Botón de Editar (NUEVO) */}
         <TouchableOpacity
           className="bg-blue-500 px-3 py-1.5 rounded-lg mr-2" // Añadimos margen a la derecha
-          onPress={() => handleEditEvent(item.id)} // Necesitarás crear esta función
+          onPress={() => handleEditEvent(item)} // Necesitarás crear esta función
         >
           <Text className="text-white text-sm font-medium">Editar</Text>
         </TouchableOpacity>

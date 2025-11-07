@@ -1,10 +1,10 @@
-// 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text as DefaultText, TextInput, TouchableOpacity, Alert, ScrollView, KeyboardAvoidingView, Platform, Image} from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import useCustomFonts from '../../hooks/useFonts';
 import * as ImagePicker from 'expo-image-picker';
+import { updateEventForCurrentUser } from '../../src/services/eventsService';
 
 const Text = (props) => (
     <DefaultText {...props} style={[{ fontFamily: 'AlanSans' }, props.style]} />
@@ -14,12 +14,20 @@ const EVENTOS_KEY = '@eventos_admin';
 
 const EditEventPage = () => {
   const router = useRouter();
-  const [titulo, setTitulo] = useState('');
-  const [fecha, setFecha] = useState(''); // YYYY-MM-DD
-  const [hora, setHora] = useState(''); // HH:mm
-  const [ubicacion, setUbicacion] = useState('');
-  const [imageUri, setImageUri] = useState(null);
+  const params = useLocalSearchParams();
+
+  // Extraemos la fecha y la hora del parámetro `fecha` si existe.
+  const fechaCompleta = params.fecha || '';
+
+  const [titulo, setTitulo] = useState(params.titulo || params.nombre || '');
+  const [descripcion, setDescripcion] = useState(params.descripcion || '');
+  const [fecha, setFecha] = useState(fechaCompleta.split('T')[0]); // Extrae solo la fecha: YYYY-MM-DD
+  const [hora, setHora] = useState(params.hora || ''); // HH:mm
+  const [ubicacion, setUbicacion] = useState(params.ubicacion || '');
+  const [imageAsset, setImageAsset] = useState({ uri: params.imagen_url || null }); // Usamos un objeto para el asset
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // El useEffect ya no es necesario para inicializar los datos.
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -33,46 +41,50 @@ const EditEventPage = () => {
       allowsEditing: true,
       aspect: [16, 9],
       quality: 1,
+      base64: true, // ¡Importante para subir a Supabase!
     });
 
     if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
+      setImageAsset(result.assets[0]); // Guardamos el objeto de asset completo
     }
   };
 
-  const handleCreateEvent = async () => {
-    if (!titulo || !fecha || !hora || !ubicacion) {
-      Alert.alert('Campos incompletos', 'Por favor, llena todos los campos.');
+  const handleUpdate = async () => {
+    if (!titulo || !fecha || !hora || !ubicacion || !descripcion) {
+      Alert.alert('Error', 'Por favor, completa todos los campos obligatorios.');
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const storedEvents = await AsyncStorage.getItem(EVENTOS_KEY);
-      const currentEvents = storedEvents ? JSON.parse(storedEvents) : [];
+      // Combinamos fecha y hora como en la página de creación
 
-      const newEvent = {
-        id: Date.now().toString(),
+      // Llamamos al servicio para actualizar el evento en Supabase
+      const result = await updateEventForCurrentUser(
+        params.id,
         titulo,
+        descripcion,
         fecha,
         hora,
         ubicacion,
-        imagen_url: imageUri, // Guardamos la URI local
-      };
+        imageAsset.uri !== params.imagen_url ? imageAsset : null // Solo pasamos el asset si la imagen cambió
+      );
 
-      const updatedEvents = [newEvent, ...currentEvents];
-      await AsyncStorage.setItem(EVENTOS_KEY, JSON.stringify(updatedEvents));
-
-      Alert.alert('¡Éxito!', 'El evento se ha creado correctamente.');
-      router.back(); // Vuelve a la pantalla de gestión de eventos
+      if (result.success) {
+        Alert.alert('Éxito', 'Evento actualizado correctamente.');
+        router.back();
+      } else {
+        Alert.alert('Error', result.error || 'No se pudo actualizar el evento.');
+      }
     } catch (error) {
-      console.error('Error al crear el evento:', error);
-      Alert.alert('Error', 'No se pudo crear el evento.');
+      console.error("Error al actualizar el evento:", error);
+      Alert.alert('Error', 'No se pudo actualizar el evento.');
     } finally {
       setIsSubmitting(false);
     }
   };
+  
 
   return (
     <KeyboardAvoidingView
@@ -80,7 +92,7 @@ const EditEventPage = () => {
       className="flex-1 bg-gray-100"
     >
       <ScrollView className="flex-1 p-4">
-        <Text className="text-2xl font-bold text-gray-900 mb-6">Crear Nuevo Evento</Text>
+        <Text className="text-2xl font-bold text-gray-900 mb-6">Editar Evento</Text>
 
         <View className="mb-4">
           <Text className="text-sm font-medium text-gray-700 mb-1">Título *</Text>
@@ -89,6 +101,17 @@ const EditEventPage = () => {
             value={titulo}
             onChangeText={setTitulo}
             placeholder="Nombre del evento"
+          />
+        </View>
+
+        <View className="mb-4">
+          <Text className="text-sm font-medium text-gray-700 mb-1">Descripción *</Text>
+          <TextInput
+            className="w-full p-3 bg-white rounded-lg border border-gray-300"
+            value={descripcion}
+            onChangeText={setDescripcion}
+            placeholder="Descripción del evento"
+            multiline
           />
         </View>
 
@@ -128,8 +151,8 @@ const EditEventPage = () => {
             className="w-full h-40 bg-white rounded-lg border-2 border-dashed border-gray-400 items-center justify-center"
             onPress={pickImage}
           >
-            {imageUri ? (
-              <Image source={{ uri: imageUri }} className="w-full h-full rounded-lg" resizeMode="cover" />
+            {imageAsset?.uri ? (
+              <Image source={{ uri: imageAsset.uri }} className="w-full h-full rounded-lg" resizeMode="cover" />
             ) : (
               <Text className="text-gray-600">+ Seleccionar Imagen</Text>
             )}
@@ -138,13 +161,13 @@ const EditEventPage = () => {
 
         <TouchableOpacity
           className={`p-4 rounded-full ${isSubmitting ? 'bg-gray-400' : 'bg-[#9D046D]'} items-center`}
-          onPress={handleCreateEvent}
+          onPress={handleUpdate}
           disabled={isSubmitting}
         >
           {isSubmitting ? (
-            <Text className="text-white font-semibold">Creando...</Text>
+            <Text className="text-white font-semibold">Guardando...</Text>
           ) : (
-            <Text className="text-white font-semibold">Crear Evento</Text>
+            <Text className="text-white font-semibold">Guardar Cambios</Text>
           )}
         </TouchableOpacity>
       </ScrollView>

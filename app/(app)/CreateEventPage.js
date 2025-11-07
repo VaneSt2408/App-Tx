@@ -53,9 +53,9 @@ const CreateEventPage = () => {
     setIsSubmitting(true);
 
     try {
-      const fechaYHoraCombinadas = `${fecha}T${hora}`;
+      
 
-      const result = await createEventForCurrentUser(nombre, descripcion, fechaYHoraCombinadas, ubicacion, imageAsset);
+      const result = await createEventForCurrentUser(nombre, descripcion, fecha, hora, ubicacion, imageAsset);
 
       if (result.success) {
         Alert.alert('¡Éxito!', 'El evento se ha creado correctamente.');
