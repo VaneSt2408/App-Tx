@@ -285,7 +285,7 @@ const MarketplacePage = () => {
         data={filteredProductos}
         renderItem={renderProduct}
         keyExtractor={(item) => item.id.toString()}
-        numColumns={2}
+        numColumns={3}
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
         contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 90 }}

@@ -1,23 +1,26 @@
 // app/(app)/Eventos.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback} from 'react';
 import { View, Text as DefaultText, FlatList, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
-import { useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter, useFocusEffect } from 'expo-router';
 import EventCard from '../../components/FeaturedCard'; // Reutilizamos el mismo componente de la FeedPage
+import EventsModal from '../../components/EventsModal'; // 1. Importar el modal
 import useCustomFonts from '../../hooks/useFonts'; 
 
+// Aseguramos que las fuentes personalizadas estén cargadas
 const Text = (props) => (
     <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
   );
 import { getEvents, deleteEvent } from '../../src/services/eventsService';
 
-const EVENTOS_KEY = '@eventos_admin'; 
-
+// Página de gestión de eventos
 const EventosPage = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-   const [events, setEvents] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [selectedEvent, setSelectedEvent] = useState(null); // 2. Estado para el evento seleccionado
+  const [modalVisible, setModalVisible] = useState(false); // 3. Estado para la visibilidad del modal
 
+   // Cargar eventos desde la API
   const loadEvents = async () => {
     const result = await getEvents();
     if (result.success) {
@@ -25,11 +28,15 @@ const EventosPage = () => {
     }
     setLoading(false);
   };
-
-  useEffect(() => {
+// Cargar eventos al montar el componente
+useFocusEffect(
+  useCallback(() => {
     loadEvents();
-  }, []);
+    return () => { };
+  }, [])
+);
 
+  // Manejar eliminación de evento
   const handleDeleteEvent = async (eventId) => {
     Alert.alert(
       '¿Eliminar evento?',
@@ -52,15 +59,33 @@ const EventosPage = () => {
     );
   };
 
+  const handleEditEvent = (item) => {
+    router.push({ pathname: './EditEventPage', params: item });
+  }
+
+  // Manejar edición de evento (navegar a la página de edición)
   const renderEvent = ({ item }) => (
     <View className="mb-3 bg-white rounded-xl overflow-hidden shadow-sm p-4">
-      <EventCard type="evento" item={item} />
+      {/* 4. Pasar la prop onPress para abrir el modal */}
+      <EventCard 
+        type="evento" 
+        item={item} 
+        onPress={() => { setSelectedEvent(item); setModalVisible(true); }}
+      />
       <View className="flex-row justify-end mt-2">
         <TouchableOpacity
           className="bg-red-500 px-3 py-1.5 rounded-lg"
           onPress={() => handleDeleteEvent(item.id)}
         >
           <Text style={{fontFamily: 'Alan Sans'}} className="text-white text-sm font-medium">Eliminar</Text>
+        </TouchableOpacity>
+
+        {/* Botón de Editar (NUEVO) */}
+        <TouchableOpacity
+          className="bg-blue-500 px-3 py-1.5 rounded-lg mr-2" // Añadimos margen a la derecha
+          onPress={() => handleEditEvent(item)} // Necesitarás crear esta función
+        >
+          <Text className="text-white text-sm font-medium">Editar</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -94,6 +119,16 @@ const EventosPage = () => {
           showsVerticalScrollIndicator={false}
         />
       )}
+
+      {/* 5. Añadir el componente del modal a la pantalla */}
+      <EventsModal 
+        visible={modalVisible} 
+        event={selectedEvent} 
+        onClose={() => { 
+          setModalVisible(false); 
+          setSelectedEvent(null); 
+        }} 
+      />
     </View>
   );
 };

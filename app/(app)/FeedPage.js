@@ -7,6 +7,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import useCustomFonts from '../../hooks/useFonts';
 import { getEvents } from '../../src/services/eventsService';
+import EventsModal from '../../components/EventsModal'; // 1. Importar el modal
 import EventCarousel from '../../components/EventCarousel'; // Importa el nuevo componente
 
 const FeedPage = () => {
@@ -18,6 +19,8 @@ const FeedPage = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [selectedEvent, setSelectedEvent] = useState(null); // 2. Estado para el evento seleccionado
+  const [modalVisible, setModalVisible] = useState(false); // 3. Estado para la visibilidad del modal
 
   useEffect(() => {
     loadFeed();
@@ -131,7 +134,13 @@ const FeedPage = () => {
         {renderPostsHeader()}
 
         {/* Carrusel de Eventos con encabezado */}
-        <EventCarousel events={events} />
+        {/* 4. Pasar la prop onEventPress para abrir el modal */}
+        <EventCarousel 
+          events={events} 
+          onEventPress={(event) => {
+            setSelectedEvent(event);
+            setModalVisible(true);
+          }} />
 
         {/* Lista de Publicaciones */}
         <FlatList
@@ -144,6 +153,16 @@ const FeedPage = () => {
           ListEmptyComponent={renderEmpty}
         />
       </ScrollView>
+
+      {/* 5. Añadir el componente del modal a la pantalla */}
+      <EventsModal 
+        visible={modalVisible} 
+        event={selectedEvent} 
+        onClose={() => { 
+          setModalVisible(false); 
+          setSelectedEvent(null); 
+        }} 
+      />
     </View>
   );
 };

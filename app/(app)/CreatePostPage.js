@@ -29,12 +29,12 @@ export default function CreatePostPage() {
             Alert.alert('Permiso necesario', 'Se necesita acceso a la galería.');
             return;
         }
-
+        //Para comprimir imagens de posts
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
             aspect: [4, 3], // Proporción común para posts
-            quality: 0.7,
+            quality: 0.8, // Calidad de la imagen comprimida al 80%
             base64: true, // ¡Importante para subir!
         });
 

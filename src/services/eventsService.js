@@ -42,7 +42,7 @@ const isAdmin = async (userId) => {
  * @param {string|null} imageMimeType - Tipo de MIME de la imagen
  * @returns {Promise<{success: boolean, data?: object, error?: string}>} - Datos del evento creado
  */
-export const createEvent = async (creadorId, nombre, descripcion, fecha, ubicacion = null, imageBase64 = null, imageMimeType = null) => {
+export const createEvent = async (creadorId, nombre, descripcion, fecha, hora, ubicacion = null, imageBase64 = null, imageMimeType = null) => {
     try {
         // Validaciones básicas
         if (!creadorId || !creadorId.trim()) {
@@ -100,7 +100,8 @@ export const createEvent = async (creadorId, nombre, descripcion, fecha, ubicaci
             creador_id: creadorId,
             descripcion: descripcion.trim(),
             fecha: fecha,
-            imagen_url: imageUrl
+            hora: hora, // <-- AÑADIDO: Guardar la hora
+            imagen_url: imageUrl,
         };
         
         // Agregar nombre solo si la columna existe (descomenta cuando agregues la columna en Supabase)
@@ -135,7 +136,7 @@ export const createEvent = async (creadorId, nombre, descripcion, fecha, ubicaci
  * @param {Object} imageAsset - Imagen del evento en formato de asset (opcional)
  * @returns {Promise<{success: boolean, data?: object, error?: string}>} - Datos del evento creado
  */
-export const createEventForCurrentUser = async (nombre, descripcion, fecha, ubicacion = null, imageAsset = null) => {
+export const createEventForCurrentUser = async (nombre, descripcion, fecha, hora, ubicacion = null, imageAsset = null) => {
     try {
         const { data: { user }, error: userError } = await supabase.auth.getUser();
 
@@ -154,6 +155,7 @@ export const createEventForCurrentUser = async (nombre, descripcion, fecha, ubic
             nombre,
             descripcion,
             fecha,
+            hora,
             ubicacion,
             imageAsset?.base64 || null,
             imageAsset?.mimeType || null
@@ -170,12 +172,13 @@ export const createEventForCurrentUser = async (nombre, descripcion, fecha, ubic
  * @param {string} nombre - Nuevo nombre del evento
  * @param {string} descripcion - Nueva descripción del evento
  * @param {string} fecha - Nueva fecha del evento
+ * @param {string} hora - Nueva hora del evento
  * @param {string|null} ubicacion - Nueva ubicación del evento (opcional)
  * @param {string|null} imageBase64 - Nueva imagen del evento en base64 (opcional)
  * @param {string|null} imageMimeType - Tipo de MIME de la imagen (opcional)
  * @returns {Promise<{success: boolean, data?: object, error?: string}>} - Datos del evento actualizado
  */
-export const updateEvent = async (eventoId, nombre, descripcion, fecha, ubicacion = null, imageBase64 = null, imageMimeType = null) => {
+export const updateEvent = async (eventoId, nombre, descripcion, fecha, hora, ubicacion = null, imageBase64 = null, imageMimeType = null) => {
     try {
         // Validaciones básicas
         if (!eventoId) {
@@ -214,6 +217,7 @@ export const updateEvent = async (eventoId, nombre, descripcion, fecha, ubicacio
             nombre: nombre.trim(),
             descripcion: descripcion.trim(),
             fecha: fecha,
+            hora: hora, // <-- AÑADIDO: Guardar la hora
         };
         
         // Agregar ubicación si se proporciona
@@ -278,11 +282,12 @@ export const updateEvent = async (eventoId, nombre, descripcion, fecha, ubicacio
  * @param {string} nombre - Nuevo nombre del evento
  * @param {string} descripcion - Nueva descripción del evento
  * @param {string} fecha - Nueva fecha del evento
+ * @param {string} hora - Nueva hora del evento
  * @param {string|null} ubicacion - Nueva ubicación del evento (opcional)
  * @param {Object} imageAsset - Nueva imagen del evento en formato de asset (opcional)
  * @returns {Promise<{success: boolean, data?: object, error?: string}>} - Datos del evento actualizado
  */
-export const updateEventForCurrentUser = async (eventoId, nombre, descripcion, fecha, ubicacion = null, imageAsset = null) => {
+export const updateEventForCurrentUser = async (eventoId, nombre, descripcion, fecha, hora, ubicacion = null, imageAsset = null) => {
     try {
         const { data: { user }, error: userError } = await supabase.auth.getUser();
 
@@ -301,6 +306,7 @@ export const updateEventForCurrentUser = async (eventoId, nombre, descripcion, f
             nombre,
             descripcion,
             fecha,
+            hora,
             ubicacion,
             imageAsset?.base64 || null,
             imageAsset?.mimeType || null
@@ -325,45 +331,17 @@ export const getEvents = async () => {
             return { success: false, error: error.message };
         }
 
-        // Normalizar: si no existe 'hora', extraerla desde 'fecha' (timestampz)
-        const normalized = (data || []).map(ev => {
-            // copia para no mutar directamente si prefieres
-            const out = { ...ev };
-
-            // Si ya existe hora y no es vacío, mantenla
-            if (out.hora) return out;
-
-            const fecha = out.fecha;
-            if (!fecha) {
-                out.hora = null;
-                return out;
+        // Normalizar la fecha para que solo muestre YYYY-MM-DD
+        const normalizedData = (data || []).map(evento => {
+            if (evento.fecha && typeof evento.fecha === 'string') {
+                // Cortamos la cadena para obtener solo la parte de la fecha.
+                // "2026-05-13 12:00:00+00" -> "2026-05-13"
+                evento.fecha = evento.fecha.substring(0, 10);
             }
-
-            try {
-                // Algunos motores no parsean 'YYYY-MM-DD HH:MM:SS+00' sin la 'T'
-                let iso = fecha;
-                if (typeof iso === 'string' && iso.includes(' ') && !iso.includes('T')) {
-                    iso = iso.replace(' ', 'T');
-                }
-
-                const d = new Date(iso);
-                if (!isNaN(d)) {
-                    // Mostrar hora en formato local "HH:MM"
-                    // Nota: toLocaleTimeString convertirá a la zona del dispositivo.
-                    out.hora = d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
-                } else {
-                    // Fallback: intentar extraer substring si el formato es predecible
-                    const match = String(fecha).match(/(\d{2}:\d{2})/);
-                    out.hora = match ? match[1] : null;
-                }
-            } catch (e) {
-                out.hora = null;
-            }
-
-            return out;
+            return evento;
         });
 
-        return { success: true, data: normalized };
+        return { success: true, data: normalizedData };
     } catch (error) {
         return { success: false, error: error.message };
     }

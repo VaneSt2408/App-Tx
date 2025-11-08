@@ -7,13 +7,26 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator } from '@react-navigation/stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import FeedPage from './FeedPage';
 import MarketplacePage from './MarketplacePage';
 import ArtesanoSettings from './ArtesanoSettings';
 import Estadisticas from './estadisticas';
+import ArtesanoProfile from './ArtesanoProfile'; // Importamos la pantalla de edición
 
 const Tab = createBottomTabNavigator(); // Crear el tab navigator
+const ProfileStack = createStackNavigator(); // Creamos un Stack Navigator para el perfil
+
+// Este es el nuevo navegador para la pestaña de Perfil
+function ProfileStackNavigator() {
+    return (
+        <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
+            <ProfileStack.Screen name="ArtesanoSettings" component={ArtesanoSettings} />
+            <ProfileStack.Screen name="ArtesanoProfile" component={ArtesanoProfile} />
+        </ProfileStack.Navigator>
+    );
+}
 
 // Componente principal
 function ArtPage() {
@@ -76,7 +89,7 @@ function ArtPage() {
             />
             <Tab.Screen 
                 name="Perfil" 
-                component={ArtesanoSettings}
+                component={ProfileStackNavigator} // Usamos el nuevo Stack Navigator aquí
                 options={{
                     tabBarLabel: 'Perfil',
                 }}

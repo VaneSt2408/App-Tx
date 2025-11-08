@@ -39,7 +39,7 @@ const FeaturedCard = ({ type = 'artesano', item = {}, onPress }) => {
       }
 
       if (type === 'evento' && item.id) {
-        router.push({ pathname: '/EventDetail', params: { eventId: item.id.toString() } });
+        router.push({ pathname: '/NewEventDetailPage', params: { id: item.id.toString() } }); // Ejemplo de cambio de ruta
         return;
       }
     } catch (e) {
@@ -81,7 +81,7 @@ const FeaturedCard = ({ type = 'artesano', item = {}, onPress }) => {
   const title = (() => {
     if (type === 'artesano') return item.nombre || item.name || 'Artesano';
     if (type === 'producto') return item.nombre || item.title || item.name || 'Producto';
-    if (type === 'evento') return item.titulo || item.title || item.name || 'Evento';
+    if (type === 'evento') return item.titulo || item.title || item.nombre || 'Evento'; //Cambio de propiedad de name a nombre
     return '';
   })();
 
