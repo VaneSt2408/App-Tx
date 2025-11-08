@@ -13,6 +13,9 @@
       "supportsTablet": true
     },
     "android": {
+      "intentFilters": [
+        { "action": "VIEW", "data": [{ "scheme": "https", "host": "*.txapp.example.com" }], "category": ["BROWSABLE", "DEFAULT"] }
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

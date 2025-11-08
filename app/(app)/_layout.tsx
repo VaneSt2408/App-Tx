@@ -4,6 +4,8 @@ import { Stack, useRouter, Href } from 'expo-router';
 import { useEffect } from 'react'; // ⬅️ Reutilizamos el hook con tu lógica de App.js
 import { ActivityIndicator, View } from 'react-native';
 import { useAuth } from '../../src/context/AuthContext';
+import {FilterProvider} from '../../src/context/FilterContext';
+
 // Componente de carga, similar al de tu App.js
 const LoadingScreen = () => (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -54,6 +56,7 @@ export default function AppLayout() {
   // 5. Definimos TODAS las pantallas posibles del área privada.
   // Esto reemplaza tener que listarlas dentro de cada 'case' del switch.
   return (
+    <FilterProvider>
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="PageAdmin" options={{ title: "Modo Admin" }} />
@@ -78,7 +81,9 @@ export default function AppLayout() {
       <Stack.Screen name="CreateEventPage" options={{title: "Crear evento"}}/>
       <Stack.Screen name="ArtesanoSettings" options={{title: "Ajustes de perfil del artesano"}}/>
       <Stack.Screen name="ArtesanoProfileVistaVisitante" options={{title: "Ver perfil como visitante", headerBackVisible: false}}/>
+      <Stack.Screen name="MarketplaceFilters" options={{title: "Filtros de Marketplace", headerBackVisible: false}}/>
 
     </Stack>
+        </FilterProvider>
   );
 }

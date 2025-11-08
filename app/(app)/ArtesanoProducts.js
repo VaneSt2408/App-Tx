@@ -33,7 +33,7 @@ export default function ArtesanoProducts() {
   const [selectedProductoIndex, setSelectedProductoIndex] = useState(0); // Estado para guardar el índice del producto seleccionado
   const [showProductoModal, setShowProductoModal] = useState(false); // Estado para guardar el estado del modal de producto
   const [showEditModal, setShowEditModal] = useState(false); // Estado para guardar el estado del modal de edición
-  const [editData, setEditData] = useState({ nombre: '', precio: '', categoria: '', descripcion: '', imagen_url: '' }); // Estado para guardar los datos de edición
+  const [editData, setEditData] = useState({ nombre: '', precio: '', categoria: '', descripcion: '', imagen_url: '', estado: 'activo' }); // Estado para guardar los datos de edición
   const [selectedImage, setSelectedImage] = useState(null); // Estado para guardar la imagen seleccionada
   const [editLoading, setEditLoading] = useState(false); // Estado para guardar el estado de carga de edición
   const [showUploadModal, setShowUploadModal] = useState(false); // Estado para guardar el estado del modal de subida de producto
@@ -153,7 +153,8 @@ export default function ArtesanoProducts() {
         precio: selectedProducto.precio?.toString() || '', 
         categoria: selectedProducto.categoria || '', 
         descripcion: selectedProducto.descripcion || '',
-        imagen_url: selectedProducto.imagen_url || ''
+        imagen_url: selectedProducto.imagen_url || '',
+        estado: selectedProducto.estado || 'activo'
       });
       setSelectedImage(null);
       setShowEditModal(true);
@@ -173,7 +174,7 @@ export default function ArtesanoProducts() {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
-        quality: 0.8, // Calidad de la imagen reducida al 80%
+        quality: 0.7,
         base64: true,
       });
 
@@ -194,7 +195,7 @@ export default function ArtesanoProducts() {
   // Función para cerrar el modal de edición
   const handleCloseEditModal = () => {
     setShowEditModal(false);
-    setEditData({ nombre: '', precio: '', categoria: '', descripcion: '', imagen_url: '' });
+    setEditData({ nombre: '', precio: '', categoria: '', descripcion: '', imagen_url: '', estado: 'activo' });
     setSelectedImage(null);
   };
 
@@ -211,6 +212,7 @@ export default function ArtesanoProducts() {
         precio: editData.precio,
         categoria: editData.categoria,
         descripcion: editData.descripcion,
+        estado: editData.estado,
       };
 
       await updateProduct(selectedProducto.id, updateData, selectedImage);
@@ -635,6 +637,30 @@ export default function ArtesanoProducts() {
                   onChangeText={(text) => setEditData({ ...editData, precio: text })}
                   keyboardType="numeric"
                 />
+              </View>
+
+              {/* Campo de estado */}
+              <View style={styles.editSection}>
+                <Text style={styles.editLabel}>Estado *</Text>
+                <View style={styles.statusContainer}>
+                  {['activo', 'vendido', 'inactivo'].map(status => (
+                    <TouchableOpacity
+                      key={status}
+                      style={[
+                        styles.statusButton,
+                        editData.estado === status && styles.statusButtonActive,
+                      ]}
+                      onPress={() => setEditData({ ...editData, estado: status })}
+                    >
+                      <Text style={[
+                        styles.statusButtonText,
+                        editData.estado === status && styles.statusButtonTextActive,
+                      ]}>
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
 
               {/* Campo de categoría */}
@@ -1127,5 +1153,31 @@ const styles = StyleSheet.create({
     color: '#9D046D',
     fontWeight: '600',
   },
+  statusContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  statusButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ced4da',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+  },
+  statusButtonActive: {
+    backgroundColor: '#FBDAF4',
+    borderColor: '#9D046D',
+  },
+  statusButtonText: {
+    fontSize: 14,
+    color: '#495057',
+    fontWeight: '500',
+  },
+  statusButtonTextActive: {
+    color: '#9D046D',
+    fontWeight: 'bold',
+  },
 });
-
