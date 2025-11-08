@@ -15,7 +15,7 @@ import useCustomFonts from '../../hooks/useFonts';
 
 
 const Text = (props) => (
-    <DefaultText {...props} style={[{ fontFamily: 'AlanSans' }, props.style]} />
+    <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
   );
 const { width } = Dimensions.get('window'); // Obtener el ancho de la ventana
 const imageSize = (width - 40) / 3; // Para grid de 3 columnas
