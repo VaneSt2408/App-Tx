@@ -101,7 +101,7 @@ export const createProduct = async (productData) => {
         artesano_id: user.id,
         nombre: productData.nombre,
         descripcion: productData.descripcion,
-        precio: productData.precio,
+        precio: parseFloat(productData.precio) || 0, // Convertimos a número
         categoria: productData.categoria || 'general',
         imagen_url: imagenUrl,
         estado: 'activo'

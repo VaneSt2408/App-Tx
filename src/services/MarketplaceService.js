@@ -5,7 +5,7 @@ import { supabase } from '../supabase/client';
  * Servicio para manejar operaciones del Marketplace
  */
 export class MarketplaceService {
-  
+
   /**
    * Obtiene productos del marketplace con paginación
    * @param {number} limit - Cantidad de productos por página (default: 20)
@@ -15,8 +15,9 @@ export class MarketplaceService {
    */
   static async getProductos(limit = 20, page = 0, filters = {}) {
     try {
+      console.log('[MarketplaceService] Recibidos filtros:', JSON.stringify(filters, null, 2));
       const offset = page * limit;
-      
+
 
       // Construir query base
       let query = supabase
@@ -27,6 +28,7 @@ export class MarketplaceService {
           descripcion,
           precio,
           categoria,
+          estado,
           imagen_url,
           created_at,
           artesano_id,
@@ -36,24 +38,60 @@ export class MarketplaceService {
             categoria,
             avatar_url
           )
-        `, { count: 'exact' })
-        .eq('estado', 'activo');
+        `, { count: 'exact' });
 
-      // Aplicar filtros
-      if (filters.categoria) {
-        query = query.eq('categoria', filters.categoria);
+      // FILTRO DE BÚSQUEDA DE TEXTO (RPC)
+      if (filters.searchQuery && filters.searchQuery.trim()) {
+        console.log(`[MarketplaceService] Aplicando filtro de búsqueda de texto: "${filters.searchQuery.trim()}"`);
+        const searchTerm = filters.searchQuery.trim(); // Ya no es necesario formatear para websearch_to_tsquery
+
+        // Llamamos a la función de la base de datos
+        const { data: rpcData, error: rpcError } = await supabase.rpc('buscar_productos_con_artesano', {
+          search_term: searchTerm // Pasamos el texto directamente
+        });
+
+        if (rpcError) {
+          console.error('[MarketplaceService] Error en RPC:', rpcError.message);
+          return { success: false, error: rpcError.message };
+        }
+
+        if (!rpcData || rpcData.length === 0) {
+          return { success: true, data: [], hasMore: false, totalCount: 0 };
+        }
+
+        const productIds = rpcData.map(p => p.id);
+        query = query.in('id', productIds);
       }
 
-      if (filters.busqueda) {
-        query = query.or(`nombre.ilike.%${filters.busqueda}%,descripcion.ilike.%${filters.busqueda}%`);
+      if (filters.categories && filters.categories.length > 0) {
+        query = query.in('categoria', filters.categories);
       }
 
-      if (filters.minPrecio !== undefined) {
-        query = query.gte('precio', filters.minPrecio);
+      if (filters.location && filters.location.trim()) {
+        // La sintaxis para filtrar en una tabla unida es "nombre_tabla_unida.columna"
+        query = query.ilike('artesanos.ubicacion', `%${filters.location.trim()}%`);
       }
 
-      if (filters.maxPrecio !== undefined) {
-        query = query.lte('precio', filters.maxPrecio);
+      // Filtro por estado ('publicados', 'disponibles', 'vendidos', etc.)
+      if (filters.estado) {
+        if (filters.estado === 'disponibles') {
+          query = query.eq('estado', 'activo');
+        } else if (filters.estado === 'vendidos') {
+          query = query.eq('estado', 'vendido');
+        } else if (filters.estado === 'no-disponible') {
+          query = query.eq('estado', 'inactivo');
+        }
+        // 'publicados' y 'todos' no necesitan un filtro de estado específico aquí.
+      }
+
+      if (filters.priceRange?.min && filters.priceRange.min !== '') {
+        const minPrice = parseFloat(filters.priceRange.min);
+        if (!isNaN(minPrice)) query = query.gte('precio', minPrice);
+      }
+
+      if (filters.priceRange?.max && filters.priceRange.max !== '') {
+        const maxPrice = parseFloat(filters.priceRange.max);
+        if (!isNaN(maxPrice)) query = query.lte('precio', maxPrice);
       }
 
       // Ordenar y paginar
@@ -64,10 +102,12 @@ export class MarketplaceService {
       const { data: productos, error: productsError, count } = await query;
 
       if (productsError) {
+        console.error('[MarketplaceService] Error en la consulta a Supabase:', productsError.message);
         return { success: false, error: productsError.message };
       }
 
       if (!productos || productos.length === 0) {
+        console.log('[MarketplaceService] La consulta no devolvió productos.');
         return { success: true, data: [], hasMore: false, totalCount: 0 };
       }
 
@@ -78,6 +118,7 @@ export class MarketplaceService {
         descripcion: prod.descripcion,
         precio: parseFloat(prod.precio),
         categoria: prod.categoria,
+        estado: prod.estado,
         imagen_url: prod.imagen_url,
         created_at: prod.created_at,
         artesano: {
@@ -125,6 +166,7 @@ export class MarketplaceService {
           created_at,
           artesano_id,
           artesanos:artesano_id (
+            user_id,
             nombre,
             ubicacion,
             categoria,
@@ -134,7 +176,6 @@ export class MarketplaceService {
           )
         `)
         .eq('id', productoId)
-        .eq('estado', 'activo')
         .single();
 
       if (error) {
@@ -156,31 +197,54 @@ export class MarketplaceService {
       ]);
 
       const productoFormateado = {
-        id: producto.id,
-        nombre: producto.nombre,
-        descripcion: producto.descripcion,
+        ...producto, // Mantenemos todos los campos del producto
         precio: parseFloat(producto.precio),
-        categoria: producto.categoria,
-        imagen_url: producto.imagen_url,
-        estado: producto.estado,
-        created_at: producto.created_at,
         is_liked: !!userLikeResult.data,
         likes_count: likesCountResult.count || 0,
+        // CORRECCIÓN: Renombrar 'artesanos' a 'artesano' para que coincida con la vista
         artesano: {
-          id: producto.artesano_id,
-          nombre: producto.artesanos?.nombre || 'Artesano',
-          ubicacion: producto.artesanos?.ubicacion || '',
-          categoria: producto.artesanos?.categoria || '',
-          avatar_url: producto.artesanos?.avatar_url || null,
-          curp: producto.artesanos?.curp || '',
-          numero_ine: producto.artesanos?.numero_ine || '',
-        },
+          ...producto.artesanos,
+          id: producto.artesanos?.user_id // Aseguramos que el ID esté disponible como 'id'
+        }
       };
 
       return { success: true, data: productoFormateado };
 
     } catch (error) {
       return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Obtiene los datos de contacto de un artesano (teléfono y email).
+   * @param {string} artesanoId - El ID del usuario artesano.
+   * @returns {Promise<{success: boolean, data?: {telefono: string | null}, error?: string}>}
+   */
+  static async getArtesanoContact(artesanoId) {
+    try {
+      if (!artesanoId) {
+        return { success: false, error: 'ID de artesano no proporcionado' };
+      }
+ 
+      // 1. Obtener el teléfono de la tabla 'perfiles'
+      const { data: perfilResult, error: perfilError } = await supabase
+        .from('perfiles')
+        .select('telefono')
+        .eq('id', artesanoId)
+        .single();
+ 
+      if (perfilError && perfilError.code !== 'PGRST116') { // PGRST116 = no rows found, lo cual es válido
+        throw perfilError;
+      }
+
+      const contactData = {
+        telefono: perfilResult?.telefono || null,
+        email: null, // Ya no se obtiene el email
+      };
+ 
+      return { success: true, data: contactData };
+    } catch (error) {
+      return { success: false, error: 'No se pudieron obtener los datos de contacto.' };
     }
   }
 
@@ -251,6 +315,7 @@ export class MarketplaceService {
           descripcion,
           precio,
           categoria,
+          estado,
           imagen_url,
           created_at,
           artesano_id,
@@ -275,6 +340,7 @@ export class MarketplaceService {
         descripcion: prod.descripcion,
         precio: parseFloat(prod.precio),
         categoria: prod.categoria,
+        estado: prod.estado,
         imagen_url: prod.imagen_url,
         created_at: prod.created_at,
         artesano: {

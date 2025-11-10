@@ -1,11 +1,9 @@
-// En: app/(app)/ArtesanoSettings.js -> Nueva pantalla de perfil único con diseño superior mejorado y botón de cerrar sesión
+// En: app/(app)/ArtesanoProfileVistaVisitante.js -> Vista de perfil para visitantes
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text as DefaultText, StyleSheet, ScrollView, Image, TouchableOpacity, SafeAreaView, Dimensions, Alert, RefreshControl } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useAuth } from '../../src/context/AuthContext';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { artesanoService } from '../../src/services/artesanoService';
-import { signOut } from '../../src/services/authService'; // Importar la función de cerrar sesión
 
 const { width } = Dimensions.get('window');
 
@@ -13,74 +11,51 @@ const Text = (props) => (
     <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
 );
 
-export default function ArtesanoSettings() {
+export default function ArtesanoProfileVistaVisitante() {
     const router = useRouter();
-    const { session } = useAuth();
+    const { userId, email } = useLocalSearchParams(); // Obtener userId y email de los parámetros
     const [artesano, setArtesano] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false); // 1. Añadir estado para el refresco
+    const [refreshing, setRefreshing] = useState(false);
     const [activeTab, setActiveTab] = useState('sobreMi'); // Estado para la pestaña activa
     const [publicaciones, setPublicaciones] = useState([]); // Estado para las publicaciones del artesano
     const [productos, setProductos] = useState([]); // Estado para los productos del artesano
 
     useEffect(() => {
-        if (session?.user?.id) {
-            loadArtesanoProfile(true); // Carga inicial
+        if (userId) {
+            loadArtesanoProfile(userId, true); // Carga inicial
+        } else {
+            Alert.alert("Error", "No se proporcionó un ID de artesano.");
+            router.back();
         }
-    }, [session]);
+    }, [userId]);
 
-    const loadArtesanoProfile = async (isInitialLoad = false) => {
+    const loadArtesanoProfile = async (id, isInitialLoad = false) => {
         try {
             if (isInitialLoad) setLoading(true);
-            const data = await artesanoService.getArtesanoCompleto(session.user.id);
+            const data = await artesanoService.getArtesanoCompleto(id);
             setArtesano(data.artesano);
             setPublicaciones(data.publicaciones || []);
             setProductos(data.productos || []); // Cargar los productos
         } catch (error) {
             console.error('Error al cargar perfil:', error);
+            Alert.alert("Error", "No se pudo cargar el perfil del artesano.");
         } finally {
             if (isInitialLoad) setLoading(false);
-        }
-    };
-
-    // 2. Crear la función onRefresh
-    const onRefresh = useCallback(async () => {
-        setRefreshing(true);
-        try {
-            await loadArtesanoProfile();
-        } finally {
             setRefreshing(false);
         }
-    }, []);
-
-    // Función para cerrar sesión
-    const handleLogout = async () => {
-        Alert.alert(
-            'Cerrar Sesión',
-            '¿Estás seguro de que deseas cerrar sesión?',
-            [
-                {
-                    text: 'Cancelar',
-                    style: 'cancel',
-                },
-                {
-                    text: 'Cerrar Sesión',
-                    style: 'destructive',
-                    onPress: async () => {
-                        await signOut();
-                        // Opcional: redirigir a la pantalla de inicio de sesión
-                        // router.replace('/(auth)/login'); // Descomenta si deseas redirigir
-                    }
-                }
-            ]
-        );
     };
+
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        await loadArtesanoProfile(userId);
+    }, [userId]);
 
     if (loading) {
         return (
             <SafeAreaView style={styles.container}>
                 <View style={styles.loadingContainer}>
-                    <Text style={styles.loadingText}>Cargando perfil...</Text>
+                    <Text style={styles.loadingText}>Cargando perfil del artesano...</Text>
                 </View>
             </SafeAreaView>
         );
@@ -89,8 +64,12 @@ export default function ArtesanoSettings() {
     if (!artesano) {
         return (
             <SafeAreaView style={styles.container}>
+                <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                    <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
+                    <Text> Volver</Text>
+                </TouchableOpacity>
                 <View style={styles.errorContainer}>
-                    <Text style={styles.errorText}>No se pudo cargar el perfil</Text>
+                    <Text style={styles.errorText}>No se pudo cargar el perfil del artesano.</Text>
                 </View>
             </SafeAreaView>
         );
@@ -98,89 +77,76 @@ export default function ArtesanoSettings() {
 
     return (
         <SafeAreaView style={styles.container}>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
+                <Text> Volver</Text>
+            </TouchableOpacity>
             <ScrollView 
                 contentContainerStyle={styles.contentContainer}
-                // 3. Añadir el RefreshControl al ScrollView
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
                         onRefresh={onRefresh}
-                        colors={['#9D046D']} // Color del indicador de carga
+                        colors={['#9D046D']}
                     />
                 }
             >
                 {/* Header con foto de perfil, nombre y botones */}
-                <View style={[styles.header,{fontFamily: 'Alan Sans'}]}>
+                <View style={[styles.header, { fontFamily: 'Alan Sans' }]}>
                     <View style={styles.avatarContainer}>
                         {artesano.avatar_url ? (
                             <Image source={{ uri: artesano.avatar_url }} style={styles.avatar} />
                         ) : (
                             <View style={styles.defaultAvatar}>
-                                <MaterialCommunityIcons name="account" size={60} color="#666" />
+                                <MaterialCommunityIcons name="account" size={50} color="#fff" />
                             </View>
                         )}
                     </View>
 
-                    <Text style={[styles.name,{fontFamily: 'Alan Sans'}]}>{artesano.nombre || 'Sin nombre'}</Text>
+                    <Text style={[styles.name, { fontFamily: 'Alan Sans' }]}>{artesano.nombre || 'Artesano sin nombre'}</Text>
                     <Text style={styles.specialty}>{artesano.categoria || 'Ceramista'} - {artesano.ubicacion || 'Madrid, España'}</Text>
-
-                    <View style={styles.buttonRow}>
-                        <TouchableOpacity 
-                            style={styles.viewAsVisitorButton}
-                            onPress={() => router.push(`/ArtesanoProfileVistaVisitante?userId=${session.user.id}&email=${session.user.email}`)}
-                        >
-                            <Text style={[styles.viewAsVisitorText,{fontFamily: 'Alan Sans'}]}>Ver como visitante</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity 
-                            style={styles.editProfileButton}
-                            onPress={() => router.push({ pathname: 'ArtesanoProfile', params: { userId: session.user.id } })}
-                        >
-                            <MaterialCommunityIcons name="pencil" size={16} color="#fff" />
-                            <Text style={[styles.editProfileText,{fontFamily: 'Alan Sans'}]}>Editar Perfil</Text>
-                        </TouchableOpacity>
-                    </View>
 
                     {/* Métricas: Seguidores, Publicaciones, Valoración */}
                     <View style={styles.metricsContainer}>
                         <View style={styles.metricCard}>
-                            <Text style={[styles.metricNumber,{fontFamily: 'Alan Sans'}]}>{productos.length}</Text>
-                            <Text style={[styles.metricLabel,{fontFamily: 'Alan Sans'}]}>Productos</Text>
+                            <Text style={[styles.metricNumber, { fontFamily: 'Alan Sans' }]}>{productos.length}</Text>
+                            <Text style={[styles.metricLabel, { fontFamily: 'Alan Sans' }]}>Productos</Text>
                         </View>
                         <View style={styles.metricCard}>
-                            <Text style={[styles.metricNumber,{fontFamily: 'Alan Sans'}]}>{publicaciones.length}</Text>
-                            <Text style={[styles.metricLabel,{fontFamily: 'Alan Sans'}]}>Publicaciones</Text>
+                            <Text style={[styles.metricNumber, { fontFamily: 'Alan Sans' }]}>{publicaciones.length}</Text>
+                            <Text style={[styles.metricLabel, { fontFamily: 'Alan Sans' }]}>Publicaciones</Text>
                         </View>
                         <View style={styles.metricCard}>
-                            <Text style={[styles.metricNumber,{fontFamily: 'Alan Sans'}]}>{artesano?.total_likes || 0}</Text>
-                            <Text style={[styles.metricLabel,{fontFamily: 'Alan Sans'}]}>Likes</Text>
+                            <Text style={[styles.metricNumber, { fontFamily: 'Alan Sans' }]}>{artesano?.total_likes || 0}</Text>
+                            <Text style={[styles.metricLabel, { fontFamily: 'Alan Sans' }]}>Likes</Text>
                         </View>
                     </View>
                 </View>
 
-                {/* Pestañas: Sobre mí, Mi Trabajo, Reseñas */}
+                {/* Pestañas */}
                 <View style={styles.tabsContainer}>
                     <TouchableOpacity 
                         style={[styles.tab, activeTab === 'sobreMi' && styles.activeTab]}
                         onPress={() => setActiveTab('sobreMi')}>
-                        <Text style={[styles.tabText, activeTab === 'sobreMi' && styles.activeTabText, {fontFamily: 'Alan Sans'}]}>Sobre mí</Text>
+                        <Text style={[styles.tabText, activeTab === 'sobreMi' && styles.activeTabText, { fontFamily: 'Alan Sans' }]}>Descripción</Text>
                     </TouchableOpacity>
                     <TouchableOpacity 
                         style={[styles.tab, activeTab === 'miTrabajo' && styles.activeTab]}
                         onPress={() => setActiveTab('miTrabajo')}>
-                        <Text style={[styles.tabText, activeTab === 'miTrabajo' && styles.activeTabText, {fontFamily: 'Alan Sans'}]}>Mi Trabajo</Text>
+                        <Text style={[styles.tabText, activeTab === 'miTrabajo' && styles.activeTabText, { fontFamily: 'Alan Sans' }]}>Productos</Text>
                     </TouchableOpacity>
                     <TouchableOpacity 
                         style={[styles.tab, activeTab === 'publicaciones' && styles.activeTab]}
                         onPress={() => setActiveTab('publicaciones')}>
-                        <Text style={[styles.tabText, activeTab === 'publicaciones' && styles.activeTabText, {fontFamily: 'Alan Sans'}]}>Publicaciones</Text>
+                        <Text style={[styles.tabText, activeTab === 'publicaciones' && styles.activeTabText, { fontFamily: 'Alan Sans' }]}>Publicaciones</Text>
                     </TouchableOpacity>
                 </View>
 
                 {/* Contenido dinámico de las pestañas */}
                 {activeTab === 'sobreMi' && (
                     <View style={styles.tabContent}>
-                        <Text style={[styles.tabContentText,{fontFamily: 'Alan Sans'}]}>
-                            {artesano?.descripcion || 'Aún no has agregado una descripción sobre ti.'}
+                        <Text style={[styles.tabContentText, { fontFamily: 'Alan Sans' }]}>
+                            {artesano?.descripcion || 'Este artesano aún no ha agregado una descripción.'}
                         </Text>
 
                         {/* Sección de Contacto */}
@@ -192,20 +158,20 @@ export default function ArtesanoSettings() {
                                     <Text style={styles.contactText}>{artesano.telefono}</Text>
                                 </View>
                             )}
-                            {session?.user?.email && (
+                            {/* Usamos el email que viene como parámetro */}
+                            {email && ( 
                                 <View style={styles.contactRow}>
                                     <MaterialCommunityIcons name="email" size={20} color="#9D046D" />
-                                    <Text style={styles.contactText}>{session.user.email}</Text>
+                                    <Text style={styles.contactText}>{email}</Text>
                                 </View>
                             )}
                         </View>
-
                     </View>
                 )}
 
                 {activeTab === 'miTrabajo' && (
                     <View style={styles.gridContainer}> 
-                        {productos.map(pub => ( // Renderizar productos aquí
+                        {productos.map(pub => (
                             <TouchableOpacity key={pub.id} style={styles.gridItem}>
                                 {pub.imagen_url ? (
                                     <Image source={{ uri: pub.imagen_url }} style={styles.gridImage} />
@@ -219,7 +185,7 @@ export default function ArtesanoSettings() {
 
                 {activeTab === 'publicaciones' && (
                     <View style={styles.gridContainer}>
-                        {publicaciones.map(pub => ( // Renderizar publicaciones aquí
+                        {publicaciones.map(pub => (
                             <TouchableOpacity key={pub.id} style={styles.gridItem}>
                                 {pub.imagen_url ? (
                                     <Image source={{ uri: pub.imagen_url }} style={styles.gridImage} />
@@ -230,15 +196,6 @@ export default function ArtesanoSettings() {
                         ))}
                     </View>
                 )}
-
-
-                {/* Botón de Cerrar Sesión */}
-                <View style={styles.logoutSection}>
-                    <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                        <MaterialCommunityIcons name="logout" size={24} color="#fff" />
-                        <Text style={[styles.logoutButtonText, { fontFamily: 'Alan Sans' }]}>Cerrar Sesión</Text>
-                    </TouchableOpacity>
-                </View>
             </ScrollView>
         </SafeAreaView>
     );
@@ -248,6 +205,13 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#fff',
+    },
+    backButton: {
+        position: 'absolute',
+        top: 40,
+        left: 10,
+        zIndex: 10,
+        flexDirection: 'row',
     },
     contentContainer: {
         paddingBottom: 20,
@@ -294,29 +258,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         width: '100%',
         marginBottom: 20,
-    },
-    viewAsVisitorButton: {
-        backgroundColor: '#f5f5f5',
-        paddingVertical: 8,
-        paddingHorizontal: 15,
-        borderRadius: 8,
-        alignItems: 'center',
-        flex: 1,
-        marginRight: 10,
-    },
-    viewAsVisitorText: {
-        fontSize: 14,
-        color: '#333',
-    },
-    editProfileButton: {
-        backgroundColor: '#9D046D',
-        paddingVertical: 8,
-        paddingHorizontal: 15,
-        borderRadius: 8,
-        alignItems: 'center',
-        flex: 1,
-        flexDirection: 'row',
-        justifyContent: 'center',
     },
     editProfileText: {
         fontSize: 14,
@@ -378,29 +319,6 @@ const styles = StyleSheet.create({
         color: '#555',
         lineHeight: 20,
     },
-    logoutSection: {
-        paddingHorizontal: 20,
-        marginTop: 20,
-    },
-    logoutButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#db4437',
-        paddingVertical: 16,
-        borderRadius: 10,
-        elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.2,
-        shadowRadius: 2,
-    },
-    logoutButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginLeft: 8,
-    },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
@@ -425,8 +343,8 @@ const styles = StyleSheet.create({
         padding: 2,
     },
     gridItem: {
-        width: (width / 2) - 6, // Ajustado para 3 columnas con padding
-        height: (width / 2) - 6, // Mantenemos la proporción cuadrada
+        width: (width / 3) - 6, // 3 columnas
+        height: (width / 3) - 6,
         margin: 2,
     },
     gridImage: {

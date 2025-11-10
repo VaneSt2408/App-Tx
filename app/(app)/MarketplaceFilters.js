@@ -1,20 +1,42 @@
 // app/(app)/MarketplaceFilters.js
-import React, { useState } from 'react';
+// Pantalla de filtros para el Marketplace
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useFilter } from '../../src/context/FilterContext'; // Corregido de useFilters a useFilter si es necesario
 
 // Lista de ejemplo, idealmente vendría de una API
 const CATEGORIAS_EJEMPLO = [
-  'Textil', 'Alfarería', 'Joyería', 'Madera', 'Piel', 'Piedra', 'Vidrio', 'Metal'
+  'Textil', 'Alfarería', 'Joyería', 
+  'Madera', 'Piel', 'Piedra', 'Vidrio', 
+  'Metal', 'Cerámica', 'Cestería', 
+  'Fibras', 'Minerales'
 ];
 
+// Componente principal de filtros
+// NO MODIFICAR
 export default function MarketplaceFilters() {
   const router = useRouter();
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [priceRange, setPriceRange] = useState({ min: '', max: '' });
-  const [location, setLocation] = useState('');
+  const { filters, applyFilters, clearFilters } = useFilter(); // Obtenemos los filtros actuales del contexto
+  const [selectedCategories, setSelectedCategories] = useState(filters.categories || []);
+  const [priceRange, setPriceRange] = useState(filters.priceRange || { min: '', max: '' });
+  const [location, setLocation] = useState(filters.location || '');
 
+  // NO MODIFICAR
+  // Sincroniza el estado local con el contexto cuando los filtros del contexto cambian.
+  useEffect(() => {
+    // Los TextInput esperan strings. Si los valores en el contexto son números, los convertimos.
+    const minPrice = filters.priceRange?.min?.toString() || '';
+    const maxPrice = filters.priceRange?.max?.toString() || '';
+
+    setSelectedCategories(filters.categories || []);
+    setPriceRange({ min: minPrice, max: maxPrice });
+    setLocation(filters.location || '');
+  }, [filters]);
+
+  // NO MODIFICAR
+  // Maneja la selección y deselección de categorías
   const toggleCategory = (category) => {
     setSelectedCategories(prev =>
       prev.includes(category)
@@ -23,16 +45,29 @@ export default function MarketplaceFilters() {
     );
   };
 
+  // NO MODIFICAR
+  // Maneja la acción de limpiar filtros
   const handleClear = () => {
     setSelectedCategories([]);
     setPriceRange({ min: '', max: '' });
     setLocation('');
+    clearFilters();
   };
 
+  // NO MODIFICAR
+  // Maneja la acción de aplicar filtros
   const handleApply = () => {
-    // Aquí se pasaría la información de los filtros a la página anterior.
-    // Por ahora, solo navega hacia atrás.
-    console.log('Aplicando filtros:', { selectedCategories, priceRange, location });
+    // Convertir los precios a números antes de aplicar el filtro.
+    const numericPriceRange = {
+      min: priceRange.min ? parseFloat(priceRange.min) : null,
+      max: priceRange.max ? parseFloat(priceRange.max) : null,
+    };
+
+    applyFilters({
+      categories: selectedCategories,
+      priceRange: numericPriceRange,
+      location, 
+    });
     router.back();
   };
 
