@@ -45,7 +45,7 @@ export default function EstadisticasPage() {
 
   // Función para navegar al perfil del artesano
   const handlePressArtesano = (userId) => {
-    router.push({ pathname: "/(app)/ArtesanoProfile", params: { userId } });
+    router.push({ pathname: "/(app)/ArtesanoProfileVistaVisitante", params: { userId } }); //Cambiar a la ruta correcta
   };
 
   // Función para formatear la fecha

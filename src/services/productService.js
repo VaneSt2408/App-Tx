@@ -319,6 +319,16 @@ export const deleteProduct = async (productId) => {
       }
     }
 
+    // Opcional (recomendado si no hay ON DELETE CASCADE): Eliminar likes asociados
+    try {
+      await supabase
+        .from('likes_productos')
+        .delete()
+        .eq('producto_id', productId);
+    } catch (likesError) {
+      // No es crítico, continuar con la eliminación del producto
+    }
+
     // Eliminar el producto
     const { error: deleteError } = await supabase
       .from('productos')
