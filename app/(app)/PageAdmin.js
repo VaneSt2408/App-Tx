@@ -2,188 +2,228 @@
 // Este archivo es el encargado de mostrar la página de administración en la aplicación.
 // Muestra la página de administración registrada en la base de datos y permite cerrar sesión, navegar a la página de invitación de enlace mágico, lista de artesanos, estadísticas, modificación/eliminación y configuración general.
 
-import React, { useEffect, useState } from 'react'; // En: src/pages/PageAdmin.js
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native'; // Asegúrate de importar TouchableOpacity
-import { useRouter } from 'expo-router'; // Importa useRouter para la navegación con Expo Router
-import { signOut } from '../../src/services/authService'; // Similar a ClientPage.js
-import { supabase } from '../../src/supabase/client'; // Similar a ClientPage.js
-import { MaterialCommunityIcons } from '@expo/vector-icons'; // Importa los íconos de MaterialCommunityIcons
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
+import { useRouter } from 'expo-router';
+import { signOut } from '../../src/services/authService'; // Asumo que la ruta es correcta
+import { supabase } from '../../src/supabase/client'; // Asumo que la ruta es correcta
+import { Ionicons } from '@expo/vector-icons'; // Importamos Ionicons para los iconos
 
-function PageAdmin() { // Asegúrate de que el nombre del componente coincida con el del archivo
-    const router = useRouter(); // Hook para la navegación con Expo Router
-    const [user, setUser] = useState(null); // Estado para almacenar los datos del usuario
-    const [loading, setLoading] = useState(true); // Estado para manejar la carga
+function PageAdmin() {
+    const router = useRouter();
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    // useEffect ahora solo obtiene los datos del usuario para mostrarlos
-    useEffect(() => { // Similar al de Home.js pero sin lógica de tareas
-        const fetchUser = async () => { // Función para obtener los datos del usuario
-            const { data: { user } } = await supabase.auth.getUser(); // Obtiene el usuario actual
-            setUser(user); // Actualiza el estado del usuario
-            setLoading(false); // Actualiza el estado de carga
+    // useEffect no se toca, la lógica se mantiene
+    useEffect(() => {
+        const fetchUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            setUser(user);
+            setLoading(false);
         };
-        fetchUser(); // Llama a la función para obtener los datos del usuario
+        fetchUser();
     }, []);
 
-    const handleLogout = async () => { // Función para manejar el cierre de sesión
-        await signOut(); // Llama a la función signOut
+    // handleLogout no se toca, la lógica se mantiene
+    const handleLogout = async () => {
+        await signOut();
         // No se navega aquí. App.js se encarga de todo.
     };
 
-    if (loading || !user) { // Muestra un indicador de carga mientras se obtienen los datos del usuario
-        return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#9D046D" /></View>;
+    if (loading || !user) {
+        return (
+            // Usamos el color de fondo original #f5ff5
+            <View style={[styles.container, styles.loadingContainer]}>
+                <ActivityIndicator size="large" color="#9D046D" />
+            </View>
+        );
     }
 
+    // El JSX se actualiza para coincidir con la imagen pero con los colores originales
     return (
-        <View style={styles.container}>
-            <View style={styles.userInfo}>
-                <Text style={styles.emailText}>Email: {user.email}</Text>
-                <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-                    <MaterialCommunityIcons name="logout" size={28} color="#db4437" />
+        <SafeAreaView style={styles.container}>
+            {/* Cambiamos la barra de estado a oscura para el fondo claro */}
+            <StatusBar barStyle="dark-content" />
+            
+            {/* Header como en la imagen, pero con texto oscuro */}
+            <View style={styles.header}>
+                <View>
+                    <Text style={styles.headerTitle}>Panel</Text>
+                    <Text style={styles.headerSubtitle}>Administrador</Text>
+                </View>
+                {/* Icono oscuro para fondo claro */}
+                <Ionicons name="shield-outline" size={28} color="#555555" />
+            </View>
+
+            {/* Contenedor de botones del menú */}
+            <View style={styles.menuContainer}>
+                {/* Botón 1 con color original: #690DB5 e ícono con fondo */}
+                <TouchableOpacity 
+                    style={[styles.menuButton, styles.menuButtonPurple]} 
+                    onPress={() => router.push('./MagicLink')}
+                >
+                    {/* Contenedor de icono con color */}
+                    <View style={[styles.iconContainer, styles.iconBgBlue, styles.menuIcon]}>
+                        <Ionicons name="person-add-outline" size={18} color="#FFFFFF" />
+                    </View>
+                    <Text style={styles.menuText}>Registrar Nuevo Artesano</Text>
+                    <Ionicons name="chevron-forward-outline" size={22} color="#FFFFFF" />
+                </TouchableOpacity>
+
+                {/* Botón 2 con color original: #9D046D e ícono con fondo */}
+                <TouchableOpacity 
+                    style={[styles.menuButton, styles.menuButtonMagenta]} 
+                    onPress={() => router.push('./ArtesanoList')}
+                >
+                    {/* Contenedor de icono con color */}
+                    <View style={[styles.iconContainer, styles.iconBgGreen, styles.menuIcon]}>
+                        <Ionicons name="list-outline" size={18} color="#FFFFFF" />
+                    </View>
+                    <Text style={styles.menuText}>Lista de Artesanos</Text>
+                    <Ionicons name="chevron-forward-outline" size={22} color="#FFFFFF" />
+                </TouchableOpacity>
+
+                {/* Botón 3 con color original: #9D046D e ícono con fondo */}
+                <TouchableOpacity 
+                    style={[styles.menuButton, styles.menuButtonMagenta]} 
+                    onPress={() => router.push('./estadisticas')}
+                >
+                    {/* Contenedor de icono con color */}
+                    <View style={[styles.iconContainer, styles.iconBgPurple, styles.menuIcon]}>
+                        <Ionicons name="bar-chart-outline" size={18} color="#FFFFFF" />
+                    </View>
+                    <Text style={styles.menuText}>Estadísticas</Text>
+                    <Ionicons name="chevron-forward-outline" size={22} color="#FFFFFF" />
+                </TouchableOpacity>
+
+                {/* Botón 4 con color original: #9D046D e ícono con fondo */}
+                <TouchableOpacity 
+                    style={[styles.menuButton, styles.menuButtonMagenta]} 
+                    onPress={() => router.push('./Eventos')}
+                >
+                    {/* Contenedor de icono con color */}
+                    <View style={[styles.iconContainer, styles.iconBgOrange, styles.menuIcon]}>
+                        <Ionicons name="calendar-outline" size={18} color="#FFFFFF" />
+                    </View>
+                    <Text style={styles.menuText}>Eventos</Text>
+                    <Ionicons name="chevron-forward-outline" size={22} color="#FFFFFF" />
                 </TouchableOpacity>
             </View>
-            <Text style={styles.title}>Modo: Administrador</Text>
-            <TouchableOpacity style={styles.botonPersonalizado} onPress={() => router.push('./MagicLink')}>
-                <Text style={styles.textoDelBoton}>Registrar Nuevo Artesano</Text>
-            </TouchableOpacity>
 
-            <TouchableOpacity style={styles.botonPersonalizado2} onPress={() => router.push('./ArtesanoList')}>
-            <Text style={styles.textoDelBoton}>Lista de artesanos</Text>
+            {/* Botón de Cerrar Sesión al final, con el color rojo original #db4437 */}
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                <Ionicons name="log-out-outline" size={22} color="#FFFFFF" />
+                <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
             </TouchableOpacity>
-
-            <TouchableOpacity style={styles.botonPersonalizado3} onPress={() => router.push('./estadisticas')}>
-            <Text style={styles.textoDelBoton}>Estadisticas</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.botonPersonalizado4} onPress={() =>router.push('./Eventos')}>
-            <Text style={styles.textoDelBoton}>Eventos</Text>
-            </TouchableOpacity>
-
-        </View>
+        </SafeAreaView>
     );
 }
+
+// Stylesheet actualizado con los colores originales
 const styles = StyleSheet.create({
-    loadingContainer: {
+    container: {
         flex: 1,
+        backgroundColor: '#f5f5f5', // Color de fondo original
+    },
+    loadingContainer: {
         justifyContent: 'center',
         alignItems: 'center',
     },
-    container: {
-        flex: 1,
-        padding: 20,
-        backgroundColor: '#f5f5f5',
-    },
-    title: {
-        fontSize: 15,
-        fontWeight: 'bold',
-        marginBottom: 10,
-        color: '#333',
-        textAlign: 'center',
-    },
-    userInfo: {
+    header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: '#ddd',
-        marginBottom: 10,
+        paddingHorizontal: 20,
+        paddingVertical: 15,
+        marginTop: 10,
     },
-    emailText: {
-        fontSize: 16,
-        color: '#555',
+    headerTitle: {
+        fontSize: 34,
+        fontWeight: 'bold',
+        color: '#333333', // Texto oscuro para fondo claro
     },
-    formContainer: {
-        marginBottom: 10,
-        padding: 10,
-        backgroundColor: '#fff',
-        borderRadius: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
+    headerSubtitle: {
+        fontSize: 17,
+        color: '#555555', // Texto oscuro para fondo claro
+    },
+    menuContainer: {
+        flex: 1, 
+        paddingHorizontal: 15,
+        marginTop: 20,
+    },
+    // Estilo base para los botones
+    menuButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 15, // Reducido un poco para que se vea mejor con el icono
+        paddingHorizontal: 15,
+        borderRadius: 6, // CAMBIO: De 12 a 6 (rounded-sm)
+        marginBottom: 15, 
+    },
+    // Color específico para el primer botón
+    menuButtonPurple: {
+        // CAMBIO: Se usa rgba para la transparencia (R=157, G=4, B=109, A=0.7)
+        backgroundColor: 'rgba(157, 4, 109, 0.7)', 
+        // Se quitó opacity: 0.7
+    },
+    // Color específico para los otros botones
+    menuButtonMagenta: {
+        // CAMBIO: Se usa rgba para la transparencia (R=157, G=4, B=109, A=0.7)
+        backgroundColor: 'rgba(157, 4, 109, 0.7)',
+        // Se quitó opacity: 0.7
+    },
+    
+    // --- NUEVOS ESTILOS PARA LOS ICONOS ---
+    menuIcon: {
+        marginRight: 15, // Mantenemos el margen
+    },
+    iconContainer: {
+        width: 30, // Tamaño del círculo
+        height: 30, // Tamaño del círculo
+        borderRadius: 6, // CAMBIO: De 15 a 6 (menos round)
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    // Colores iconos
+    iconBgBlue: {
+        backgroundColor: '#3B82F6', // Azul
+    },
+    iconBgGreen: {
+        backgroundColor: '#22C55E', // Verde
+    },
+    iconBgPurple: {
+        backgroundColor: '#A855F7', // Morado
+    },
+    iconBgOrange: {
+        backgroundColor: '#F97316', // Naranja
+    },
+    // --- FIN DE NUEVOS ESTILOS ---
+
+    // Texto blanco para que contraste con los botones de color
+    menuText: {
+        flex: 1, 
+        color: '#FFFFFF',
+        fontSize: 17,
+        fontWeight: '500',
     },
     logoutButton: {
-        padding: 8, // Añade un poco de espacio para que sea más fácil de presionar
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        // CAMBIO: Se usa rgba para la transparencia (R=219, G=68, B=55, A=0.9)
+        backgroundColor: 'rgba(219, 68, 55, 0.9)', 
+        marginHorizontal: 15,
+        paddingVertical: 18,
+        borderRadius: 9, //CAMBIO: De 12 a 6 (rounded-sm)
+        marginBottom: 20, 
+        // Se quitó opacity: 0.9
     },
-    // Estilos para el contenedor del botón
-  botonPersonalizado: {
-    backgroundColor: '#690DB5', // Color de fondo
-    paddingVertical: 10,       // Relleno vertical
-    paddingHorizontal: 20,   // Relleno horizontal
-    borderRadius: 8,           // Bordes redondeados
-    borderWidth: 2,            // Ancho del borde
-    borderColor: '#fff',    // Color del borde
-    top: 10, 
-
-    // Para centrar el texto (opcional)
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-    botonPersonalizado2: {
-    backgroundColor: '#9D046D', // Color de fondo
-    paddingVertical: 10,       // Relleno vertical
-    paddingHorizontal: 20,   // Relleno horizontal
-    borderRadius: 8,           // Bordes redondeados
-    borderWidth: 2,            // Ancho del borde
-    borderColor: '#9D046D',    // Color del borde
-    top: 20,
-
-    // Para centrar el texto (opcional)
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-    botonPersonalizado3: {
-    backgroundColor: '#9D046D', // Color de fondo
-    paddingVertical: 10,       // Relleno vertical
-    paddingHorizontal: 20,   // Relleno horizontal
-    borderRadius: 8,           // Bordes redondeados
-    borderWidth: 2,            // Ancho del borde
-    borderColor: '#9D046D',    // Color del borde
-    top: 30,
-
-    // Para centrar el texto (opcional)
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-    
-    botonPersonalizado4: {
-    backgroundColor: '#9D046D', // Color de fondo
-    paddingVertical: 10,       // Relleno vertical
-    paddingHorizontal: 20,   // Relleno horizontal
-    borderRadius: 8,           // Bordes redondeados
-    borderWidth: 2,            // Ancho del borde
-    borderColor: '#9D046D',    // Color del borde
-    top: 40,
-
-    // Para centrar el texto (opcional)
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-    botonPersonalizado5: {
-    backgroundColor: '#9D046D', // Color de fondo
-    paddingVertical: 10,       // Relleno vertical
-    paddingHorizontal: 20,   // Relleno horizontal
-    borderRadius: 8,           // Bordes redondeados
-    borderWidth: 2,            // Ancho del borde
-    borderColor: '#9D046D',    // Color del borde
-    top: 50,
-
-    // Para centrar el texto (opcional)
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  // Estilos para el texto dentro del botón (único, reutilizable)
-  textoDelBoton: {
-    color: 'white',            // Color del texto
-    fontSize: 16,
-    fontWeight: 'bold',
-  }
-
-
+    logoutButtonText: {
+        color: '#FFFFFF', // Texto blanco
+        fontSize: 17,
+        fontWeight: '600',
+        marginLeft: 10,
+    },
 });
 
-export default PageAdmin
+export default PageAdmin;
