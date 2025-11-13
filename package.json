@@ -2,8 +2,8 @@
   "name": "txapp",
   "main": "expo-router/entry",
   "version": "1.0.0",
-  "slug": "txapp",
-  "scheme": "txapp",
+  "slug": "TxApp",
+  "scheme": "TxApp",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
