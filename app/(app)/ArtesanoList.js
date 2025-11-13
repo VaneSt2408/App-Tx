@@ -6,7 +6,7 @@
 
 // Importaciones
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, ActivityIndicator, Alert,TouchableOpacity,SafeAreaView,TextInput} from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image, ActivityIndicator, Alert,TouchableOpacity,SafeAreaView,TextInput, Platform} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { artesanoService } from '../../src/services/artesanoService';
 import { useRouter } from 'expo-router';
@@ -88,25 +88,24 @@ export default function ArtesanoList() {
     <TouchableOpacity 
       style={styles.card} 
       onPress={() => navigateToProfile(item.user_id)}
-      activeOpacity={0.7}
+      activeOpacity={0.8}
     >
-      <View style={styles.header}>
-        <View style={styles.avatarContainer}>
-          {item.avatar_url ? (
-            <Image 
-              source={{ uri: item.avatar_url }} 
-              style={styles.avatar}
+      {/* Cabecera Magenta */}
+      <View style={styles.cardHeader}>
+        {item.avatar_url ? (
+          <Image 
+            source={{ uri: item.avatar_url }} 
+            style={styles.avatar}
+          />
+        ) : (
+          <View style={styles.defaultAvatar}>
+            <MaterialCommunityIcons 
+              name="account" 
+              size={30} 
+              color="#fff" 
             />
-          ) : (
-            <View style={styles.defaultAvatar}>
-              <MaterialCommunityIcons 
-                name="account" 
-                size={40} 
-                color="#666" 
-              />
-            </View>
-          )}
-        </View>
+          </View>
+        )}
         <View style={styles.infoContainer}>
           <Text style={styles.nombre}>
             {item.nombre || 'No definido'}
@@ -114,40 +113,30 @@ export default function ArtesanoList() {
           <Text style={styles.folio}>
             Folio: {item.folio || 'No definido'}
           </Text>
-          {item.ubicacion && (
-            <Text style={styles.ubicacion}>
-              📍 {item.ubicacion}
-            </Text>
-          )}
-          {item.categoria && (
-            <Text style={styles.categoria}>
-              🏷️ {item.categoria}
-            </Text>
-          )}
         </View>
-        <TouchableOpacity 
-          style={styles.arrowButton}
-          onPress={() => navigateToProfile(item.user_id)}
-        >
-          <MaterialCommunityIcons name="chevron-right" size={24} color="#177eaaff" />
-        </TouchableOpacity>
+        <MaterialCommunityIcons name="chevron-right" size={28} color="#fff" />
       </View>
       
-      {item.descripcion && (
-        <View style={styles.descripcionContainer}>
-          <Text style={styles.descripcion}>
-            {item.descripcion}
+      {/* Cuerpo Blanco */}
+      <View style={styles.cardBody}>
+        {item.ubicacion && (
+          <View style={styles.infoRow}>
+            <MaterialCommunityIcons name="map-marker-outline" size={20} color="#555" style={styles.infoIcon} />
+            <Text style={styles.infoText}>{item.ubicacion}</Text>
+          </View>
+        )}
+        {item.categoria && (
+          <View style={styles.infoRow}>
+            <MaterialCommunityIcons name="tag-outline" size={20} color="#555" style={styles.infoIcon} />
+            <Text style={styles.infoText}>{item.categoria}</Text>
+          </View>
+        )}
+        <View style={styles.infoRow}>
+          <MaterialCommunityIcons name="calendar-blank-outline" size={20} color="#555" style={styles.infoIcon} />
+          <Text style={styles.infoText}>
+            Registro: {new Date(item.created_at || item.fecha_creacion_cuenta).toLocaleDateString('es-ES')}
           </Text>
         </View>
-      )}
-      
-      <View style={styles.footer}>
-        <Text style={styles.fecha}>
-          Registrado: {new Date(item.created_at || item.fecha_creacion_cuenta).toLocaleDateString('es-ES')}
-        </Text>
-        <Text style={styles.tapHint}>
-          Toca para ver perfil completo →
-        </Text>
       </View>
     </TouchableOpacity>
   );
@@ -183,9 +172,9 @@ export default function ArtesanoList() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.safeArea}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#177eaaff" />
+          <ActivityIndicator size="large" color="#9D046D" />
           <Text style={styles.loadingText}>Cargando artesanos...</Text>
         </View>
       </SafeAreaView>
@@ -193,16 +182,18 @@ export default function ArtesanoList() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
+      {/* Encabezado con Título y Flecha */}
       <View style={styles.headerContainer}>
-        <Text style={styles.title}>Lista de Artesanos</Text>
-        <TouchableOpacity onPress={loadArtesanos} style={styles.refreshIcon}>
-          <MaterialCommunityIcons name="refresh" size={24} color="#177eaaff" />
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
         </TouchableOpacity>
+        <Text style={styles.title}>Lista de Artesanos</Text>
+        <View style={{ width: 40 }} /> {/* Espaciador para centrar el título */}
       </View>
       
       {/* Barra de búsqueda */}
-      <View style={styles.searchContainer}>
+      <View style={styles.searchSection}>
         <View style={styles.searchInputContainer}>
           <MaterialCommunityIcons 
             name="magnify" 
@@ -212,7 +203,7 @@ export default function ArtesanoList() {
           />
           <TextInput
             style={styles.searchInput}
-            placeholder="Buscar por nombre, folio, categoría o ubicación..."
+            placeholder="Buscar por nombre, folio..."
             placeholderTextColor="#999"
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -228,6 +219,7 @@ export default function ArtesanoList() {
         </View>
       </View>
       
+      {/* Lista */}
       <FlatList
         data={filteredArtesanos}
         renderItem={renderArtesano}
@@ -243,9 +235,9 @@ export default function ArtesanoList() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f0f2f5', // Fondo gris claro
   },
   headerContainer: {
     flexDirection: 'row',
@@ -253,32 +245,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    backgroundColor: '#f0f2f5', // Mismo fondo gris
+  },
+  backButton: {
+    padding: 8,
+    marginLeft: -8, // Compensar padding
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
+    textAlign: 'center',
   },
-  refreshIcon: {
-    padding: 8,
-  },
-  searchContainer: {
+  searchSection: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    paddingBottom: 16,
+    backgroundColor: '#f0f2f5', // Mismo fondo gris
   },
   searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#FFFFFF',
     borderRadius: 25,
     paddingHorizontal: 15,
-    paddingVertical: 10,
+    paddingVertical: Platform.OS === 'ios' ? 12 : 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
   searchIcon: {
     marginRight: 10,
@@ -296,6 +288,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#f0f2f5',
   },
   loadingText: {
     marginTop: 10,
@@ -303,94 +296,71 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   listContainer: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
   },
   card: {
     backgroundColor: '#fff',
     borderRadius: 12,
     marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 3,
   },
-  header: {
+  cardHeader: {
     flexDirection: 'row',
+    alignItems: 'center',
     padding: 16,
-    alignItems: 'flex-start',
-  },
-  avatarContainer: {
-    marginRight: 12,
+    backgroundColor: '#9D046D', // Color magenta
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
   },
   avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: '#f0f0f0',
+    marginRight: 12,
   },
   defaultAvatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#e0e0e0',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)', // Avatar por defecto semi-transparente
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 12,
   },
   infoContainer: {
     flex: 1,
   },
-  arrowButton: {
-    padding: 8,
-    marginLeft: 8,
-  },
   nombre: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
+    color: '#FFFFFF', // Texto blanco
+    marginBottom: 2,
   },
   folio: {
     fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
+    color: '#F0F0F0', // Texto blanco más suave
   },
-  ubicacion: {
-    fontSize: 12,
-    color: '#888',
-    marginBottom: 2,
+  cardBody: {
+    padding: 16,
   },
-  categoria: {
-    fontSize: 12,
-    color: '#888',
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
   },
-  descripcionContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 12,
+  infoIcon: {
+    marginRight: 12,
   },
-  descripcion: {
+  infoText: {
     fontSize: 14,
-    color: '#555',
-    lineHeight: 20,
-  },
-  footer: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-  },
-  fecha: {
-    fontSize: 12,
-    color: '#999',
-  },
-  tapHint: {
-    fontSize: 12,
-    color: '#177eaaff',
-    fontStyle: 'italic',
-    marginTop: 4,
+    color: '#333',
+    flex: 1, // Para que el texto se ajuste
   },
   emptyContainer: {
     flex: 1,
@@ -403,9 +373,10 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 16,
     marginBottom: 20,
+    textAlign: 'center',
   },
   refreshButton: {
-    backgroundColor: '#177eaaff',
+    backgroundColor: '#9D046D', // Botón con color magenta
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
