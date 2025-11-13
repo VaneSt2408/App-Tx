@@ -1,4 +1,5 @@
 // app/(app)/ClientSettings.js
+// Pantalla de ajustes para el cliente con opciones de gestión, soporte y cierre de sesión
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';

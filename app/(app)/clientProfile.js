@@ -1,4 +1,5 @@
 // app/(app)/ClientProfile.js
+// Perfil del cliente con edición, cambio de contraseña y eliminación de perfil   
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text as DefaultText, ScrollView, ActivityIndicator, Alert, TouchableOpacity, Image } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';

@@ -362,15 +362,6 @@ export default function ArtesanoProducts() {
             {productos.length} {productos.length === 1 ? 'producto' : 'productos'}
           </Text>
         </View>
-        {isOwnProfile && (
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => setShowUploadModal(true)}
-          >
-
-            <MaterialCommunityIcons name="plus" size={24} color="#9D046D" />
-          </TouchableOpacity>
-        )}
       </View>
 
       <FlatList
@@ -391,6 +382,17 @@ export default function ArtesanoProducts() {
           />
         }
       />
+
+      {/* Botón Flotante (FAB) para agregar producto */}
+      {isOwnProfile && (
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => setShowUploadModal(true)}
+        >
+          <MaterialCommunityIcons name="plus" size={28} color="#fff" />
+        </TouchableOpacity>
+      )}
+
 
       {/* Modal de detalles de producto */}
       <Modal
@@ -1179,5 +1181,17 @@ const styles = StyleSheet.create({
   statusButtonTextActive: {
     color: '#9D046D',
     fontWeight: 'bold',
+  },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    width: 56,
+    height: 56,
+    backgroundColor: '#9D046D',
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
   },
 });
