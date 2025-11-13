@@ -47,7 +47,7 @@ const PostCard = ({ post, onLike }) => {
     
     if (post.artesano?.id) {
       router.push({
-        pathname: '/ArtesanoProfile',
+        pathname: '/ArtesanoProfileVistaVisitante', // Cambiar a la ruta correcta
         params: { userId: post.artesano.id.toString() }
       });
     } else {

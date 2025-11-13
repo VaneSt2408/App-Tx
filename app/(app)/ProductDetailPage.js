@@ -9,6 +9,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router'; 
 import MarketplaceService from '../../src/services/MarketplaceService';
 import { toggleLikeProduct  } from '../../src/services/productService';
+import { useAuth } from '../../src/context/AuthContext';
 import useCustomFonts from '../../hooks/useFonts';
 
 // Componente principal
@@ -16,6 +17,7 @@ export default function ProductDetailPage() {
   const router = useRouter(); // Obtener el router
   const { productId } = useLocalSearchParams(); // Obtener el id del producto
   const [product, setProduct] = useState(null); // Establecer el estado del producto
+  const { role } = useAuth(); // Obtener el rol del usuario
   const [loading, setLoading] = useState(true); // Establecer el estado de carga
   const [refreshing, setRefreshing] = useState(false); // Estado para el refresco
   const [saved, setSaved] = useState(false); // Establecer el estado de guardado
@@ -43,6 +45,7 @@ export default function ProductDetailPage() {
       if (result.success) {
         setProduct(result.data);
         setIsLiked(result.data.is_liked || false);
+        setSaved(result.data.is_saved || false); // <-- Actualizar el estado inicial de guardado
         setLikesCount(result.data.likes_count || 0); // Agregar esta línea
       } else {
         Alert.alert('Error', 'No se pudo cargar el producto');
@@ -76,12 +79,25 @@ export default function ProductDetailPage() {
   };
 
   // Handlers para botones (placeholders)
-  const handleSave = () => {
-    setSaved(!saved);
-    Alert.alert(
-      saved ? 'Eliminado' : 'Guardado',
-      saved ? 'Producto eliminado de guardados' : 'Producto guardado correctamente'
-    );
+  const handleSave = async () => {
+    try {
+      // Cambiamos el estado visual inmediatamente para una mejor experiencia de usuario
+      setSaved(current => !current);
+
+      const result = await MarketplaceService.toggleSaveProduct(productId);
+
+      if (result.success) {
+        // Sincronizamos el estado final con la respuesta del servidor
+        setSaved(result.saved);
+      } else {
+        // Si falla, revertimos el cambio visual y mostramos una alerta
+        setSaved(current => !current);
+        Alert.alert('Error', result.error || 'No se pudo guardar el producto.');
+      }
+    } catch (error) {
+      setSaved(current => !current); // Revertir si hay una excepción
+      Alert.alert('Error', 'Ocurrió un error inesperado al guardar.');
+    }
   };
 
   // Función para contactar al artesano
@@ -171,7 +187,7 @@ const handleLike = async (productID) => {
   const handleArtesanoPress = () => {
     if (product?.artesano?.id) {
       router.push({
-        pathname: '/ArtesanoProfile',
+        pathname: '/ArtesanoProfileVistaVisitante', // Cambiar a la ruta correcta
         params: { userId: product.artesano.id.toString() }
       });
     }
@@ -260,19 +276,21 @@ const handleLike = async (productID) => {
 
           {/* Botones de Acción */}
           <View style={styles.actionsContainer}>
-            <TouchableOpacity 
-              style={[styles.actionButton, styles.saveButton, saved && styles.savedButton]}
-              onPress={handleSave}
-            >
-              <MaterialCommunityIcons 
-                name={saved ? "bookmark" : "bookmark-outline"}
-                size={20}
-                color={saved ? "#9D046D" : "#666"}
-              />
-              <Text style={[styles.actionButtonText, saved && styles.savedButtonText]}>
-                {saved ? "Guardado" : "Guardar"}
-              </Text>
-            </TouchableOpacity>
+            {role === 'cliente' && (
+              <TouchableOpacity 
+                style={[styles.actionButton, styles.saveButton, saved && styles.savedButton]}
+                onPress={handleSave}
+              >
+                <MaterialCommunityIcons 
+                  name={saved ? "bookmark" : "bookmark-outline"}
+                  size={20}
+                  color={saved ? "#9D046D" : "#666"}
+                />
+                <Text style={[styles.actionButtonText, saved && styles.savedButtonText]}>
+                  {saved ? "Guardado" : "Guardar"}
+                </Text>
+              </TouchableOpacity>
+            )}
 
             {/* Contactar al artesano */}
             <TouchableOpacity 

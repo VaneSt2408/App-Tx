@@ -182,6 +182,24 @@ export class MarketplaceService {
         return { success: false, error: error.message };
       }
       
+      // Verificar si el usuario actual ha guardado el producto
+      let isSaved = false;
+      if (user) {
+        const { data: savedData, error: savedError } = await supabase
+          .from('productos_guardados')
+          .select('id')
+          .eq('producto_id', productoId)
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (savedError) {
+          console.error('[MarketplaceService] Error checking saved status:', savedError.message);
+          // No bloqueamos la carga por este error, simplemente asumimos que no está guardado
+        } else {
+          isSaved = !!savedData;
+        }
+      }
+
       // Verificar si el usuario actual ha dado like y obtener conteo total
       const [userLikeResult, likesCountResult] = await Promise.all([
         supabase
@@ -200,6 +218,7 @@ export class MarketplaceService {
         ...producto, // Mantenemos todos los campos del producto
         precio: parseFloat(producto.precio),
         is_liked: !!userLikeResult.data,
+        is_saved: isSaved, // <-- AÑADIMOS EL ESTADO DE GUARDADO
         likes_count: likesCountResult.count || 0,
         // CORRECCIÓN: Renombrar 'artesanos' a 'artesano' para que coincida con la vista
         artesano: {
@@ -424,6 +443,67 @@ export class MarketplaceService {
       return { success: true, favorited };
 
     } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Guarda o quita un producto de la lista de guardados de un usuario (toggle).
+   * @param {string} productoId - ID del producto a guardar/quitar.
+   * @returns {Promise<{success: boolean, saved?: boolean, error?: string}>}
+   */
+  static async toggleSaveProduct(productoId) {
+    try {
+      // 1. Obtener el usuario actual
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return { success: false, error: 'Debes iniciar sesión para guardar productos' };
+      }
+
+      const userId = user.id;
+
+      // 2. Verificar si el producto ya está guardado
+      const { data: existingSave, error: checkError } = await supabase
+        .from('productos_guardados')
+        .select('id')
+        .eq('producto_id', productoId)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('[MarketplaceService] Error checking saved product:', checkError.message);
+        return { success: false, error: checkError.message };
+      }
+
+      let saved;
+
+      if (existingSave) {
+        // 3a. Si ya existe, lo eliminamos (quitar de guardados)
+        const { error: deleteError } = await supabase
+          .from('productos_guardados')
+          .delete()
+          .eq('id', existingSave.id);
+
+        if (deleteError) {
+          return { success: false, error: deleteError.message };
+        }
+        saved = false;
+      } else {
+        // 3b. Si no existe, lo insertamos (guardar)
+        const { error: insertError } = await supabase
+          .from('productos_guardados')
+          .insert({ producto_id: productoId, user_id: userId });
+
+        if (insertError) {
+          return { success: false, error: insertError.message };
+        }
+        saved = true;
+      }
+
+      return { success: true, saved };
+
+    } catch (error) {
+      console.error('[MarketplaceService] Unexpected error in toggleSaveProduct:', error.message);
       return { success: false, error: error.message };
     }
   }

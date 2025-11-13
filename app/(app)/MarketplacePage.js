@@ -16,7 +16,7 @@ const Text = (props) => (
 
 const MarketplacePage = () => {
   const { filters } = useFilter();
-  const { session } = useAuth();
+  const { session, role } = useAuth();
   const router = useRouter();
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -241,8 +241,21 @@ const MarketplacePage = () => {
     <View className="flex-1 bg-gray-100">
       {/* Header */}
       <View className="bg-white pb-3">
-        <View className="px-4 flex-row items-center justify-center pt-4">
+        <View className="px-4 flex-row items-center justify-between pt-4">
+          <View style={{ width: 28 }} />{/* Espaciador para centrar el título */}
           <Text className="text-xl font-bold text-gray-900">Marketplace</Text>
+          {role === 'artesano' && (
+            <TouchableOpacity
+              onPress={() =>
+                router.push({
+                  pathname: '/ArtesanoProducts',
+                  params: { userId: session?.user?.id },
+                })
+              }
+            >
+              <MaterialCommunityIcons name="plus-circle-outline" size={28} color="#9D046D" />
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Barra de Búsqueda */}
@@ -340,12 +353,15 @@ const MarketplacePage = () => {
       />
 
       {/* Botón Flotante (FAB) - SOLO PARA EL ARTESANO */}
-      {session?.user?.role === 'artesano' && (
+      {role === 'artesano' && (
         <TouchableOpacity
           className="absolute right-5 bottom-5 w-14 h-14 bg-[#9D046D] rounded-full justify-center items-center shadow-lg"
-          onPress={() => {
-            router.push('/CreateProductPage'); // Asegúrate de que esta ruta exista
-          }}
+          onPress={() =>
+            router.push({
+              pathname: '/ArtesanoProducts',
+              params: { userId: session?.user?.id },
+            })
+          }
         >
           <MaterialCommunityIcons name="plus" size={28} color="white" />
         </TouchableOpacity>

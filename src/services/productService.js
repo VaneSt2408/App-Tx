@@ -319,6 +319,19 @@ export const deleteProduct = async (productId) => {
       }
     }
 
+    // Eliminar likes y guardados asociados. Con ON DELETE CASCADE en la DB, esto es una
+    // doble seguridad, pero no está de más y es crucial si la cascada no está configurada.
+    const { error: likesError } = await supabase
+        .from('likes_productos')
+        .delete()
+        .eq('producto_id', productId);
+
+    // Si hay un error eliminando los likes (y no es porque no había), detenemos el proceso.
+    if (likesError) {
+        console.error('Error eliminando likes del producto:', likesError.message);
+        // No lanzamos un error fatal aquí si ya tenemos ON DELETE CASCADE, pero es bueno saberlo.
+    }
+
     // Eliminar el producto
     const { error: deleteError } = await supabase
       .from('productos')
