@@ -71,7 +71,7 @@ export default function ArtesanoList() {
 
   const navigateToProfile = (userId) => {
     router.push({
-      pathname: '/ArtesanoProfile',
+      pathname: '/ArtesanoProfileVistaVisitante', // Cambiar a la ruta correcta
       params: { userId: userId.toString() }
     });
   };

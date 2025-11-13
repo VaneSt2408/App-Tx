@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text as DefaultText, StyleSheet, ScrollView, Image, TouchableOpacity, SafeAreaView, Dimensions, Alert, RefreshControl } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import useCustomFonts from '../../hooks/useFonts';
 import { useAuth } from '../../src/context/AuthContext';
 import { artesanoService } from '../../src/services/artesanoService';
 import { signOut } from '../../src/services/authService'; // Importar la función de cerrar sesión
@@ -80,7 +81,7 @@ export default function ArtesanoSettings() {
         return (
             <SafeAreaView style={styles.container}>
                 <View style={styles.loadingContainer}>
-                    <Text style={styles.loadingText}>Cargando perfil...</Text>
+                    <Text style={[styles.loadingText,{fontFamily: 'Alan Sans'}]}>Cargando perfil...</Text>
                 </View>
             </SafeAreaView>
         );
@@ -90,7 +91,7 @@ export default function ArtesanoSettings() {
         return (
             <SafeAreaView style={styles.container}>
                 <View style={styles.errorContainer}>
-                    <Text style={styles.errorText}>No se pudo cargar el perfil</Text>
+                    <Text style={[styles.errorText,{fontFamily: 'Alan Sans'}]}>No se pudo cargar el perfil</Text>
                 </View>
             </SafeAreaView>
         );
@@ -122,7 +123,7 @@ export default function ArtesanoSettings() {
                     </View>
 
                     <Text style={[styles.name,{fontFamily: 'Alan Sans'}]}>{artesano.nombre || 'Sin nombre'}</Text>
-                    <Text style={styles.specialty}>{artesano.categoria || 'Ceramista'} - {artesano.ubicacion || 'Madrid, España'}</Text>
+                    <Text style={[styles.specialty,{fontFamily: 'Alan Sans'}]}>{artesano.categoria || 'Ceramista'} - {artesano.ubicacion || 'Madrid, España'}</Text>
 
                     <View style={styles.buttonRow}>
                         <TouchableOpacity 
@@ -185,17 +186,17 @@ export default function ArtesanoSettings() {
 
                         {/* Sección de Contacto */}
                         <View style={styles.contactSection}>
-                            <Text style={styles.contactTitle}>Contacto</Text>
+                            <Text style={[styles.contactTitle,{fontFamily: 'Alan Sans'}]}>Contacto</Text>
                             {artesano?.telefono && (
                                 <View style={styles.contactRow}>
                                     <MaterialCommunityIcons name="phone" size={20} color="#9D046D" />
-                                    <Text style={styles.contactText}>{artesano.telefono}</Text>
+                                    <Text style={[styles.contactText,{fontFamily: 'Alan Sans'}]}>{artesano.telefono}</Text>
                                 </View>
                             )}
                             {session?.user?.email && (
                                 <View style={styles.contactRow}>
                                     <MaterialCommunityIcons name="email" size={20} color="#9D046D" />
-                                    <Text style={styles.contactText}>{session.user.email}</Text>
+                                    <Text style={[styles.contactText,{fontFamily: 'Alan Sans'}]}>{session.user.email}</Text>
                                 </View>
                             )}
                         </View>

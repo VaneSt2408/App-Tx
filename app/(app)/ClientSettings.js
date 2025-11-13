@@ -1,9 +1,17 @@
 // app/(app)/ClientSettings.js
+// Pantalla de ajustes para el cliente con opciones de gestión, soporte y cierre de sesión
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text as DefaultText, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { signOut } from '../../src/services/authService';
+import useCustomFonts from '../../hooks/useFonts';
+
+
+const Text = (props) => (
+    <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
+  );
+
 
 const ClientSettings = () => {
   const router = useRouter();
@@ -62,7 +70,7 @@ const ClientSettings = () => {
         <TouchableOpacity className="p-2" onPress={() => router.back()}>
           <MaterialCommunityIcons name="chevron-left" size={24} color="#333" />
         </TouchableOpacity>
-        <Text className="text-lg font-bold text-gray-900">Mi Cuenta</Text>
+        <Text style={{fontFamily: 'Alan Sans'}}className="text-lg font-bold text-gray-900">Mi Cuenta</Text>
         <TouchableOpacity className="p-2">
           <MaterialCommunityIcons name="dots-vertical" size={24} color="#333" />
         </TouchableOpacity>
@@ -75,8 +83,8 @@ const ClientSettings = () => {
             <MaterialCommunityIcons name="account" size={24} color="#666" />
           </View>
           <View className="flex-1">
-            <Text className="text-base font-semibold text-gray-900">Nombre del Artesano</Text>
-            <Text className="text-xs text-[#9D046D]">Ver mi perfil</Text>
+            <Text style={{fontFamily: 'Alan Sans'}}className="text-base font-semibold text-gray-900">Nombre del Artesano</Text>
+            <Text style={{fontFamily: 'Alan Sans'}}className="text-xs text-[#9D046D]">Ver mi perfil</Text>
           </View>
           <MaterialCommunityIcons name="chevron-right" size={20} color="#ccc" />
         </TouchableOpacity>

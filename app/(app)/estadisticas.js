@@ -43,7 +43,7 @@ export default function EstadisticasPage() {
   }, []);
 
   const handlePressArtesano = (userId) => {
-    router.push({ pathname: '/(app)/ArtesanoProfile', params: { userId } });
+    router.push({ pathname: "/(app)/ArtesanoProfileVistaVisitante", params: { userId } }); //Cambiar a la ruta correcta
   };
 
   const formatDate = (dateString) => {
