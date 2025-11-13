@@ -15,7 +15,7 @@ import useCustomFonts from '../../hooks/useFonts';
 
 
 const Text = (props: TextProps) => (
-    <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
+    <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]}/>
   );
 // --- COMPONENTE AUXILIAR PARA MOSTRAR CADA REQUISITO ---
 // Este componente muestra un ícono de check o 'x' y el texto del requisito.

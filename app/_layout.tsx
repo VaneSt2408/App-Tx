@@ -76,7 +76,7 @@ function RootLayoutNav() {
         router.replace('/(app)' as Href); 
       }
     }
-  }, [session, role, profile, authLoading, segments, isPasswordRecovery]); // Dependemos de los estados clave incluyendo profile.
+  }, [session, role, profile, authLoading, segments, isPasswordRecovery, router]); // Dependemos de los estados clave incluyendo profile.
 
   // Mientras carga la sesión, mostramos el indicador.
   if (authLoading) {
