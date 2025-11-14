@@ -43,6 +43,16 @@ const MarketplacePage = () => {
         serviceFilters.priceRange.max = serviceFilters.priceRange.max ? parseFloat(serviceFilters.priceRange.max) : null;
       }
 
+      // Lógica para filtros de tipo de venta
+      if (filter === 'mayoristas') {
+        serviceFilters.tipo_venta = 'mayorista';
+      } else if (filter === 'minorista') {
+        serviceFilters.tipo_venta = 'minorista';
+      } else {
+        // Asegurarse de que el filtro de tipo de venta no se aplique en otras vistas
+        delete serviceFilters.tipo_venta;
+      }
+
       const combinedFilters = {
         ...serviceFilters,
         estado: filter,
@@ -242,9 +252,9 @@ const MarketplacePage = () => {
       {/* Header */}
       <View className="bg-white pb-3">
         <View className="px-4 flex-row items-center justify-between pt-4">
-          <View style={{ width: 28 }} />{/* Espaciador para centrar el título */}
+          <View style={{ width: 28 }} />
           <Text className="text-xl font-bold text-gray-900">Marketplace</Text>
-          {role === 'artesano' && (
+          {role === 'artesano' ? (
             <TouchableOpacity
               onPress={() =>
                 router.push({
@@ -255,6 +265,8 @@ const MarketplacePage = () => {
             >
               <MaterialCommunityIcons name="plus-circle-outline" size={28} color="#9D046D" />
             </TouchableOpacity>
+          ) : (
+            <View style={{ width: 28 }} /> // Espaciador para centrar el título para clientes
           )}
         </View>
 
@@ -327,6 +339,22 @@ const MarketplacePage = () => {
           >
             <Text className={`font-medium ${filter === 'no-disponible' ? 'text-white' : 'text-gray-800'}`}>No Disponible</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            className={`px-4 py-2 mr-2 rounded-xl ${
+              filter === 'mayoristas' ? 'bg-[#9D046D] text-white' : 'bg-gray-200 text-gray-800'
+            }`}
+            onPress={() => handleFilterChange('mayoristas')}
+          >
+            <Text className={`font-medium ${filter === 'mayoristas' ? 'text-white' : 'text-gray-800'}`}>Para mayoristas</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className={`px-4 py-2 mr-2 rounded-xl ${
+              filter === 'minorista' ? 'bg-[#9D046D] text-white' : 'bg-gray-200 text-gray-800'
+            }`}
+            onPress={() => handleFilterChange('minorista')}
+          >
+            <Text className={`font-medium ${filter === 'minorista' ? 'text-white' : 'text-gray-800'}`}>Minorista</Text>
+          </TouchableOpacity>
         </ScrollView>
       </View>
 
@@ -351,21 +379,6 @@ const MarketplacePage = () => {
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
       />
-
-      {/* Botón Flotante (FAB) - SOLO PARA EL ARTESANO */}
-      {role === 'artesano' && (
-        <TouchableOpacity
-          className="absolute right-5 bottom-5 w-14 h-14 bg-[#9D046D] rounded-full justify-center items-center shadow-lg"
-          onPress={() =>
-            router.push({
-              pathname: '/ArtesanoProducts',
-              params: { userId: session?.user?.id },
-            })
-          }
-        >
-          <MaterialCommunityIcons name="plus" size={28} color="white" />
-        </TouchableOpacity>
-      )}
     </View>
   );
 };

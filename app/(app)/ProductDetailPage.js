@@ -274,6 +274,38 @@ const handleLike = async (productID) => {
             </Text>
           </View>
 
+          {/* Stock Disponible */}
+          {product.estado === 'activo' && product.stock !== null && product.stock > 0 && (
+            <View style={styles.availabilityContainer}>
+              <MaterialCommunityIcons 
+                name="package-variant-closed"
+                size={20}
+                color="#6200ea"
+              />
+              <Text style={[styles.availabilityText, { color: "#6200ea" }]}>
+                {product.stock} {product.stock === 1 ? 'unidad disponible' : 'unidades disponibles'}
+              </Text>
+            </View>
+          )}
+
+          {/* Tipo de Venta */}
+          {product.min_may && (
+            <View style={styles.availabilityContainer}>
+              <MaterialCommunityIcons 
+                name="storefront-outline"
+                size={20}
+                color="#333"
+              />
+              <Text style={[styles.availabilityText, { color: "#333" }]}>
+                {
+                  product.min_may === 'minoreo' ? 'Venta por minoreo' :
+                  product.min_may === 'mayoreo' ? 'Venta por mayoreo' :
+                  'Venta minorista y mayorista'
+                }
+              </Text>
+            </View>
+          )}
+
           {/* Botones de Acción */}
           <View style={styles.actionsContainer}>
             {role === 'cliente' && (

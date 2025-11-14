@@ -818,9 +818,7 @@ export default function ClientProfile() {
           <MaterialCommunityIcons name="chevron-left" size={24} color="#333" />
         </TouchableOpacity>
         <Text style={{fontFamily: 'Alan Sans', fontSize:24, fontWeight: 'bold'}} className="text-2xl text-gray-700">Mi Cuenta</Text>
-        <TouchableOpacity className="p-2">
-          <MaterialCommunityIcons name="dots-vertical" size={24} color="#333" />
-        </TouchableOpacity>
+        <View style={{ width: 40 }} />
       </View>
 
       {/* Sección de Perfil */}

@@ -200,14 +200,21 @@ export default function ArtesanoSettings() {
                                 </View>
                             )}
                         </View>
+                        {/* Botón de Cerrar Sesión */}
+                        <View style={styles.logoutSection}>
+                            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                                <MaterialCommunityIcons name="logout" size={24} color="#fff" />
+                                <Text style={[styles.logoutButtonText, { fontFamily: 'Alan Sans' }]}>Cerrar Sesión</Text>
+                            </TouchableOpacity>
+                        </View>
 
                     </View>
                 )}
 
                 {activeTab === 'miTrabajo' && (
-                    <View style={styles.gridContainer}> 
+                    <View style={styles.gridContainer}>
                         {productos.map(pub => ( // Renderizar productos aquí
-                            <TouchableOpacity key={pub.id} style={styles.gridItem}>
+                            <TouchableOpacity key={pub.id} style={styles.gridItem} onPress={() => router.push({ pathname: '/ArtesanoProducts', params: { userId: session.user.id } })}>
                                 {pub.imagen_url ? (
                                     <Image source={{ uri: pub.imagen_url }} style={styles.gridImage} />
                                 ) : (
@@ -221,7 +228,7 @@ export default function ArtesanoSettings() {
                 {activeTab === 'publicaciones' && (
                     <View style={styles.gridContainer}>
                         {publicaciones.map(pub => ( // Renderizar publicaciones aquí
-                            <TouchableOpacity key={pub.id} style={styles.gridItem}>
+                            <TouchableOpacity key={pub.id} style={styles.gridItem} onPress={() => router.push('/ArtesanoPublications')}>
                                 {pub.imagen_url ? (
                                     <Image source={{ uri: pub.imagen_url }} style={styles.gridImage} />
                                 ) : (
@@ -232,14 +239,6 @@ export default function ArtesanoSettings() {
                     </View>
                 )}
 
-
-                {/* Botón de Cerrar Sesión */}
-                <View style={styles.logoutSection}>
-                    <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                        <MaterialCommunityIcons name="logout" size={24} color="#fff" />
-                        <Text style={[styles.logoutButtonText, { fontFamily: 'Alan Sans' }]}>Cerrar Sesión</Text>
-                    </TouchableOpacity>
-                </View>
             </ScrollView>
         </SafeAreaView>
     );

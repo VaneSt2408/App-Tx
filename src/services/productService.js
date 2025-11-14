@@ -104,7 +104,9 @@ export const createProduct = async (productData) => {
         precio: parseFloat(productData.precio) || 0, // Convertimos a número
         categoria: productData.categoria || 'general',
         imagen_url: imagenUrl,
-        estado: 'activo'
+        estado: productData.estado || 'activo',
+        stock: parseInt(productData.stock, 10) || 0,
+        min_may: productData.min_may || 'minoreo',
       })
       .select()
       .single();
@@ -250,7 +252,10 @@ export const updateProduct = async (productId, updateData, newImageAsset) => {
       nombre: updateData.nombre.trim(),
       precio: parseFloat(updateData.precio),
       categoria: updateData.categoria?.trim() || null,
+      stock: parseInt(updateData.stock, 10) || 0,
       descripcion: updateData.descripcion?.trim() || null,
+      estado: updateData.estado || 'activo',
+      min_may: updateData.min_may || 'minoreo',
     };
     
     // Solo actualizar imagen si hay una nueva imagen seleccionada

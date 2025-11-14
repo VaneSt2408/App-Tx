@@ -1,4 +1,5 @@
 // En: components/UploadProductModal.js
+// Componente modal para subir un nuevo producto con imagen y detalles. Incluye validaciones y manejo de estado de carga.
 import React, { useState } from 'react';
 import {
   View,
@@ -17,13 +18,24 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { selectAndCompressImage, createProduct } from '../src/services/productService';
 
+const CATEGORIAS_EJEMPLO = [
+  'Textil', 'Alfarería', 'Joyería', 
+  'Madera', 'Piel', 'Piedra', 'Vidrio', 
+  'Metal', 'Cerámica', 'Cestería', 
+  'Fibras', 'Minerales'
+];
+
 const UploadProductModal = ({ visible, onClose, onProductUploaded }) => {
   const [formData, setFormData] = useState({
     nombre: '',
     descripcion: '',
     precio: '',
-    categoria: 'general',
+    categoria: '',
+    stock: '',
+    min_may: 'minoreo', // minoreo, mayoreo, ambas
   });
+  const [manualCategoria, setManualCategoria] = useState('');
+
   const [selectedImage, setSelectedImage] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -67,12 +79,29 @@ const UploadProductModal = ({ visible, onClose, onProductUploaded }) => {
       return;
     }
 
+    const stock = parseInt(formData.stock, 10);
+    if (isNaN(stock) || stock < 0) {
+      Alert.alert('Error', 'El stock debe ser un número válido igual o mayor a 0');
+      return;
+    }
+
     setLoading(true);
     try {
       // Preparar datos del producto incluyendo la imagen
+      const finalCategoria = formData.categoria === 'Otro' 
+        ? manualCategoria.trim() 
+        : formData.categoria;
+
+      if (!finalCategoria) {
+        Alert.alert('Error', 'Debes seleccionar o especificar una categoría');
+        setLoading(false);
+        return;
+      }
+
       const productData = {
         ...formData,
-        imageAsset: selectedImage, // Pasar el asset completo con base64
+        categoria: finalCategoria,
+        imageAsset: selectedImage,
       };
 
       const result = await createProduct(productData);
@@ -83,8 +112,11 @@ const UploadProductModal = ({ visible, onClose, onProductUploaded }) => {
         nombre: '',
         descripcion: '',
         precio: '',
-        categoria: 'general',
+        categoria: '',
+        stock: '',
+        min_may: 'minoreo',
       });
+      setManualCategoria('');
       setSelectedImage(null);
       onClose();
       if (onProductUploaded) {
@@ -103,8 +135,11 @@ const UploadProductModal = ({ visible, onClose, onProductUploaded }) => {
         nombre: '',
         descripcion: '',
         precio: '',
-        categoria: 'general',
+        categoria: '',
+        stock: '',
+        min_may: 'minoreo',
       });
+      setManualCategoria('');
       setSelectedImage(null);
       onClose();
     }
@@ -190,14 +225,72 @@ const UploadProductModal = ({ visible, onClose, onProductUploaded }) => {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Categoría</Text>
+              <Text style={styles.label}>Stock disponible *</Text>
               <TextInput
                 style={styles.input}
-                value={formData.categoria}
-                onChangeText={(value) => handleInputChange('categoria', value)}
-                placeholder="Ej: cerámica, textiles, madera"
+                value={formData.stock}
+                onChangeText={(value) => handleInputChange('stock', value)}
+                placeholder="Ej: 10"
+                keyboardType="number-pad"
                 editable={!loading}
               />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Tipo de Venta</Text>
+              <View style={styles.categoryContainer}>
+                {['minoreo', 'mayoreo', 'ambas'].map(tipo => (
+                  <TouchableOpacity
+                    key={tipo}
+                    style={[
+                      styles.categoryChip,
+                      formData.min_may === tipo && styles.categoryChipSelected
+                    ]}
+                    onPress={() => handleInputChange('min_may', tipo)}
+                    disabled={loading}
+                  >
+                    <Text style={[
+                      styles.categoryChipText,
+                      formData.min_may === tipo && styles.categoryChipTextSelected
+                    ]}>
+                      {tipo.charAt(0).toUpperCase() + tipo.slice(1)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Categoría</Text>
+              <View style={styles.categoryContainer}>
+                {[...CATEGORIAS_EJEMPLO, 'Otro'].map(cat => (
+                  <TouchableOpacity
+                    key={cat}
+                    style={[
+                      styles.categoryChip,
+                      formData.categoria === cat && styles.categoryChipSelected
+                    ]}
+                    onPress={() => handleInputChange('categoria', cat)}
+                    disabled={loading}
+                  >
+                    <Text style={[
+                      styles.categoryChipText,
+                      formData.categoria === cat && styles.categoryChipTextSelected
+                    ]}>
+                      {cat}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              {formData.categoria === 'Otro' && (
+                <TextInput
+                  style={[styles.input, { marginTop: 10 }]}
+                  value={manualCategoria}
+                  onChangeText={setManualCategoria}
+                  placeholder="Escribe la categoría personalizada"
+                  editable={!loading}
+                />
+              )}
             </View>
           </View>
         </ScrollView>
@@ -332,6 +425,32 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 8,
+  },
+  // Estilos para categorías
+  categoryContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  categoryChip: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: '#e9ecef',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#dee2e6',
+  },
+  categoryChipSelected: {
+    backgroundColor: '#FBDAF4',
+    borderColor: '#9D046D',
+  },
+  categoryChipText: {
+    fontSize: 14,
+    color: '#495057',
+  },
+  categoryChipTextSelected: {
+    color: '#9D046D',
+    fontWeight: 'bold',
   },
 });
 
