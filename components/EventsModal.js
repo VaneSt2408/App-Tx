@@ -12,7 +12,7 @@ import { supabase } from '../src/supabase/client';
  * - event: objeto con la información del evento (id, nombre, descripcion, fecha, ubicacion, imagen_url, etc.)
  */
 const EventsModal = ({ visible = false, onClose = () => {}, event = null, onDataChange = () => {} }) => {
-  const { session } = useAuth();
+  const { session, role } = useAuth(); // Obtenemos el rol del usuario
   const [isSaved, setIsSaved] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -100,6 +100,12 @@ const EventsModal = ({ visible = false, onClose = () => {}, event = null, onData
     }
   };
 
+  // Determinamos el texto del botón según el rol del usuario
+  const buttonTexts = {
+    save: role === 'artesano' ? 'Confirmar Asistencia' : 'Guardar Evento',
+    delete: role === 'artesano' ? 'Anular Asistencia' : 'Eliminar Evento',
+  };
+
   return (
     <Modal animationType="slide" visible={visible} transparent>
       <View style={styles.backdrop}>
@@ -147,7 +153,7 @@ const EventsModal = ({ visible = false, onClose = () => {}, event = null, onData
                     <ActivityIndicator size="small" color="#fff" />
                   ) : (
                     <Text style={isSaved ? styles.deleteButtonText : styles.primaryButtonText}>
-                      {isSaved ? 'Eliminar Evento' : 'Guardar Evento'}
+                      {isSaved ? buttonTexts.delete : buttonTexts.save}
                     </Text>
                   )}
                 </TouchableOpacity>
