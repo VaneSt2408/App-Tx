@@ -47,11 +47,13 @@ export const artesanoService = {
       }
 
       // Combinar todos los datos (la descripcion ahora viene de artesanos)
+      // 'ubicacion' (que es el link) ya está incluido en '...artesanoData'
       const artesanoCompleto = {
         ...artesanoData,
         descripcion: artesanoData?.descripcion || null,
         nombre: artesanoData?.nombre || null,
-        telefono: perfil?.telefono || null
+        telefono: perfil?.telefono || null,
+        // <-- ELIMINADO: Ya no necesitamos 'google_maps_link'
       };
       
       return artesanoCompleto;

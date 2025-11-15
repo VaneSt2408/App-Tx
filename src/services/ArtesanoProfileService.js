@@ -1,6 +1,9 @@
 // Backend logic para el perfil del artesano
 // Este servicio maneja todas las operaciones de backend para el perfil del artesano
 
+// Backend logic para el perfil del artesano
+// Este servicio maneja todas las operaciones de backend para el perfil del artesano
+
 import { supabase } from '../supabase/client';
 
 /**
@@ -16,7 +19,7 @@ export async function updatePerfilArtesano(userId, data) {
       .from('artesanos')
       .update({ 
         nombre: data.nombre, 
-        ubicacion: data.ubicacion,
+        ubicacion: data.ubicacion, // <-- MODIFICADO: Esto ahora es el enlace
         descripcion: data.descripcion 
       })
       .eq('user_id', userId);
@@ -40,7 +43,7 @@ export async function updatePerfilArtesano(userId, data) {
 /**
  * Actualiza el perfil completo del artesano incluyendo avatar si se proporciona
  * @param {string} userId - ID del usuario
- * @param {Object} data - Datos a actualizar { nombre, telefono, ubicacion, descripcion, avatar_url }
+ * @param {Object} data - Datos a actualizar { nombre, telefono, ubicacion, descripcion, avatar_url } // <-- MODIFICADO
  * @param {Object} newImageAsset - Objeto de imagen de ImagePicker (opcional)
  * @returns {Promise<{success: boolean, avatar_url?: string, error?: string}>}
  */
@@ -61,10 +64,12 @@ export async function updatePerfilArtesanoCompleto(userId, data, newImageAsset) 
     }
     
     // Actualizar tabla artesanos (nombre, ubicacion, descripcion, avatar_url si cambió)
+    // <-- MODIFICADO: 'ubicacion' ahora es el enlace y 'google_maps_link' se elimina
     const updateData = {
       nombre: data.nombre, 
-      ubicacion: data.ubicacion,
-      descripcion: data.descripcion 
+      ubicacion: data.ubicacion, // <-- Esto ahora es el enlace
+      descripcion: data.descripcion,
+      // <-- ELIMINADO: google_maps_link
     };
     
     // Solo actualizar avatar_url si hay una nueva imagen
@@ -347,4 +352,3 @@ export async function getPerfilCompletoArtesano(userId) {
     throw error;
   }
 }
-
