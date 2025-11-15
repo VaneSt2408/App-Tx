@@ -10,7 +10,7 @@ import MarketplaceService from '../../src/services/MarketplaceService';
 import { useFilter } from '../../src/context/FilterContext';
 
 const Text = (props) => (
-  <DefaultText {...props} style={[{ fontFamily: 'AlanSans' }, props.style]} />
+  <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
 );
 
 
@@ -241,9 +241,8 @@ const MarketplacePage = () => {
     <View className="flex-1 bg-gray-100">
       {/* Header */}
       <View className="bg-white pb-3">
-        <View className="px-4 flex-row items-center justify-between pt-4">
-          <View style={{ width: 28 }} />{/* Espaciador para centrar el título */}
-          <Text className="text-xl font-bold text-gray-900">Marketplace</Text>
+        <View className="px-4 flex-row items-center justify-between pt-4">          
+          <Text className="text-3xl font-bold text-gray-900 mb-4">Marketplace</Text>
           {role === 'artesano' && (
             <TouchableOpacity
               onPress={() =>

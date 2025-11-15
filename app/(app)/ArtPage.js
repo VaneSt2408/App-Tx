@@ -5,7 +5,7 @@
 
 // Importaciones
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, SafeAreaView} from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -31,7 +31,7 @@ function ProfileStackNavigator() {
 // Componente principal
 function ArtPage() {
     return (
-        // Renderizado
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
         <Tab.Navigator
             screenOptions={({ route }) => ({
                 tabBarIcon: ({ focused, color, size }) => {
@@ -50,13 +50,13 @@ function ArtPage() {
                     return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
                 },
                 tabBarActiveTintColor: '#9D046D',
-                tabBarInactiveTintColor: '#2222',
+                tabBarInactiveTintColor: '#666', // Corregido a un color válido
                 tabBarStyle: {
                     backgroundColor: '#fff',
                     borderTopWidth: 1,
                     borderTopColor: '#e1e8ed',
-                    height: 70, // Aumentamos la altura total
-                    paddingBottom: 12, // Más espacio abajo para la barra del iPhone
+                    height: 40, // Aumentamos la altura total
+                    paddingBottom: 8, // Más espacio abajo para la barra del iPhone
                     paddingTop: 8, // Mantenemos el espacio superior
                 },
                 tabBarLabelStyle: {
@@ -95,6 +95,7 @@ function ArtPage() {
                 }}
             />
         </Tab.Navigator>
+        </SafeAreaView>
     );
 }
 

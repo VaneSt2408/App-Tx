@@ -5,7 +5,7 @@
 
 // Importaciones
 import React, { useState, useEffect } from 'react';
-import {View,Text,FlatList,Image,TouchableOpacity,StyleSheet,ActivityIndicator,RefreshControl,Alert,Dimensions,Modal,ScrollView,PanResponder,Animated,TextInput,} from 'react-native';
+import {View,Text,FlatList,Image,TouchableOpacity,StyleSheet,ActivityIndicator,RefreshControl,Alert,Dimensions,Modal,ScrollView,PanResponder,Animated,TextInput, SafeAreaView} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
@@ -337,16 +337,15 @@ export default function ArtesanoProducts() {
 
   if (loading && productos.length === 0) {
     return (
-      <View style={styles.loadingContainer}>
-
+      <SafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#9D046D" />
         <Text style={styles.loadingText}>Cargando productos...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -382,7 +381,6 @@ export default function ArtesanoProducts() {
           />
         }
       />
-
       {/* Botón Flotante (FAB) para agregar producto */}
       {isOwnProfile && (
         <TouchableOpacity
@@ -392,8 +390,6 @@ export default function ArtesanoProducts() {
           <MaterialCommunityIcons name="plus" size={28} color="#fff" />
         </TouchableOpacity>
       )}
-
-
       {/* Modal de detalles de producto */}
       <Modal
         visible={showProductoModal}
@@ -733,20 +729,20 @@ export default function ArtesanoProducts() {
           loadProductos();
         }}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#fff', // Cambiado a blanco para que coincida con el header
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#fff',
   },
   loadingText: {
     marginTop: 12,
@@ -783,8 +779,9 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   list: {
-    padding: 8,
+    padding: 9,
     paddingTop: 0,
+    backgroundColor: '#fff', // El color de fondo se aplica aquí
     paddingBottom: 80,
     paddingBottom1: 90, // Aumentado para más espacio inferior
   },
@@ -830,7 +827,7 @@ const styles = StyleSheet.create({
   gridItem: {
     width: imageSize,
     height: imageSize,
-    margin: 4,
+    margin: 6.7,
     backgroundColor: '#fff',
     borderRadius: 8,
     overflow: 'hidden',

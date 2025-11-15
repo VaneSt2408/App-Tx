@@ -62,8 +62,8 @@ export default function AppLayout() {
       <Stack.Screen name="PageAdmin" options={{ title: "Modo Admin" }} />
       <Stack.Screen name="MagicLink" options={{ title: "Envio de link" }} />
       <Stack.Screen name="RegisterArtesano" options={{ headerShown: false}} />
-      <Stack.Screen name="ArtPage" options={{ title: "Pagina del artesano" }} />
-      <Stack.Screen name="ClientPage" options={{ title: "Pagina del cliente" }} />
+      <Stack.Screen name="ArtPage" options={{ headerShown: false}} />
+      <Stack.Screen name="ClientPage" options={{headerShown: false }} />
       <Stack.Screen name="ChangePassword" options={{ title: "Confirmar contraseña" }} />
       <Stack.Screen name="NotFoundPage" options={{ title: "Error de permisos" }} />
       <Stack.Screen name="clientProfile" options={{ title: "" }} />
