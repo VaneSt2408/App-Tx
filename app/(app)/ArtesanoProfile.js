@@ -3,7 +3,11 @@
 // Muestra el perfil del artesano registrado en la base de datos y permite editarlo, cambiar la contraseña, eliminar el perfil y cambiar la foto de perfil.
 
 import React, { useState, useEffect, useRef } from 'react'; // Importar los hooks de react
-import {View,Text as DefaultText,StyleSheet,ScrollView,Image,TouchableOpacity,SafeAreaView,ActivityIndicator,Alert,Dimensions,FlatList,Modal,TextInput,PanResponder,Animated} from 'react-native';
+import {
+  View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, SafeAreaView,
+  ActivityIndicator, Alert, Dimensions, FlatList, Modal, TextInput,
+  PanResponder, Animated, Linking // <-- Se mantiene Linking
+} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Importar los componentes de expo-vector-icons
 import { useRouter, useLocalSearchParams } from 'expo-router'; // Importar el router de expo-router
 import { artesanoService } from '../../src/services/artesanoService'; // Importar el servicio de artesano
@@ -14,13 +18,9 @@ import { updatePerfilArtesanoCompleto, eliminarPerfilArtesano, subirAvatarArtesa
 import ChangePasswordModal from '../../components/ChangePasswordModal'; // Importar el modal de cambio de contraseña
 import AsyncStorage from '@react-native-async-storage/async-storage'; // Importar AsyncStorage para persistencia
 import { validateCurrentPassword } from '../../src/services/profileInfo'; // Importar validación de contraseña
-import useCustomFonts from '../../hooks/useFonts';
 
 const { width } = Dimensions.get('window'); // Obtener el ancho de la ventana
 const imageSize = (width - 10) / 3; // Para grid de 3 columnas
-const Text = (props) => (
-    <DefaultText {...props} style={[{ fontFamily: 'AlanSans' }, props.style]} />
-  );
 
 export default function ArtesanoProfile() { // Exportar la función ArtesanoProfile
   const router = useRouter(); // Obtener el router
@@ -42,7 +42,16 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
   // Estados para eliminación de perfil con validación de contraseña
   const [showDeleteProfile, setShowDeleteProfile] = useState(false); // Modal de eliminación de perfil
   const [deletePasswordData, setDeletePasswordData] = useState({ currentPassword: '' }); // Estado para la contraseña de eliminación
-  const [editData, setEditData] = useState({ nombre: '', telefono: '', ubicacion: '', descripcion: '', avatar_url: null }); // Establecer el estado de los datos de edición
+  
+  // LÍNEA MODIFICADA: Se elimina 'google_maps_link'. 'ubicacion' guardará el enlace.
+  const [editData, setEditData] = useState({ 
+    nombre: '', 
+    telefono: '', 
+    ubicacion: '', // <-- Esto ahora guardará el enlace de Google Maps
+    descripcion: '', 
+    avatar_url: null 
+  }); 
+  
   const [deletePasswordValidated, setDeletePasswordValidated] = useState(false); // Contraseña de eliminación validada
   const [selectedPublication, setSelectedPublication] = useState(null); // Estado para la publicación seleccionada
   const [deletePasswordAttempts, setDeletePasswordAttempts] = useState(0); // Intentos de contraseña de eliminación
@@ -52,7 +61,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
   const [showDeletePassword, setShowDeletePassword] = useState(false); // Mostrar/ocultar contraseña
   const [totalFailedAttempts, setTotalFailedAttempts] = useState(0); // Intentos fallidos totales (compartido con cambio de contraseña)
 
-  
+
   // Refs para evitar race conditions en contadores
   const deletePasswordAttemptsRef = useRef(0); // Ref para intentos de contraseña de eliminación
   const totalFailedAttemptsRef = useRef(0); // Ref para intentos fallidos totales (compartido)
@@ -166,11 +175,14 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
       
       // Cargar datos para edición
       if (isOwnProfile && data.artesano) { // Si el usuario es el propio y hay datos del artesano
+        // BLOQUE MODIFICADO: 'ubicacion' ahora es el enlace, 'google_ws_link' se elimina
         setEditData({ 
           nombre: data.artesano.nombre || '', 
           telefono: data.artesano.telefono || '', 
-          ubicacion: data.artesano.ubicacion || '', 
-          avatar_url: data.artesano.avatar_url || null
+          ubicacion: data.artesano.ubicacion || '', // <-- MODIFICADO: Esto ahora es el enlace
+          descripcion: data.artesano.descripcion || '',
+          avatar_url: data.artesano.avatar_url || null,
+          // <-- ELIMINADO: google_maps_link
         }); // Establecer el estado de los datos de edición
       }
     } catch (error) { // Capturar el error
@@ -408,7 +420,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         mediaTypes: ImagePicker.MediaTypeOptions.Images, // Tipo de media: imágenes
         allowsEditing: true, // Permitir edición
         aspect: [1, 1], // Aspecto cuadrado
-        quality: 0.8, // Calidad de la imagen
+        quality: 0.5, // Calidad de la imagen
         base64: true, // Convertir a base64
       });
       if (!result.canceled && result.assets && result.assets[0]) { // Si no se canceló y hay assets y el primer asset
@@ -478,13 +490,25 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
     }
   };
 
+  // *** Se mantiene la función para abrir el enlace de Google Maps ***
+  const handleOpenMaps = async (url) => {
+    if (!url) return;
+    // Verificar si el enlace es soportado
+    const supported = await Linking.canOpenURL(url);
+    if (supported) {
+      await Linking.openURL(url);
+    } else {
+      Alert.alert('Error', 'No se puede abrir este enlace');
+    }
+  };
+
   const renderHeader = () => (
     <View style={styles.header}>
       <View style={styles.headerTop}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={{fontFamily: 'Alan Sans', fontWeight: 'bold', fontSize: 23}}>Perfil</Text>
+        <Text style={styles.headerTitle}>Perfil</Text>
         {isOwnProfile ? (
           <TouchableOpacity onPress={() => setShowSettingsMenu(true)} style={styles.backButton}>
             <MaterialCommunityIcons name="cog-outline" size={24} color="#333" />
@@ -545,15 +569,15 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
             <Text style={styles.statNumber}>{publicaciones.length}</Text>
-            <Text style={{fontFamily: 'Alan Sans'}}>Publicaciones</Text>
+            <Text style={styles.statLabel}>Publicaciones</Text>
           </View>
           <View style={styles.statItem}>
             <Text style={styles.statNumber}>{productos.length}</Text>
-            <Text style={{fontFamily: 'Alan Sans'}}>Productos</Text>
+            <Text style={styles.statLabel}>Productos</Text>
           </View>
           <View style={styles.statItem}>
             <Text style={styles.statNumber}>{artesano?.total_likes || 0}</Text>
-            <Text style={{fontFamily: 'Alan Sans'}}>Likes</Text>
+            <Text style={styles.statLabel}>Likes</Text>
           </View>
         </View>
       </View>
@@ -562,13 +586,20 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         <Text style={styles.nombre}>{artesano?.nombre || 'No definido'}</Text>
         <Text style={styles.folio}>Folio: {artesano?.folio || 'No definido'}</Text>
         
+        {/* <-- ELIMINADO: Bloque de texto 'ubicacion' */}
+
+        {/* *** BLOQUE MODIFICADO: Ahora usa artesano.ubicacion *** */}
         {artesano?.ubicacion && (
-          <View style={styles.infoRow}>
-            <MaterialCommunityIcons name="map-marker" size={16} color="#E93C25" />
-            <Text style={styles.infoText}>{artesano.ubicacion}</Text>
-          </View>
+          <TouchableOpacity 
+            style={styles.infoRow} 
+            onPress={() => handleOpenMaps(artesano.ubicacion)}
+          >
+            <MaterialCommunityIcons name="map-marker-link" size={16} color="#34A853" />
+            <Text style={[styles.infoText, styles.linkText]}>Ver Ubicación en Google Maps</Text>
+          </TouchableOpacity>
         )}
-        
+        {/* *** FIN DEL BLOQUE MODIFICADO *** */}
+
         {artesano?.categoria && (
           <View style={styles.infoRow}>
             <MaterialCommunityIcons name="tag" size={16} color="#7B480A" />
@@ -601,9 +632,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
           size={20} 
           color={activeTab === 'publicaciones' ? '#9D046D' : '#666'} 
         />
-
-        
-        <Text style={[styles.tabText, activeTab === 'publicaciones' && styles.activeTabText, {fontFamily: 'Alan Sans', fontWeight: 'bold', fontSize: 14}]}>
+        <Text style={[styles.tabText, activeTab === 'publicaciones' && styles.activeTabText]}>
           Publicaciones
         </Text>
       </TouchableOpacity>
@@ -617,7 +646,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
           size={20} 
           color={activeTab === 'productos' ? '#9D046D' : '#666'} 
         />
-        <Text style={[styles.tabText, activeTab === 'productos' && styles.activeTabText, {fontFamily: 'Alan Sans', fontWeight: 'bold', fontSize: 14}]}>
+        <Text style={[styles.tabText, activeTab === 'productos' && styles.activeTabText]}>
           Productos
         </Text>
       </TouchableOpacity>
@@ -915,7 +944,14 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
         onRequestClose={() => {
           setShowEditModal(false);
           setSelectedImage(null);
-          setEditData(prev => ({ ...prev, avatar_url: artesano?.avatar_url || null }));
+          // *** BLOQUE MODIFICADO: Resetear estado (sin google_maps_link) ***
+          setEditData({
+            nombre: artesano?.nombre || '',
+            telefono: artesano?.telefono || '',
+            ubicacion: artesano?.ubicacion || '', // <-- Esto es el enlace
+            descripcion: artesano?.descripcion || '',
+            avatar_url: artesano?.avatar_url || null,
+          });
         }}
       >
         <View style={styles.editModalContainer}>
@@ -925,7 +961,14 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
               <TouchableOpacity onPress={() => {
                 setShowEditModal(false);
                 setSelectedImage(null);
-                setEditData(prev => ({ ...prev, avatar_url: artesano?.avatar_url || null }));
+                // *** BLOQUE MODIFICADO: Resetear estado (sin google_maps_link) ***
+                setEditData({
+                  nombre: artesano?.nombre || '',
+                  telefono: artesano?.telefono || '',
+                  ubicacion: artesano?.ubicacion || '', // <-- Esto es el enlace
+                  descripcion: artesano?.descripcion || '',
+                  avatar_url: artesano?.avatar_url || null,
+                });
               }}>
                 <MaterialCommunityIcons name="close" size={24} color="#333" />
               </TouchableOpacity>
@@ -994,14 +1037,21 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
                 />
               </View>
 
+              {/* <-- ELIMINADO: Input de Ubicacion (texto) --> */}
+
+              {/* *** BLOQUE MODIFICADO: Este input ahora es para 'ubicacion' (enlace) *** */}
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Ubicación</Text>
+                <Text style={styles.inputLabel}>Ubicación (Enlace de Google Maps)</Text>
                 <TextInput
                   style={styles.input}
                   value={editData.ubicacion}
                   onChangeText={(text) => setEditData({ ...editData, ubicacion: text })}
+                  placeholder="https://maps.app.goo.gl/..."
+                  keyboardType="url"
+                  autoCapitalize="none"
                 />
               </View>
+              {/* *** FIN DEL BLOQUE MODIFICADO *** */}
 
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Descripción</Text>
@@ -1440,6 +1490,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginLeft: 8,
+  },
+  // *** ESTILO 'linkText' se mantiene ***
+  linkText: {
+    color: '#34A853', // Color distintivo para el enlace
+    textDecorationLine: 'underline',
   },
   descripcion: {
     fontSize: 14,

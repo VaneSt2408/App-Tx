@@ -5,23 +5,21 @@
 
 
 // Importaciones
+// En: app/(app)/ArtesanoList.js -> Archivo de la lista de artesanos (Frontend)
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, ActivityIndicator, Alert,TouchableOpacity,SafeAreaView,TextInput, Platform} from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image, ActivityIndicator, Alert, TouchableOpacity, SafeAreaView, TextInput, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { artesanoService } from '../../src/services/artesanoService';
 import { useRouter } from 'expo-router';
 
-
-// Componente principal
 export default function ArtesanoList() {
-  const router = useRouter(); // Router de expo-router para navegar entre pantallas
-  const [artesanos, setArtesanos] = useState([]); // Estado para guardar la lista de artesanos
-  const [filteredArtesanos, setFilteredArtesanos] = useState([]); // Estado para guardar la lista de artesanos filtrados
-  const [loading, setLoading] = useState(true); // Estado para guardar el estado de carga
-  const [error, setError] = useState(null); // Estado para guardar el estado de error
-  const [searchQuery, setSearchQuery] = useState(''); // Estado para guardar la consulta de búsqueda
+  const router = useRouter();
+  const [artesanos, setArtesanos] = useState([]);
+  const [filteredArtesanos, setFilteredArtesanos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Función para cargar la lista de artesanos
   const loadArtesanos = async () => {
     try {
       setLoading(true);
@@ -36,46 +34,41 @@ export default function ArtesanoList() {
     }
   };
 
-  // Función optimizada para filtrar artesanos por búsqueda
   const filterArtesanos = useCallback(() => {
     if (!searchQuery.trim()) {
       setFilteredArtesanos(artesanos);
       return;
     }
 
-    // Filtro para buscar artesanos por nombre, folio, categoría o ubicación
     const query = searchQuery.toLowerCase().trim();
     const filtered = artesanos.filter(artesano => {
       const nombre = (artesano.nombre || '').toLowerCase();
       const folio = (artesano.folio || '').toLowerCase();
       const categoria = (artesano.categoria || '').toLowerCase();
       const ubicacion = (artesano.ubicacion || '').toLowerCase();
-      return nombre.includes(query) ||
-             folio.includes(query) ||
-             categoria.includes(query) ||
-             ubicacion.includes(query);
+      return (
+        nombre.includes(query) ||
+        folio.includes(query) ||
+        categoria.includes(query) ||
+        ubicacion.includes(query)
+      );
     });
 
-    // Actualizar el estado con la lista de artesanos filtrados
     setFilteredArtesanos(filtered);
   }, [searchQuery, artesanos]);
-  
-  // Efecto para cargar la lista de artesanos
+
   useEffect(() => {
     loadArtesanos();
   }, []);
 
-  // Efecto para filtrar artesanos cuando cambia la búsqueda o los artesanos
   useEffect(() => {
     filterArtesanos();
   }, [filterArtesanos]);
 
-  // Función para limpiar la búsqueda
   const clearSearch = () => {
     setSearchQuery('');
   };
 
-  // Función para navegar al perfil del artesano
   const navigateToProfile = (userId) => {
     router.push({
       pathname: '/ArtesanoProfileVistaVisitante', // Cambiar a la ruta correcta
@@ -83,58 +76,62 @@ export default function ArtesanoList() {
     });
   };
 
-  // Función para renderizar cada artesano en la lista
   const renderArtesano = ({ item }) => (
-    <TouchableOpacity 
-      style={styles.card} 
+    <TouchableOpacity
+      style={styles.card}
       onPress={() => navigateToProfile(item.user_id)}
       activeOpacity={0.8}
     >
       {/* Cabecera Magenta */}
       <View style={styles.cardHeader}>
         {item.avatar_url ? (
-          <Image 
-            source={{ uri: item.avatar_url }} 
+          <Image
+            source={{ uri: item.avatar_url }}
             style={styles.avatar}
           />
         ) : (
           <View style={styles.defaultAvatar}>
-            <MaterialCommunityIcons 
-              name="account" 
-              size={30} 
-              color="#fff" 
+            <MaterialCommunityIcons
+              name="account"
+              size={30}
+              color="#fff"
             />
           </View>
         )}
         <View style={styles.infoContainer}>
           <Text style={styles.nombre}>
-            {item.nombre || 'No definido'}
+            {item.nombre ? String(item.nombre) : 'No definido'}
           </Text>
           <Text style={styles.folio}>
-            Folio: {item.folio || 'No definido'}
+            Folio: {item.folio ? String(item.folio) : 'No definido'}
           </Text>
         </View>
         <MaterialCommunityIcons name="chevron-right" size={28} color="#fff" />
       </View>
-      
+
       {/* Cuerpo Blanco */}
       <View style={styles.cardBody}>
-        {item.ubicacion && (
+        {item.ubicacion ? (
           <View style={styles.infoRow}>
             <MaterialCommunityIcons name="map-marker-outline" size={20} color="#555" style={styles.infoIcon} />
-            <Text style={styles.infoText}>{item.ubicacion}</Text>
+            <Text style={styles.infoText}>{String(item.ubicacion)}</Text>
           </View>
-        )}
-        {item.categoria && (
+        ) : null}
+
+        {item.categoria ? (
           <View style={styles.infoRow}>
             <MaterialCommunityIcons name="tag-outline" size={20} color="#555" style={styles.infoIcon} />
-            <Text style={styles.infoText}>{item.categoria}</Text>
+            <Text style={styles.infoText}>{String(item.categoria)}</Text>
           </View>
-        )}
+        ) : null}
+
         <View style={styles.infoRow}>
           <MaterialCommunityIcons name="calendar-blank-outline" size={20} color="#555" style={styles.infoIcon} />
           <Text style={styles.infoText}>
-            Registro: {new Date(item.created_at || item.fecha_creacion_cuenta).toLocaleDateString('es-ES')}
+            Registro:{' '}
+            {item.created_at || item.fecha_creacion_cuenta
+              ? new Date(item.created_at || item.fecha_creacion_cuenta).toLocaleDateString('es-ES')
+              : 'No disponible'}
           </Text>
         </View>
       </View>
@@ -143,19 +140,18 @@ export default function ArtesanoList() {
 
   const renderEmptyState = () => {
     const isSearching = searchQuery.trim().length > 0;
-    
+
     return (
       <View style={styles.emptyContainer}>
-        <MaterialCommunityIcons 
-          name={isSearching ? "magnify" : "account-group"} 
-          size={80} 
-          color="#ccc" 
+        <MaterialCommunityIcons
+          name={isSearching ? "magnify" : "account-group"}
+          size={80}
+          color="#ccc"
         />
         <Text style={styles.emptyText}>
-          {isSearching 
-            ? `No se encontraron artesanos para "${searchQuery}"`
-            : 'No hay artesanos registrados'
-          }
+          {isSearching
+            ? `No se encontraron artesanos para "${searchQuery || ''}"`
+            : 'No hay artesanos registrados'}
         </Text>
         {isSearching ? (
           <TouchableOpacity style={styles.refreshButton} onPress={clearSearch}>
@@ -189,16 +185,16 @@ export default function ArtesanoList() {
           <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
         </TouchableOpacity>
         <Text style={styles.title}>Lista de Artesanos</Text>
-        <View style={{ width: 40 }} /> {/* Espaciador para centrar el título */}
+        <View style={{ width: 40 }} />
       </View>
-      
+
       {/* Barra de búsqueda */}
       <View style={styles.searchSection}>
         <View style={styles.searchInputContainer}>
-          <MaterialCommunityIcons 
-            name="magnify" 
-            size={20} 
-            color="#666" 
+          <MaterialCommunityIcons
+            name="magnify"
+            size={20}
+            color="#666"
             style={styles.searchIcon}
           />
           <TextInput
@@ -218,12 +214,12 @@ export default function ArtesanoList() {
           )}
         </View>
       </View>
-      
+
       {/* Lista */}
       <FlatList
         data={filteredArtesanos}
         renderItem={renderArtesano}
-        keyExtractor={(item) => item.user_id.toString()}
+        keyExtractor={(item) => String(item.user_id)}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={renderEmptyState}
@@ -237,7 +233,7 @@ export default function ArtesanoList() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f0f2f5', // Fondo gris claro
+    backgroundColor: '#f0f2f5',
   },
   headerContainer: {
     flexDirection: 'row',
@@ -245,11 +241,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#f0f2f5', // Mismo fondo gris
+    backgroundColor: '#f0f2f5',
   },
   backButton: {
     padding: 8,
-    marginLeft: -8, // Compensar padding
+    marginLeft: -8,
   },
   title: {
     fontSize: 20,
@@ -260,7 +256,7 @@ const styles = StyleSheet.create({
   searchSection: {
     paddingHorizontal: 16,
     paddingBottom: 16,
-    backgroundColor: '#f0f2f5', // Mismo fondo gris
+    backgroundColor: '#f0f2f5',
   },
   searchInputContainer: {
     flexDirection: 'row',
@@ -313,7 +309,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#9D046D', // Color magenta
+    backgroundColor: '#9D046D',
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
   },
@@ -328,7 +324,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)', // Avatar por defecto semi-transparente
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -339,12 +335,12 @@ const styles = StyleSheet.create({
   nombre: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#FFFFFF', // Texto blanco
+    color: '#FFFFFF',
     marginBottom: 2,
   },
   folio: {
     fontSize: 14,
-    color: '#F0F0F0', // Texto blanco más suave
+    color: '#F0F0F0',
   },
   cardBody: {
     padding: 16,
@@ -360,7 +356,7 @@ const styles = StyleSheet.create({
   infoText: {
     fontSize: 14,
     color: '#333',
-    flex: 1, // Para que el texto se ajuste
+    flex: 1,
   },
   emptyContainer: {
     flex: 1,
@@ -376,7 +372,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   refreshButton: {
-    backgroundColor: '#9D046D', // Botón con color magenta
+    backgroundColor: '#9D046D',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
