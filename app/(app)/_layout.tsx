@@ -67,10 +67,10 @@ export default function AppLayout() {
       <Stack.Screen name="ChangePassword" options={{ title: "Confirmar contraseña" }} />
       <Stack.Screen name="NotFoundPage" options={{ title: "Error de permisos" }} />
       <Stack.Screen name="clientProfile" options={{ title: "" }} />
-      <Stack.Screen name="ArtesanoProfile" options={{ title: "Perfil del Artesano" }} />
+      <Stack.Screen name="ArtesanoProfile" options={{ title: "Perfil del Artesano", headerShown: false }} />
       <Stack.Screen name="ArtesanoList" options={{ title: "Lista de artesanos" }} />
       <Stack.Screen name="ArtesanoPublications" options={{ title: "Mis Publicaciones" }} />
-      <Stack.Screen name="ArtesanoProducts" options={{ headerShown: false }} />
+      <Stack.Screen name="ArtesanoProducts" options={{ title: "Mis Productos" }} />
       <Stack.Screen name="CreatePostPage" options={{title: "Crea una publicacion"}}/>
       <Stack.Screen name="FeedPage" options={{title: "Publicaciones"}}/>
       <Stack.Screen name="MarketplacePage" options={{title: "Marketplace"}}/>
@@ -81,8 +81,12 @@ export default function AppLayout() {
       <Stack.Screen name="CreateEventPage" options={{title: "Crear evento"}}/>
       <Stack.Screen name="ArtesanoSettings" options={{title: "Ajustes de perfil del artesano"}}/>
       <Stack.Screen name="ArtesanoProfileVistaVisitante" options={{title: "Ver perfil como visitante", headerBackVisible: false}}/>
-      <Stack.Screen name="MarketplaceFilters" options={{title: "Filtros de Marketplace", headerBackVisible: false}}/>
-
+      <Stack.Screen name="MarketplaceFilters" options={{title: "Filtros de Marketplace", headerShown: false}}/>
+      <Stack.Screen name="perfilcliente" options={{title: "Perfil del cliente", headerBackVisible: false}}/>
+      <Stack.Screen name="gestionCuentaCliente" options={{ title: "Gestion de cuenta del cliente", headerBackVisible: false }} />
+      <Stack.Screen name="ayudaSoporte" options={{ title: "Ayuda y Soporte", headerBackVisible: false }} />
+      <Stack.Screen name="TerminoCondiciones" options={{ title: "Términos y Condiciones", headerBackVisible: false }} />
+      <Stack.Screen name="AppSettings" options={{ title: "Configuración de la App", headerBackVisible: false }} />
     </Stack>
         </FilterProvider>
   );

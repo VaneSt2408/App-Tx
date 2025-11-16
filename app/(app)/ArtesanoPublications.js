@@ -23,7 +23,6 @@ const imageSize = (width - 40) / 3; // Para grid de 3 columnas
 // Componente principal
 export default function ArtesanoPublications() {
   const router = useRouter(); // Obtener el router
-  const { userId } = useLocalSearchParams(); // Obtener el id del usuario
   const { session } = useAuth(); // Obtener la sesión
   const [publicaciones, setPublicaciones] = useState([]); // Establecer el estado de las publicaciones
   const [loading, setLoading] = useState(true); // Establecer el estado de carga
@@ -38,14 +37,17 @@ export default function ArtesanoPublications() {
   const [editData, setEditData] = useState({ texto: '' }); // Establecer el estado de los datos de edición
   const [editLoading, setEditLoading] = useState(false); // Establecer el estado de carga de edición
   const swipeAnim = React.useRef(new Animated.Value(0)).current; // Referencia para la animación del swipe
-  const isOwnProfile = session?.user?.id === userId; // Verificar si el usuario es el propio
+  
+  // Usar el ID de la sesión como la fuente principal de verdad
+  const userId = session?.user?.id;
+  const isOwnProfile = true; // Esta pantalla siempre es del perfil propio
 
   // Efecto para cargar las publicaciones
   useEffect(() => {
     if (userId) {
       loadPublicaciones();
     }
-  }, [userId]);
+  }, [userId]); // Dependerá del userId de la sesión
 
   // Función para cargar las publicaciones
   const loadPublicaciones = async (page = 0) => {
@@ -189,8 +191,8 @@ export default function ArtesanoPublications() {
   const handleEditPublication = () => {
     if (selectedPublication) {
       setEditData({ texto: selectedPublication.texto || '' });
-      setShowEditModal(true);
-      // No cerrar el modal de detalles inmediatamente
+      setShowPublicationModal(false); // Cerramos el modal de detalles
+      setShowEditModal(true); // Abrimos el de edición
     } else {
     }
   };
@@ -209,7 +211,7 @@ export default function ArtesanoPublications() {
       await updatePublication(selectedPublication.id, { texto: editData.texto });
       Alert.alert('Éxito', 'Publicación editada correctamente');
       handleCloseEditModal();
-      handleCloseModal();
+      setShowPublicationModal(false); // Asegurarse de que el modal de detalles también se cierre
       // Recargar las publicaciones
       loadPublicaciones(0);
     } catch (error) {
@@ -279,15 +281,6 @@ export default function ArtesanoPublications() {
           : 'Este artesano aún no ha compartido publicaciones'
         }
       </Text>
-      {isOwnProfile && (
-        <TouchableOpacity
-          style={styles.createButton}
-          onPress={() => router.push('/CreatePostPage')}
-        >
-          <MaterialCommunityIcons name="plus" size={20} color="#fff" />
-          <Text style={[styles.createButtonText,{fontFamily: 'Alan Sans'}]}>Crear Publicación</Text>
-        </TouchableOpacity>
-      )}
     </View>
   );
 
@@ -317,14 +310,7 @@ export default function ArtesanoPublications() {
             {totalCount} {totalCount === 1 ? 'publicación' : 'publicaciones'}
           </Text>
         </View>
-        {isOwnProfile && (
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => router.push('/CreatePostPage')}
-          >
-            <MaterialCommunityIcons name="plus" size={24} color="#9D046D" />
-          </TouchableOpacity>
-        )}
+        <View style={{ width: 40 }} />
       </View>
 
       <FlatList
@@ -347,6 +333,16 @@ export default function ArtesanoPublications() {
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
       />
+
+      {/* Botón de Acción Flotante (FAB) para crear publicación */}
+      {isOwnProfile && (
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => router.push('/CreatePostPage')}
+        >
+          <MaterialCommunityIcons name="plus" size={28} color="#fff" />
+        </TouchableOpacity>
+      )}
 
       {/* Modal de detalles de publicación */}
       <Modal
@@ -470,13 +466,7 @@ export default function ArtesanoPublications() {
                 <TouchableOpacity
                   style={styles.editButton}
                   onPress={() => {
-                    if (selectedPublication) {
-                      setEditData({ texto: selectedPublication.texto || '' });
-                      setShowPublicationModal(false); // Cerrar modal de detalles
-                      setShowEditModal(true); // Abrir modal de edición
-                    } else {
-                      Alert.alert('Error', 'No hay publicación seleccionada');
-                    }
+                    handleEditPublication();
                   }}
                 >
                   <MaterialCommunityIcons name="pencil" size={20} color="#fff" />
@@ -503,7 +493,11 @@ export default function ArtesanoPublications() {
         animationType="slide"
         onRequestClose={handleCloseEditModal}
       >
-        <View style={styles.modalContainer}>
+        {(() => {
+          const hasChanges = editData.texto !== (selectedPublication?.texto || '');
+          const isSaveDisabled = editLoading || !hasChanges;
+        return (
+          <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle,{fontFamily: 'Alan Sans', fontSize: 21}]}>Editar Publicación</Text>
@@ -549,9 +543,9 @@ export default function ArtesanoPublications() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.saveButton, editLoading && styles.disabledButton]}
+                style={[styles.saveButton, isSaveDisabled && styles.disabledButton]}
                 onPress={handleSaveEdit}
-                disabled={editLoading}
+                disabled={isSaveDisabled}
               >
                 {editLoading ? (
                   <ActivityIndicator size="small" color="#fff" />
@@ -565,6 +559,8 @@ export default function ArtesanoPublications() {
             </View>
           </View>
         </View>
+        );
+        })()}
       </Modal>
     </View>
   );
@@ -933,5 +929,21 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     backgroundColor: '#6c757d',
+  },
+    fab: {
+    position: 'absolute',
+    width: 56,
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+    right: 20,
+    bottom: 20, // Se ajustará sobre el tab bar
+    backgroundColor: '#9D046D',
+    borderRadius: 28,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
 });

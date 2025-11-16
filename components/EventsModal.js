@@ -1,16 +1,45 @@
-import React from 'react';
-import { Modal, View, Text, Image, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { Modal, View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useAuth } from '../src/context/AuthContext';
+import { supabase } from '../src/supabase/client';
 
 /**
  * EventsModal
  * Props:
  * - visible: boolean
  * - onClose: function
- * - event: objeto con la información del evento (id, nombre, descripcion, fecha, ubicacion, imagen_url, creador_id, etc.)
+ * - event: objeto con la información del evento (id, nombre, descripcion, fecha, ubicacion, imagen_url, etc.)
  */
-const EventsModal = ({ visible = false, onClose = () => {}, event = null }) => {
+const EventsModal = ({ visible = false, onClose = () => {}, event = null, onDataChange = () => {} }) => {
+  const { session, role } = useAuth(); // Obtenemos el rol del usuario
+  const [isSaved, setIsSaved] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    // Cuando el modal se hace visible y hay un evento, verificamos si ya está guardado.
+    if (visible && event?.id && session?.user?.id) {
+      checkIfEventIsSaved();
+    }
+  }, [visible, event, session]);
+
+  const checkIfEventIsSaved = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('eventos_guardados')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .eq('evento_id', event.id)
+        .maybeSingle();
+      if (error) throw error;
+      setIsSaved(data !== null);
+    } catch (error) {
+      // No mostramos alerta para no ser intrusivos
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (!event) return null;
 
@@ -29,6 +58,52 @@ const EventsModal = ({ visible = false, onClose = () => {}, event = null }) => {
     } catch (e) {
       return d;
     }
+  };
+
+  const handleToggleSaveEvent = async () => {
+    if (!session?.user?.id) {
+      Alert.alert("Acción requerida", "Debes iniciar sesión para guardar un evento.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      if (isSaved) {
+        // Si ya está guardado, lo eliminamos
+        const { error } = await supabase
+          .from('eventos_guardados')
+          .delete()
+          .eq('user_id', session.user.id)
+          .eq('evento_id', event.id);
+        if (error) throw error;
+        setIsSaved(false);
+        onDataChange(); // Notificar que los datos cambiaron
+        // Alert.alert("Evento Eliminado", "El evento ha sido eliminado de tu lista.");
+      } else {
+        // Si no está guardado, lo insertamos
+        const { error } = await supabase
+          .from('eventos_guardados')
+          .insert({
+            user_id: session.user.id,
+            evento_id: event.id,
+          });
+        if (error) throw error;
+        setIsSaved(true);
+        onDataChange(); // Notificar que los datos cambiaron
+        // Alert.alert("¡Éxito!", "El evento ha sido guardado en tu perfil.");
+      }
+    } catch (error) {
+      // Si hay un error, no cambiamos el estado visual
+      Alert.alert("Error", "No se pudo completar la acción. Inténtalo de nuevo.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Determinamos el texto del botón según el rol del usuario
+  const buttonTexts = {
+    save: role === 'artesano' ? 'Confirmar Asistencia' : 'Guardar Evento',
+    delete: role === 'artesano' ? 'Anular Asistencia' : 'Eliminar Evento',
   };
 
   return (
@@ -69,8 +144,18 @@ const EventsModal = ({ visible = false, onClose = () => {}, event = null }) => {
 
 
               <View style={styles.buttonsRow}>
-                <TouchableOpacity style={styles.primaryButton} onPress={() => { /* placeholder for action */ }}>
-                  <Text style={styles.primaryButtonText}>Ir al evento</Text>
+                <TouchableOpacity 
+                  style={[isSaved ? styles.deleteButton : styles.primaryButton, isLoading && styles.buttonDisabled]} 
+                  onPress={handleToggleSaveEvent}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={isSaved ? styles.deleteButtonText : styles.primaryButtonText}>
+                      {isSaved ? buttonTexts.delete : buttonTexts.save}
+                    </Text>
+                  )}
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.secondaryButton} onPress={onClose}>
@@ -209,6 +294,24 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     color: '#333',
     fontWeight: '600',
+  },
+  deleteButton: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginLeft: 8,
+    borderWidth: 1,
+    borderColor: '#dc3545', // Un rojo para indicar eliminación
+  },
+  deleteButtonText: {
+    color: '#dc3545', // Texto rojo
+    fontWeight: '600',
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+    backgroundColor: '#ccc',
+    borderColor: '#ccc',
   },
 });
 

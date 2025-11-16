@@ -10,7 +10,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import FeedPage from './FeedPage';
 import MarketplacePage from './MarketplacePage';
 import ArtesanoList from './ArtesanoList';
-import ClientProfile from './clientProfile';
+import ClientSettings from './ClientSettings';
 import Estadisticas from './estadisticas';
 
 const Tab = createBottomTabNavigator(); // Crear el tab navigator
@@ -88,7 +88,7 @@ function ClientPage() {
             />
             <Tab.Screen 
                 name="Profile" 
-                component={ClientProfile}
+                component={ClientSettings}
                 options={{
                     tabBarLabel: 'Perfil',
                 }}

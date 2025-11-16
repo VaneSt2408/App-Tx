@@ -61,7 +61,6 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
   const [showDeletePassword, setShowDeletePassword] = useState(false); // Mostrar/ocultar contraseña
   const [totalFailedAttempts, setTotalFailedAttempts] = useState(0); // Intentos fallidos totales (compartido con cambio de contraseña)
 
-
   // Refs para evitar race conditions en contadores
   const deletePasswordAttemptsRef = useRef(0); // Ref para intentos de contraseña de eliminación
   const totalFailedAttemptsRef = useRef(0); // Ref para intentos fallidos totales (compartido)
@@ -171,7 +170,6 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
       setArtesano(data.artesano); // Establecer el estado del artesano
       setPublicaciones(data.publicaciones); // Establecer el estado de las publicaciones
       setProductos(data.productos); // Establecer el estado de los productos
-      
       
       // Cargar datos para edición
       if (isOwnProfile && data.artesano) { // Si el usuario es el propio y hay datos del artesano

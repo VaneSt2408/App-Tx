@@ -27,6 +27,7 @@ export class MarketplaceService {
           nombre,
           descripcion,
           precio,
+          min_may,
           categoria,
           estado,
           imagen_url,
@@ -94,6 +95,18 @@ export class MarketplaceService {
         if (!isNaN(maxPrice)) query = query.lte('precio', maxPrice);
       }
 
+      // Filtro por tipo de venta (minoreo/mayoreo)
+      if (filters.tipo_venta === 'mayorista') {
+        query = query.in('min_may', ['mayoreo', 'ambas']);
+      } else if (filters.tipo_venta === 'minorista') {
+        query = query.in('min_may', ['minoreo', 'ambas']);
+      }
+
+      // Filtro por stock mínimo (para mayoristas)
+      if (filters.minStock && filters.minStock > 0) {
+        query = query.gte('stock', filters.minStock);
+      }
+
       // Ordenar y paginar
       query = query
         .order('created_at', { ascending: false })
@@ -117,6 +130,7 @@ export class MarketplaceService {
         nombre: prod.nombre,
         descripcion: prod.descripcion,
         precio: parseFloat(prod.precio),
+        min_may: prod.min_may,
         categoria: prod.categoria,
         estado: prod.estado,
         imagen_url: prod.imagen_url,
@@ -162,7 +176,9 @@ export class MarketplaceService {
           precio,
           categoria,
           imagen_url,
+          min_may,
           estado,
+          stock,
           created_at,
           artesano_id,
           artesanos:artesano_id (

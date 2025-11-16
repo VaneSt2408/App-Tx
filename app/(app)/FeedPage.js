@@ -1,17 +1,18 @@
 // app/(app)/FeedPage.js
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, FlatList, RefreshControl, ActivityIndicator, Text as DefaultText, TouchableOpacity, ScrollView} from 'react-native';
+import { View, FlatList, RefreshControl, ActivityIndicator, Text as DefaultText, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import FeedService from '../../src/services/FeedService';
 import PostCard from '../../components/PostCard';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import useCustomFonts from '../../hooks/useFonts';
+import { useRouter } from 'expo-router';
 import { getEvents } from '../../src/services/eventsService';
 import EventsModal from '../../components/EventsModal'; // 1. Importar el modal
 import EventCarousel from '../../components/EventCarousel'; // Importa el nuevo componente
+import { useAuth } from '../../src/context/AuthContext';
 
 const FeedPage = () => {
-  const navigation = useNavigation();
+  const router = useRouter();
+  const { role } = useAuth(); // Obtener el rol del usuario
   const [posts, setPosts] = useState([]);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -163,8 +164,38 @@ const FeedPage = () => {
           setSelectedEvent(null); 
         }} 
       />
+
+      {/* Botón de Acción Flotante (FAB) */}
+      {role === 'artesano' && (
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => router.push('/ArtesanoPublications')}
+          activeOpacity={0.8}
+        >
+          <MaterialCommunityIcons name="plus" size={28} color="#fff" />
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  fab: {
+    position: 'absolute',
+    width: 56,
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+    right: 20,
+    bottom: 20, // Se ajustará sobre el tab bar
+    backgroundColor: '#9D046D',
+    borderRadius: 28,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+});
 
 export default FeedPage;
