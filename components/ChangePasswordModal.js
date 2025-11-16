@@ -12,7 +12,7 @@ import { useAuth } from '../src/context/AuthContext'; // Importar el contexto de
 import { useRouter } from 'expo-router'; // Importar el router
 
 export default function ChangePasswordModal({ visible, onClose, onSuccess }) { // Exportar la función ChangePasswordModal
-  const { signOut } = useAuth(); // Obtener signOut del contexto
+  const { signOut, session } = useAuth(); // Obtener signOut y session del contexto
   const router = useRouter(); // Obtener el router
   
   const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' }); // Establecer el estado de la contraseña
@@ -35,10 +35,12 @@ export default function ChangePasswordModal({ visible, onClose, onSuccess }) { /
   const totalFailedAttemptsRef = useRef(0);
   const currentPasswordAttemptsRef = useRef(0);
   
+  const userId = session?.user?.id;
+
   // Función para cargar intentos fallidos desde AsyncStorage
   const loadFailedAttempts = async () => {
     try {
-      const attempts = await AsyncStorage.getItem('passwordFailedAttempts');
+      const attempts = userId ? await AsyncStorage.getItem(`passwordFailedAttempts_${userId}`) : null;
       if (attempts !== null) {
         const parsedAttempts = parseInt(attempts);
         setTotalFailedAttempts(parsedAttempts);
@@ -51,7 +53,7 @@ export default function ChangePasswordModal({ visible, onClose, onSuccess }) { /
   // Función para guardar intentos fallidos en AsyncStorage
   const saveFailedAttempts = async (attempts) => {
     try {
-      await AsyncStorage.setItem('passwordFailedAttempts', attempts.toString());
+      if (userId) await AsyncStorage.setItem(`passwordFailedAttempts_${userId}`, attempts.toString());
       totalFailedAttemptsRef.current = attempts;
       setTotalFailedAttempts(attempts);
     } catch (error) {
@@ -61,7 +63,7 @@ export default function ChangePasswordModal({ visible, onClose, onSuccess }) { /
   // Función para limpiar intentos fallidos
   const clearFailedAttempts = async () => {
     try {
-      await AsyncStorage.removeItem('passwordFailedAttempts');
+      if (userId) await AsyncStorage.removeItem(`passwordFailedAttempts_${userId}`);
       totalFailedAttemptsRef.current = 0;
       setTotalFailedAttempts(0);
     } catch (error) {
@@ -698,4 +700,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-

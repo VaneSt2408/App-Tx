@@ -1,6 +1,6 @@
 // En: app/(app)/ArtesanoProfileVistaVisitante.js -> Vista de perfil para visitantes
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text as DefaultText, StyleSheet, ScrollView, Image, TouchableOpacity, SafeAreaView, Dimensions, Alert, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, Text as DefaultText, StyleSheet, ScrollView, Image, TouchableOpacity, SafeAreaView, Dimensions, Alert, RefreshControl, ActivityIndicator, Linking } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { artesanoService } from '../../src/services/artesanoService';
@@ -91,6 +91,18 @@ export default function ArtesanoProfileVistaVisitante() {
         }
     };
 
+    // Función para abrir el enlace de Google Maps
+    const handleOpenMaps = async (url) => {
+        if (!url) return;
+        // Verificar si el enlace es soportado
+        const supported = await Linking.canOpenURL(url);
+        if (supported) {
+            await Linking.openURL(url);
+        } else {
+            Alert.alert('Error', 'No se puede abrir este enlace');
+        }
+    };
+
     if (loading) {
         return (
             <SafeAreaView style={styles.container}>
@@ -144,7 +156,17 @@ export default function ArtesanoProfileVistaVisitante() {
                     </View>
 
                     <Text style={[styles.name, { fontFamily: 'Alan Sans' }]}>{artesano.nombre || 'Artesano sin nombre'}</Text>
-                    <Text style={styles.specialty}>{artesano.categoria || 'Ceramista'} - {artesano.ubicacion || 'Madrid, España'}</Text>
+                    <Text style={styles.specialty}>{artesano.categoria || 'Ceramista'}</Text>
+
+                    {/* Bloque de Ubicación con enlace a Google Maps */}
+                    {artesano?.link_ubicacion && artesano?.ubicacion && (
+                        <TouchableOpacity 
+                            style={styles.infoRow} 
+                            onPress={() => handleOpenMaps(artesano.link_ubicacion)}>
+                            <MaterialCommunityIcons name="map-marker-link" size={16} color="#34A853" />
+                            <Text style={[styles.specialty, styles.linkText, {fontFamily: 'Alan Sans'}]}>{artesano.ubicacion}</Text>
+                        </TouchableOpacity>
+                    )}
 
                     {/* Botón de Seguir (solo para visitantes) */}
                     {role === 'cliente' && (
@@ -439,6 +461,18 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#555',
         marginLeft: 10,
+    },
+    infoRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 6,
+        justifyContent: 'center',
+    },
+    linkText: {
+        color: '#34A853', // Color distintivo para el enlace
+        textDecorationLine: 'underline',
+        marginLeft: 8,
+        marginBottom: 20,
     },
     // Estilos para el botón de seguir
     followButton: {

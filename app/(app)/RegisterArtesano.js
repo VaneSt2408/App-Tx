@@ -1,21 +1,27 @@
 // En: app/(app)/RegisterArtesano.js -> Archivo de registro de artesano (Frontend)
 // Este archivo es el encargado de mostrar el formulario de registro de artesano en la aplicación.
 // Permite registrar un nuevo artesano en la aplicación mediante un formulario de registro.
-
 // Importaciones
-import React, { useState, useEffect } from 'react'; // Importa React y los hooks 'useState' y 'useEffect'.
+import React, { useState, useEffect } from 'react';
 
 import { 
   View, TextInput, Alert, StyleSheet, TouchableOpacity, Text, 
   ScrollView, ActivityIndicator, SafeAreaView, KeyboardAvoidingView, Platform
 } from 'react-native'; // Importa varios componentes de UI de React Native.
-// duplicate import removed (consolidated above)
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Importa una librería de íconos.
 import { useRouter } from 'expo-router'; // Usamos useRouter para la navegación con Expo Router
 import { supabase } from '../../src/supabase/client'; // Importa el cliente de Supabase.
 import { completeArtesanoRegistration } from '../../src/services/userService'; // Importa la función de servicio para el registro.
 import { LinearGradient } from 'expo-linear-gradient'; // Para el fondo degradado
 import { MotiView, MotiText } from 'moti'; // Para animaciones
+import { Modal, FlatList } from 'react-native';
+
+const CATEGORIAS_EJEMPLO = [
+  'Textil', 'Alfarería', 'Joyería', 
+  'Madera', 'Piel', 'Piedra', 'Vidrio', 
+  'Metal', 'Cerámica', 'Cestería', 
+  'Fibras', 'Minerales', 'Otro'
+];
 
 export default function RegisterArtesano() { // Define y exporta el componente de la pantalla de registro.
   const router = useRouter(); // Hook de navegación de Expo Router
@@ -28,6 +34,7 @@ export default function RegisterArtesano() { // Define y exporta el componente d
   // --- Estados para los campos del formulario ---
   const [nombre, setNombre] = useState('');
   const [ubicacion, setUbicacion] = useState('');
+  const [linkUbicacion, setLinkUbicacion] = useState(''); // Nuevo estado para el enlace de ubicación
   const [categoria, setCategoria] = useState('');
   const [curp, setCurp] = useState('');
   const [telefono, setTelefono] = useState('');
@@ -37,6 +44,8 @@ export default function RegisterArtesano() { // Define y exporta el componente d
   // --- Estados para la UI ---
   const [focusedInput, setFocusedInput] = useState(null);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isCategoryModalVisible, setCategoryModalVisible] = useState(false);
+  const [customCategory, setCustomCategory] = useState('');
 
   // Hook 'useEffect' que se ejecuta una sola vez cuando el componente se monta.
   useEffect(() => {
@@ -63,19 +72,21 @@ export default function RegisterArtesano() { // Define y exporta el componente d
   // Función principal que maneja el envío del formulario de registro.
   const handleRegister = async () => {
     // Si ya se está registrando, detiene la función para evitar envíos múltiples.
-    if (registerLoading) return;
+    if (registerLoading) return;    
+    const finalCategory = categoria === 'Otro' ? customCategory : categoria;
+
     // Valida que todos los campos requeridos del formulario estén llenos.
-    if (!nombre || !telefono || !categoria || !ubicacion || !curp || !numero_ine || !folio) {
-      return Alert.alert('Error', 'Por favor completa todos los campos obligatorios.');
+    if (!nombre || !telefono || !finalCategory || !ubicacion || !linkUbicacion || !curp || !numero_ine || !folio) {
+      return Alert.alert('Error', 'Por favor, completa todos los campos obligatorios.');
     }
 
     // Inicia un bloque 'try...catch' para manejar errores durante el registro.
     try {
       setRegisterLoading(true); // Activa el estado de carga del botón.
-      
-      // Crea un objeto con todos los datos del formulario que se envían a Supabase.
+
       const registrationData = {
-        nombre, telefono, ubicacion, categoria, curp, numero_ine, folio
+        nombre, telefono, ubicacion, link_ubicacion: linkUbicacion, 
+        categoria: finalCategory, curp, numero_ine, folio
       };
 
       // Llama a la función del servicio, le pasa los datos y espera el resultado.
@@ -116,6 +127,16 @@ export default function RegisterArtesano() { // Define y exporta el componente d
       setRegisterLoading(false); // Desactiva el estado de carga del botón.
     }
   };
+
+  const handleSelectCategory = (selected) => {
+    setCategoria(selected);
+    setCategoryModalVisible(false);
+    if (selected !== 'Otro') {
+      setCustomCategory('');
+    }
+  };
+
+  const finalCategory = categoria === 'Otro' ? customCategory : categoria;
 
   // Renderizado condicional: si la carga inicial aún no ha terminado.
   if (initialLoading) {
@@ -175,15 +196,34 @@ export default function RegisterArtesano() { // Define y exporta el componente d
             </View>
 
             {/* Categoría */}
-            <View style={[styles.inputContainer, focusedInput === 'categoria' && styles.inputFocused]}>
+            <TouchableOpacity 
+              style={[styles.inputContainer, focusedInput === 'categoria' && styles.inputFocused]}
+              onPress={() => setCategoryModalVisible(true)}
+            >
               <MaterialCommunityIcons name="shape-outline" size={20} color="#9D046D" style={styles.icon} />
-              <TextInput style={styles.input} placeholder="Categoría (ej. Textil, Alfarería)" placeholderTextColor="#9D046D" value={categoria} onChangeText={setCategoria} onFocus={() => setFocusedInput('categoria')} onBlur={() => setFocusedInput(null)} />
+              <Text style={[styles.inputText, { color: categoria ? '#333' : '#9D046D' }]}>
+                {categoria || 'Categoría (ej. Textil, Alfarería)'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Campo para categoría "Otro" */}
+            {categoria === 'Otro' && (
+            <View style={[styles.inputContainer, focusedInput === 'customCategory' && styles.inputFocused]}>
+              <MaterialCommunityIcons name="pencil-outline" size={20} color="#9D046D" style={styles.icon} />
+              <TextInput style={styles.input} placeholder="Escribe tu categoría" placeholderTextColor="#9D046D" value={customCategory} onChangeText={setCustomCategory} onFocus={() => setFocusedInput('customCategory')} onBlur={() => setFocusedInput(null)} />
             </View>
+            )}
 
             {/* Ubicación */}
             <View style={[styles.inputContainer, focusedInput === 'ubicacion' && styles.inputFocused]}>
               <MaterialCommunityIcons name="map-marker-outline" size={20} color="#9D046D" style={styles.icon} />
               <TextInput style={styles.input} placeholder="Ubicación (ej. Oaxaca, México)" placeholderTextColor="#9D046D" value={ubicacion} onChangeText={setUbicacion} onFocus={() => setFocusedInput('ubicacion')} onBlur={() => setFocusedInput(null)} />
+            </View>
+
+            {/* Ubicación Link */}
+            <View style={[styles.inputContainer, focusedInput === 'linkUbicacion' && styles.inputFocused]}>
+              <MaterialCommunityIcons name="link" size={20} color="#9D046D" style={styles.icon} />
+              <TextInput style={styles.input} placeholder="Ubicación (Enlace de Google Maps)" placeholderTextColor="#9D046D" value={linkUbicacion} onChangeText={setLinkUbicacion} onFocus={() => setFocusedInput('linkUbicacion')} onBlur={() => setFocusedInput(null)} keyboardType="url" autoCapitalize="none" />
             </View>
 
             {/* CURP */}
@@ -227,6 +267,32 @@ export default function RegisterArtesano() { // Define y exporta el componente d
             </MotiView>
           </ScrollView>
         </KeyboardAvoidingView>
+
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={isCategoryModalVisible}
+          onRequestClose={() => setCategoryModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Selecciona una Categoría</Text>
+              <FlatList
+                data={CATEGORIAS_EJEMPLO}
+                keyExtractor={(item) => item}
+                renderItem={({ item }) => (
+                  <TouchableOpacity style={styles.modalItem} onPress={() => handleSelectCategory(item)}>
+                    <Text style={styles.modalItemText}>{item}</Text>
+                  </TouchableOpacity>
+                )}
+              />
+              <TouchableOpacity style={styles.modalCloseButton} onPress={() => setCategoryModalVisible(false)}>
+                <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
       </SafeAreaView>
     </LinearGradient>
   );
@@ -289,6 +355,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
+  inputText: { // Estilo nuevo para el texto que simula un input
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+    paddingVertical: 15, // Añadimos padding vertical para simular la altura
+  },
   disabledInput: {
     backgroundColor: '#f0f0f0',
     color: '#888',
@@ -315,6 +387,46 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: 18,
+    fontWeight: 'bold',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    maxHeight: '70%',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  modalItem: {
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  modalItemText: {
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  modalCloseButton: {
+    marginTop: 20,
+    backgroundColor: '#9D046D',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+  },
+  modalCloseButtonText: {
+    color: 'white',
+    fontSize: 16,
     fontWeight: 'bold',
   },
 });

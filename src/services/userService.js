@@ -71,7 +71,7 @@ export const completeArtesanoRegistration = async (registrationData) => {
   // Imprime un mensaje en consola para indicar que la función ha comenzado.
 
   // Desestructura los datos del formulario de registro que se reciben como parámetro.
-  const { nombre, telefono, ubicacion, categoria, curp, numero_ine, folio } = registrationData;
+  const { nombre, telefono, ubicacion, link_ubicacion, categoria, curp, numero_ine, folio } = registrationData;
 
   // Inicia un bloque 'try...catch' para manejar errores durante el proceso.
   try {
@@ -95,6 +95,7 @@ export const completeArtesanoRegistration = async (registrationData) => {
         user_id: user.id, // Vincula este registro de artesano con el ID del usuario en la tabla 'auth.users'.
         nombre,
         ubicacion,
+        link_ubicacion, // <-- DATO AÑADIDO
         categoria,
         curp,
         numero_ine,

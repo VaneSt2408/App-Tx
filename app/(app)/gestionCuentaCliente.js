@@ -26,7 +26,7 @@ const Text = (props) => {
 };
 
 export default function GestionCuentaCliente() {
-  const { signOut } = useAuth();
+  const { signOut, session } = useAuth();
   const fontsLoaded = useCustomFonts();
   const router = useRouter();
 
@@ -111,7 +111,12 @@ export default function GestionCuentaCliente() {
     // --- CORRECCIÓN 1 ---
     setIsDeletingProfile(true);
     try {
-      const { error } = await deleteClientProfile();
+      const userId = session?.user?.id;
+      if (!userId) {
+        throw new Error("No se pudo obtener el ID del usuario.");
+      }
+
+      const { error } = await deleteClientProfile(userId);
       if (error) {
         throw error;
       }
@@ -132,7 +137,12 @@ export default function GestionCuentaCliente() {
     // --- CORRECCIÓN 1 ---
     setIsDeletingProfile(true);
     try {
-      const { error } = await deleteGoogleClientProfile();
+      const userId = session?.user?.id;
+      if (!userId) {
+        throw new Error("No se pudo obtener el ID del usuario.");
+      }
+
+      const { error } = await deleteClientProfile(userId); // Reutilizamos la misma función
       if (error) {
         throw error;
       }

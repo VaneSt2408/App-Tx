@@ -185,6 +185,7 @@ export class MarketplaceService {
             user_id,
             nombre,
             ubicacion,
+            link_ubicacion,
             categoria,
             avatar_url,
             curp,

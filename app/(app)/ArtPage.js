@@ -13,7 +13,6 @@ import FeedPage from './FeedPage';
 import MarketplacePage from './MarketplacePage';
 import ArtesanoSettings from './ArtesanoSettings';
 import Estadisticas from './estadisticas';
-import ArtesanoProfile from './ArtesanoProfile'; // Importamos la pantalla de edición
 
 const Tab = createBottomTabNavigator(); // Crear el tab navigator
 const ProfileStack = createStackNavigator(); // Creamos un Stack Navigator para el perfil
@@ -23,7 +22,6 @@ function ProfileStackNavigator() {
     return (
         <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
             <ProfileStack.Screen name="ArtesanoSettings" component={ArtesanoSettings} />
-            <ProfileStack.Screen name="ArtesanoProfile" component={ArtesanoProfile} />
         </ProfileStack.Navigator>
     );
 }
