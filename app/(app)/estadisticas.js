@@ -7,7 +7,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 //Componente de texto Alan Sans
 const Text = (props) => (
-  <DefaultText {...props} style={[{ fontFamily: 'AlanSans' }, props.style]} />
+  <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
 );
 
 export default function EstadisticasPage() {
@@ -177,7 +177,7 @@ export default function EstadisticasPage() {
 
 // --- ESTILOS --- (no se tocó nada)
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#f0f2f5' },
+  safeArea: { flex: 1, backgroundColor: '#fff' },
   headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',

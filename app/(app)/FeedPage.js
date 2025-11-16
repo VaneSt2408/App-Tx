@@ -81,7 +81,7 @@ const FeedPage = () => {
 
   const renderPostsHeader = () => (
     <View className="bg-white py-3 px-4 border-b border-gray-200 mb-3">
-      <Text style={{fontFamily: 'Alan Sans', fontSize: 22}} className=" font-semibold text-gray-900">Mis Publicaciones</Text>
+      <Text style={{fontFamily: 'Alan Sans'}} className=" font-semibold text-3xl text-gray-900">Mis Publicaciones</Text>
     </View>
   );
 

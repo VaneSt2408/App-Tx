@@ -9,7 +9,7 @@ import {FilterProvider} from '../../src/context/FilterContext';
 // Componente de carga, similar al de tu App.js
 const LoadingScreen = () => (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#2575fc" />
+        <ActivityIndicator size="large" color="#9D046D" />
     </View>
 );
 
@@ -81,8 +81,8 @@ export default function AppLayout() {
       <Stack.Screen name="MarketplaceFilters" options={{title: "Filtros de Marketplace", headerShown: false}}/>
       <Stack.Screen name="perfilcliente" options={{title: "Perfil del cliente", headerBackVisible: false}}/>
       <Stack.Screen name="gestionCuentaCliente" options={{ title: "Gestion de cuenta del cliente", headerBackVisible: false }} />
-      <Stack.Screen name="ayudaSoporte" options={{ title: "Ayuda y Soporte", headerBackVisible: false }} />
-      <Stack.Screen name="TerminoCondiciones" options={{ title: "Términos y Condiciones", headerBackVisible: false }} />
+      <Stack.Screen name="ayudaSoporte" options={{ headerShown: false}} />
+      <Stack.Screen name="TerminoCondiciones" options={{ headerShown: false}} />
       <Stack.Screen name="AppSettings" options={{ title: "Configuración de la App", headerBackVisible: false }} />
       <Stack.Screen name="AjustesPerfilArtesano" options={{ title: "Configuración de la App", headerBackVisible: false }} />
       <Stack.Screen name="gestionCuentaArtesano" options={{ title: "Configuración de la App", headerBackVisible: false }} />
