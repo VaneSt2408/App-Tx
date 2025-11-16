@@ -194,7 +194,7 @@ export default function ArtesanoList() {
         <View style={styles.searchInputContainer}>
           <MaterialCommunityIcons
             name="magnify"
-            size={20}
+            size={25}
             color="#666"
             style={styles.searchIcon}
           />
@@ -234,7 +234,7 @@ export default function ArtesanoList() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f0f2f5',
+    backgroundColor: '#fff',
   },
   headerContainer: {
     flexDirection: 'row',
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#f0f2f5',
+    backgroundColor: '#fff',
   },
   backButton: {
     padding: 8,
@@ -257,15 +257,15 @@ const styles = StyleSheet.create({
   searchSection: {
     paddingHorizontal: 16,
     paddingBottom: 16,
-    backgroundColor: '#f0f2f5',
+    backgroundColor: '#fff',
   },
   searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#fff',
     borderRadius: 25,
-    paddingHorizontal: 15,
-    paddingVertical: Platform.OS === 'ios' ? 12 : 8,
+    paddingHorizontal: 16,
+    paddingVertical: Platform.OS === 'ios' ? 14 : 10,
     borderWidth: 1,
     borderColor: '#E0E0E0',
   },
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 17,
     color: '#333',
   },
   clearButton: {

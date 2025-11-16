@@ -592,7 +592,7 @@ export default function ArtesanoProfile() { // Exportar la función ArtesanoProf
             style={styles.infoRow} 
             onPress={() => handleOpenMaps(artesano.ubicacion)}
           >
-            <MaterialCommunityIcons name="map-marker-link" size={16} color="#34A853" />
+            <MaterialCommunityIcons name="map-check-outline" size={16} color="#34A853" />
             <Text style={[styles.infoText, styles.linkText]}>Ver Ubicación en Google Maps</Text>
           </TouchableOpacity>
         )}

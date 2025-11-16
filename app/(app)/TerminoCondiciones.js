@@ -36,7 +36,7 @@ const TerminosCondicionesScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#fff',
   },
   header: {
     flexDirection: 'row',

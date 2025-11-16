@@ -195,7 +195,7 @@ const AyudaSoporteScreen = () => {
           </Text>
 
           <TouchableOpacity style={getStyles.contactButton} onPress={handleEmailPress}>
-            <Ionicons name="mail-outline" size={24} color="#2575fc" />
+            <Ionicons name="mail-outline" size={24} color="#9D046D" />
             <Text style={getStyles.contactText}>Enviar un correo</Text>
           </TouchableOpacity>
         </View>
@@ -207,7 +207,7 @@ const AyudaSoporteScreen = () => {
 const getStyles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#fff',
   },
   header: {
     flexDirection: 'row',
@@ -235,16 +235,17 @@ const getStyles = StyleSheet.create({
     paddingVertical: 10,
   },
   section: {
-    marginBottom: 15,
+    marginBottom: 30,
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 20,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 1,
+      height: 2,
     },
-    shadowOpacity: 0.05,
+    top: 15,
+    shadowOpacity: 0.25,
     shadowRadius: 2.22,
     elevation: 2,
   },
@@ -253,6 +254,7 @@ const getStyles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
     color: '#333',
+    top: 10,
     textAlign: 'center',
   },
   subtitle: {
@@ -262,13 +264,14 @@ const getStyles = StyleSheet.create({
     color: '#9D046D',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
-    paddingBottom: 5,
+    paddingBottom: 10,
   },
   paragraph: {
     fontSize: 16,
     lineHeight: 22,
     color: '#666',
     marginBottom: 15,
+    top: 8,
   },
   staticFaqItem: {
     marginBottom: 20,
@@ -289,17 +292,18 @@ const getStyles = StyleSheet.create({
   contactButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#eef5ff',
+    backgroundColor: '#FDB9E8',
     padding: 15,
-    borderRadius: 10,
+    borderRadius: 15,
     marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#cce0ff',
+    top: 8,
+    borderWidth: 2,
+    borderColor: '#9D046D',
   },
   contactText: {
     marginLeft: 15,
     fontSize: 16,
-    color: '#2575fc',
+    color: '#9D046D',
     fontWeight: '600',
   },
 });
