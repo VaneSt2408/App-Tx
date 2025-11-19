@@ -269,6 +269,11 @@ export const resetPasswordForEmail = async (email) => {
  */
 export const updatePassword = async (newPassword) => {
     try {
+        // Añadimos una validación para no enviar una contraseña vacía
+        if (!newPassword || newPassword.trim() === '') {
+            return { error: 'La nueva contraseña no puede estar vacía.' };
+        }
+
         // Llama a Supabase para actualizar la contraseña.
         // Supabase usa la sesión temporal activa (creada por el enlace de recuperación) 
         // para identificar al usuario que está solicitando el cambio.

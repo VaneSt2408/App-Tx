@@ -16,6 +16,7 @@ import useCustomFonts from '../../hooks/useFonts';
 export default function ProductDetailPage() {
   const router = useRouter(); // Obtener el router
   const { productId } = useLocalSearchParams(); // Obtener el id del producto
+  console.log('--- [ProductDetailPage] ID del producto recibido:', productId); // CONSOLE LOG
   const [product, setProduct] = useState(null); // Establecer el estado del producto
   const { role } = useAuth(); // Obtener el rol del usuario
   const [loading, setLoading] = useState(true); // Establecer el estado de carga
@@ -40,9 +41,13 @@ export default function ProductDetailPage() {
   const loadProductDetail = async () => {
     try {
       setLoading(true);
+      console.log(`--- [ProductDetailPage] Iniciando carga para productId: ${productId}`); // CONSOLE LOG
       const result = await MarketplaceService.getProducto(productId);
+      console.log('--- [ProductDetailPage] Respuesta completa del servicio:', JSON.stringify(result, null, 2)); // CONSOLE LOG
       
       if (result.success) {
+        console.log('--- [ProductDetailPage] Datos del producto a establecer:', JSON.stringify(result.data, null, 2)); // CONSOLE LOG
+        console.log('--- [ProductDetailPage] Datos del artesano:', JSON.stringify(result.data?.artesano, null, 2)); // CONSOLE LOG
         setProduct(result.data);
         setIsLiked(result.data.is_liked || false);
         setSaved(result.data.is_saved || false); // <-- Actualizar el estado inicial de guardado
@@ -417,12 +422,16 @@ const handleLike = async (productID) => {
           {/* Ubicación */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Ubicación</Text>
-            <View style={styles.locationContainer}>
-              <MaterialCommunityIcons name="map-marker" size={20} color="#F54927" />
-              <Text style={styles.locationText}>
-                {product.artesano.ubicacion || 'Ubicación no especificada'}
-              </Text>
-            </View>
+            {/* Lógica de ubicación unificada para que el nombre sea el enlace */}
+            {product?.artesano?.link_ubicacion && product?.artesano?.ubicacion ? (
+              <TouchableOpacity 
+                style={styles.infoRow} 
+                onPress={() => Linking.openURL(product.artesano.link_ubicacion)}
+              >
+                <MaterialCommunityIcons name="map-marker-link" size={16} color="#34A853" />
+                <Text style={[styles.infoText, styles.linkText]}>{product.artesano.ubicacion}</Text>
+              </TouchableOpacity>
+            ) : null}
           </View>
 
           {/* Espaciado inferior */}
@@ -672,15 +681,20 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '',
   },
-  locationContainer: {
+  infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 6,
   },
-  locationText: {
-    fontSize: 15,
+  infoText: {
+    fontSize: 14,
     color: '#333',
     marginLeft: 8,
     flex: 1,
+  },
+  linkText: {
+    color: '#34A853',
+    textDecorationLine: 'underline',
   },
   bottomSpacer: {
     height: 32,

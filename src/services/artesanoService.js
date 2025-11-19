@@ -165,5 +165,62 @@ export const artesanoService = {
     }
 
     return data;
-  }
+  },
+
+  // Función para eliminar el perfil de un artesano
+  async deleteArtesanoProfile(userId) {
+    try {
+      if (!userId) {
+        throw new Error('Se requiere el ID del usuario para eliminar el perfil.');
+      }
+
+      // --- INICIO DE ELIMINACIÓN SECUENCIAL MANUAL ---
+      // Para evitar errores de clave foránea si no se ha configurado la cascada en la BD.
+
+      // 1. Obtener IDs de productos para limpiar tablas dependientes.
+      const { data: productos, error: getProductosError } = await supabase.from('productos').select('id').eq('artesano_id', userId);
+      if (getProductosError) throw new Error(`Error obteniendo productos: ${getProductosError.message}`);
+
+      if (productos && productos.length > 0) {
+        const productoIds = productos.map(p => p.id);
+        // Limpiar likes y guardados de esos productos.
+        await supabase.from('likes_productos').delete().in('producto_id', productoIds);
+        await supabase.from('productos_guardados').delete().in('producto_id', productoIds);
+      }
+      
+      // 2. Eliminar los productos del artesano.
+      await supabase.from('productos').delete().eq('artesano_id', userId);
+
+      // 3. Obtener IDs de publicaciones para limpiar likes.
+      const { data: publicaciones, error: getPublicacionesError } = await supabase.from('publicaciones').select('id').eq('artesano_user_id', userId);
+      if (getPublicacionesError) throw new Error(`Error obteniendo publicaciones: ${getPublicacionesError.message}`);
+      
+      if (publicaciones && publicaciones.length > 0) {
+        const publicacionIds = publicaciones.map(p => p.id);
+        await supabase.from('likes').delete().in('publicacion_id', publicacionIds);
+      }
+      
+      // 4. Eliminar las publicaciones del artesano.
+      await supabase.from('publicaciones').delete().eq('artesano_user_id', userId);
+      
+      // 5. Eliminar relaciones de seguimiento (donde el artesano es seguido o sigue a alguien).
+      await supabase.from('seguidores_artesanos').delete().or(`seguidor_id.eq.${userId},artesano_id.eq.${userId}`);
+      
+      // 6. Eliminar participación en eventos.
+      await supabase.from('eventos_artesanos').delete().eq('artesano_id', userId);
+      
+      // 7. Eliminar el registro de la tabla 'artesanos'.
+      await supabase.from('artesanos').delete().eq('user_id', userId);
+      
+      // 8. Eliminar el registro de la tabla 'perfiles'.
+      // ESTE PASO ACTIVARÁ EL TRIGGER EN LA BD PARA BORRAR DE 'auth.users'
+      await supabase.from('perfiles').delete().eq('id', userId);
+
+      // --- FIN DE ELIMINACIÓN MANUAL ---
+
+      return { error: null };
+    } catch (error) {
+      return { error: error.message };
+    }
+  },
 };
