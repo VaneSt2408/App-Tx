@@ -1,43 +1,65 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, Switch, Alert } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { cacheDirectory, documentDirectory, readDirectoryAsync, makeDirectoryAsync, deleteAsync, getInfoAsync } from 'expo-file-system/legacy';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  SafeAreaView,
+  TouchableOpacity,
+  Switch,
+  Alert,
+} from "react-native";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import {
+  cacheDirectory,
+  documentDirectory,
+  readDirectoryAsync,
+  makeDirectoryAsync,
+  deleteAsync,
+  getInfoAsync,
+} from "expo-file-system/legacy";
 
 const AppSettingsScreen = () => {
   const router = useRouter();
   // En una implementación real, este estado vendría de un contexto o AsyncStorage
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [cacheSize, setCacheSize] = useState('Calculando...');
+  const [cacheSize, setCacheSize] = useState("Calculando...");
 
   // Función para formatear bytes a un formato legible (KB, MB, GB)
   const formatBytes = (bytes, decimals = 2) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return "0 Bytes";
     const k = 1024;
     const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
   };
 
   // Función para calcular el tamaño del caché
   const calculateCacheSize = async () => {
     try {
-      const cacheDirUri = (cacheDirectory || `${documentDirectory}cache/`);
+      const cacheDirUri = cacheDirectory || `${documentDirectory}cache/`;
       const dirInfo = await getInfoAsync(cacheDirUri);
 
       if (!dirInfo.exists) {
-        setCacheSize('0 Bytes');
+        setCacheSize("0 Bytes");
         return;
       }
 
       const files = await readDirectoryAsync(cacheDirUri);
-      const fileInfos = await Promise.all(files.map(file => getInfoAsync(`${cacheDirUri}${file}`)));
-      const totalSize = fileInfos.reduce((acc, fileInfo) => acc + (fileInfo.exists && !fileInfo.isDirectory ? fileInfo.size : 0), 0);
+      const fileInfos = await Promise.all(
+        files.map((file) => getInfoAsync(`${cacheDirUri}${file}`))
+      );
+      const totalSize = fileInfos.reduce(
+        (acc, fileInfo) =>
+          acc + (fileInfo.exists && !fileInfo.isDirectory ? fileInfo.size : 0),
+        0
+      );
 
       setCacheSize(formatBytes(totalSize));
     } catch (error) {
-      setCacheSize('Error');
+      setCacheSize("Error");
     }
   };
 
@@ -47,16 +69,19 @@ const AppSettingsScreen = () => {
   }, []);
 
   const toggleTheme = () => {
-    setIsDarkMode(previousState => !previousState);
+    setIsDarkMode((previousState) => !previousState);
     // Aquí iría la lógica para cambiar el tema de toda la app
-    Alert.alert("Próximamente", "La función de cambio de tema estará disponible pronto.");
+    Alert.alert(
+      "Próximamente",
+      "La función de cambio de tema estará disponible pronto."
+    );
   };
 
   const performClearCache = async () => {
     try {
       // Método más robusto: construir una ruta de caché segura
-      const cacheDirUri = (cacheDirectory || `${documentDirectory}cache/`);
-      
+      const cacheDirUri = cacheDirectory || `${documentDirectory}cache/`;
+
       // 1. Asegurarnos de que el directorio exista
       const dirInfo = await getInfoAsync(cacheDirUri);
       if (!dirInfo.exists) {
@@ -68,19 +93,26 @@ const AppSettingsScreen = () => {
 
       // 2. Leer los archivos dentro del directorio
       const files = await readDirectoryAsync(cacheDirUri);
-      
+
       if (files.length === 0) {
         Alert.alert("Éxito", "El caché ya estaba limpio.");
         return;
       }
-      
+
       // 3. Borrar cada archivo
-      await Promise.all(files.map(file => deleteAsync(`${cacheDirUri}${file}`, { idempotent: true })));
-      
+      await Promise.all(
+        files.map((file) =>
+          deleteAsync(`${cacheDirUri}${file}`, { idempotent: true })
+        )
+      );
+
       Alert.alert("Éxito", "El caché ha sido limpiado correctamente.");
       calculateCacheSize(); // Recalcular el tamaño después de limpiar
     } catch (error) {
-      Alert.alert("Error", `Ocurrió un error al limpiar el caché: ${error.message}`);
+      Alert.alert(
+        "Error",
+        `Ocurrió un error al limpiar el caché: ${error.message}`
+      );
     }
   };
 
@@ -90,7 +122,7 @@ const AppSettingsScreen = () => {
       "¿Estás seguro de que quieres borrar los datos en caché? Esto puede liberar espacio, pero las imágenes y datos temporales se volverán a descargar.",
       [
         { text: "Cancelar", style: "cancel" },
-        { text: "Limpiar", onPress: performClearCache, style: "destructive" }
+        { text: "Limpiar", onPress: performClearCache, style: "destructive" },
       ]
     );
   };
@@ -99,7 +131,10 @@ const AppSettingsScreen = () => {
     <SafeAreaView style={styles.safeArea}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Configuración de la App</Text>
@@ -111,7 +146,12 @@ const AppSettingsScreen = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Apariencia</Text>
           <View style={styles.settingItem}>
-            <MaterialCommunityIcons name="theme-light-dark" size={24} color="#555" style={styles.icon} />
+            <MaterialCommunityIcons
+              name="theme-light-dark"
+              size={24}
+              color="#555"
+              style={styles.icon}
+            />
             <Text style={styles.settingText}>Modo Oscuro</Text>
             <Switch
               trackColor={{ false: "#767577", true: "#C386C3" }}
@@ -125,14 +165,21 @@ const AppSettingsScreen = () => {
         {/* Sección Datos */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Gestión de Datos</Text>
-          <TouchableOpacity style={styles.settingItem} onPress={handleClearCache}>
-            <MaterialCommunityIcons name="broom" size={24} color="#555" style={styles.icon} />
+          <TouchableOpacity
+            style={styles.settingItem}
+            onPress={handleClearCache}
+          >
+            <MaterialCommunityIcons
+              name="broom"
+              size={24}
+              color="#555"
+              style={styles.icon}
+            />
             <Text style={styles.settingText}>Limpiar Caché</Text>
             <Text style={styles.cacheSizeText}>{cacheSize}</Text>
             <Ionicons name="chevron-forward" size={20} color="#ccc" />
           </TouchableOpacity>
         </View>
-
       </ScrollView>
     </SafeAreaView>
   );
@@ -141,25 +188,25 @@ const AppSettingsScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f2f2f7',
+    backgroundColor: "#fff",
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 15,
     paddingVertical: 12,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: "#e0e0e0",
   },
   backButton: {
     padding: 5,
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
   },
   container: {
     flex: 1,
@@ -169,22 +216,22 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
+    fontWeight: "600",
+    color: "#666",
     paddingHorizontal: 20,
     marginBottom: 8,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f2f2f7',
+    borderBottomColor: "#f2f2f7",
     borderTopWidth: 1,
-    borderTopColor: '#f2f2f7',
+    borderTopColor: "#f2f2f7",
   },
   icon: {
     marginRight: 15,
@@ -192,11 +239,11 @@ const styles = StyleSheet.create({
   settingText: {
     flex: 1,
     fontSize: 16,
-    color: '#333',
+    color: "#333",
   },
   cacheSizeText: {
     fontSize: 14,
-    color: '#888',
+    color: "#888",
     marginRight: 8,
   },
 });
