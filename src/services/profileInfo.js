@@ -384,115 +384,32 @@ export const changeClientPassword = async (currentPassword, newPassword) => {
 };
 
 // Función para eliminar completamente el perfil del cliente
-export const deleteClientProfile = async (currentPassword) => {
+export const deleteClientProfile = async (userId) => {
   try {
-    
-    // Obtener el usuario actual
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('No se encontró la sesión del usuario');
+    if (!userId) {
+      throw new Error('Se requiere el ID del usuario para eliminar la cuenta.');
     }
-    
-    // Validar la contraseña actual antes de proceder
-    const passwordValidation = await validateCurrentPassword(currentPassword);
-    if (!passwordValidation.data) {
-      throw new Error('Contraseña actual incorrecta');
-    }
-    
-    // 1. Eliminar avatar del storage si existe
-    try {
-      const { data: profileData } = await supabase
-        .from('clientes')
-        .select('avatar_url')
-        .eq('id', user.id)
-        .single();
-      
-      if (profileData?.avatar_url) {
-        const avatarPath = profileData.avatar_url.split('/').pop();
-        await supabase.storage
-          .from('avatars')
-          .remove([`${user.id}/${avatarPath}`]);
-      }
-    } catch (storageError) {
-      // Continuar con la eliminación aunque falle el storage
-    }
-    
-    // 2. Eliminar registros de la tabla clientes
-    
-    const { data: clientesData, error: clientesError } = await supabase
-      .from('clientes')
+
+    // 1. Eliminar datos de tablas relacionadas
+    await supabase.from('eventos_guardados').delete().eq('user_id', userId);
+    await supabase.from('likes').delete().eq('user_id', userId);
+    await supabase.from('likes_productos').delete().eq('user_id', userId);
+    await supabase.from('seguidores_artesanos').delete().eq('cliente_id', userId);
+
+    // 2. Eliminar de la tabla 'clientes'
+    await supabase.from('clientes').delete().eq('id', userId);
+
+    // 3. Eliminar de la tabla 'perfiles' (esto activará el trigger para borrar de auth.users)
+    const { error: perfilesError } = await supabase
+      .from('perfiles')
       .delete()
-      .eq('id', user.id)
-      .select();
-    
-    if (clientesError) {
-      throw new Error(`Error eliminando perfil: ${clientesError.message}`);
+      .eq('id', userId);
+
+    if (perfilesError && perfilesError.code !== 'PGRST116') { // PGRST116 = Fila no encontrada, lo cual es aceptable
+      throw perfilesError;
     }
-    
-    
-    // 3. Eliminar registros de la tabla perfiles si existe
-    try {
-      const { error: perfilesError } = await supabase
-        .from('perfiles')
-        .delete()
-        .eq('id', user.id);
-      
-      if (perfilesError) {
-        // No es crítico si esta tabla no existe
-      }
-    } catch (perfilesError) {
-    }
-    
-    // 4. Eliminar productos del artesano si es que tiene
-    try {
-      const { data: productosData, error: productosError } = await supabase
-        .from('productos')
-        .delete()
-        .eq('artesano_id', user.id)
-        .select();
-      
-      if (productosError) {
-        // No es crítico si no tiene productos
-      } else {
-      }
-    } catch (productosError) {
-    }
-    
-    // 5. Eliminar cualquier otro registro que pueda tener el usuario
-    // (Aquí se pueden agregar más tablas según sea necesario)
-    
-    // 6. Verificar que los datos se eliminaron correctamente
-    
-    // Verificar que el perfil se eliminó
-    const { data: verifyClientes } = await supabase
-      .from('clientes')
-      .select('id')
-      .eq('id', user.id);
-    
-    if (verifyClientes && verifyClientes.length > 0) {
-    } else {
-    }
-    
-    // Verificar que los productos se eliminaron (si existían)
-    const { data: verifyProductos } = await supabase
-      .from('productos')
-      .select('id')
-      .eq('artesano_id', user.id);
-    
-    if (verifyProductos && verifyProductos.length > 0) {
-    } else {
-    }
-    
-    // 7. Cerrar sesión del usuario (no se puede eliminar cuenta de auth sin permisos especiales)
-    try {
-      const { error: signOutError } = await supabase.auth.signOut();
-      if (signOutError) {
-      } else {
-      }
-    } catch (signOutError) {
-    }
+
     return { data: true, error: null };
-    
   } catch (error) {
     return { data: null, error: error.message };
   }
@@ -500,109 +417,10 @@ export const deleteClientProfile = async (currentPassword) => {
 
 // Función para eliminar perfil de usuario Google (sin validación de contraseña)
 export const deleteGoogleClientProfile = async () => {
-  try {
-    
-    // Obtener el usuario actual
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('No se encontró la sesión del usuario');
-    }
-    
-    
-    // 1. Eliminar avatar del storage si existe
-    try {
-      const { data: profileData } = await supabase
-        .from('clientes')
-        .select('avatar_url')
-        .eq('id', user.id)
-        .single();
-      
-      if (profileData?.avatar_url) {
-        const avatarPath = profileData.avatar_url.split('/').pop();
-        await supabase.storage
-          .from('avatars')
-          .remove([`${user.id}/${avatarPath}`]);
-      }
-    } catch (storageError) {
-      // Continuar con la eliminación aunque falle el storage
-    }
-    
-    // 2. Eliminar registros de la tabla clientes
-    
-    const { data: clientesData, error: clientesError } = await supabase
-      .from('clientes')
-      .delete()
-      .eq('id', user.id)
-      .select();
-    
-    if (clientesError) {
-      throw new Error(`Error eliminando perfil: ${clientesError.message}`);
-    }
-    
-    // 3. Eliminar registros de la tabla perfiles si existe
-    try {
-      const { error: perfilesError } = await supabase
-        .from('perfiles')
-        .delete()
-        .eq('id', user.id);
-      
-      if (perfilesError) {
-        // No es crítico si esta tabla no existe
-      }
-    } catch (perfilesError) {
-    }
-    
-    // 4. Eliminar productos del artesano si es que tiene
-    try {
-      const { data: productosData, error: productosError } = await supabase
-        .from('productos')
-        .delete()
-        .eq('artesano_id', user.id)
-        .select();
-      
-      if (productosError) {
-        // No es crítico si no tiene productos
-      } else {
-      }
-    } catch (productosError) {
-    }
-    
-    // 5. Verificar que los datos se eliminaron correctamente
-    
-    // Verificar que el perfil se eliminó
-    const { data: verifyClientes } = await supabase
-      .from('clientes')
-      .select('id')
-      .eq('id', user.id);
-    
-    if (verifyClientes && verifyClientes.length > 0) {
-    } else {
-    }
-    
-    // Verificar que los productos se eliminaron (si existían)
-    const { data: verifyProductos } = await supabase
-      .from('productos')
-      .select('id')
-      .eq('artesano_id', user.id);
-    
-    if (verifyProductos && verifyProductos.length > 0) {
-    } else {
-    }
-    
-    // 6. Cerrar sesión del usuario (no se puede eliminar cuenta de auth sin permisos especiales)
-    try {
-      const { error: signOutError } = await supabase.auth.signOut();
-      if (signOutError) {
-      } else {
-      }
-    } catch (signOutError) {
-    }
-    
-    // Nota: La eliminación de cuenta de autenticación requiere permisos especiales
-    // Los datos del perfil han sido eliminados completamente
-    return { data: true, error: null };
-    
-  } catch (error) {
-    return { data: null, error: error.message };
+  // Esta función ahora simplemente llama a la función principal de borrado.
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return { data: null, error: 'No se encontró la sesión del usuario' };
   }
+  return await deleteClientProfile(user.id);
 };

@@ -1,9 +1,11 @@
 // En: app/(app)/ArtesanoProfileVistaVisitante.js -> Vista de perfil para visitantes
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text as DefaultText, StyleSheet, ScrollView, Image, TouchableOpacity, SafeAreaView, Dimensions, Alert, RefreshControl } from 'react-native';
+import { View, Text as DefaultText, StyleSheet, ScrollView, Image, TouchableOpacity, SafeAreaView, Dimensions, Alert, RefreshControl, ActivityIndicator, Linking } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { artesanoService } from '../../src/services/artesanoService';
+import { seguidosService } from '../../src/services/seguidosService'; // Importar el nuevo servicio
+import { useAuth } from '../../src/context/AuthContext';
 
 const { width } = Dimensions.get('window');
 
@@ -14,12 +16,15 @@ const Text = (props) => (
 export default function ArtesanoProfileVistaVisitante() {
     const router = useRouter();
     const { userId, email } = useLocalSearchParams(); // Obtener userId y email de los parámetros
+    const { session, role } = useAuth(); // Obtener la sesión y el rol del usuario actual
     const [artesano, setArtesano] = useState(null);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [activeTab, setActiveTab] = useState('sobreMi'); // Estado para la pestaña activa
     const [publicaciones, setPublicaciones] = useState([]); // Estado para las publicaciones del artesano
     const [productos, setProductos] = useState([]); // Estado para los productos del artesano
+    const [isFollowing, setIsFollowing] = useState(false);
+    const [followLoading, setFollowLoading] = useState(false);
 
     useEffect(() => {
         if (userId) {
@@ -37,6 +42,7 @@ export default function ArtesanoProfileVistaVisitante() {
             setArtesano(data.artesano);
             setPublicaciones(data.publicaciones || []);
             setProductos(data.productos || []); // Cargar los productos
+            checkIfFollowing(id); // Verificar si el usuario actual sigue a este artesano
         } catch (error) {
             console.error('Error al cargar perfil:', error);
             Alert.alert("Error", "No se pudo cargar el perfil del artesano.");
@@ -50,6 +56,52 @@ export default function ArtesanoProfileVistaVisitante() {
         setRefreshing(true);
         await loadArtesanoProfile(userId);
     }, [userId]);
+
+    // Función para verificar si el usuario actual sigue al artesano
+    const checkIfFollowing = async (artesanoId) => {
+        if (!session?.user?.id || !artesanoId) return;
+        // Usar el servicio para verificar el seguimiento
+        const isCurrentlyFollowing = await seguidosService.checkIfFollowing(session.user.id, artesanoId);
+        setIsFollowing(isCurrentlyFollowing);
+    };
+
+    // Función para seguir o dejar de seguir a un artesano
+    const handleFollowToggle = async () => {
+        if (followLoading || !session?.user?.id) return;
+        setFollowLoading(true);
+        try {
+            let result;
+            if (isFollowing) {
+                // Usar el servicio para dejar de seguir
+                result = await seguidosService.unfollowArtesano(session.user.id, userId);
+            } else {
+                // Usar el servicio para seguir
+                result = await seguidosService.followArtesano(session.user.id, userId);
+            }
+
+            if (result.success) {
+                setIsFollowing(!isFollowing);
+            } else {
+                throw result.error || new Error('La operación de seguimiento falló.');
+            }
+        } catch (error) {
+            Alert.alert('Error', 'No se pudo completar la acción. Inténtalo de nuevo.');
+        } finally {
+            setFollowLoading(false);
+        }
+    };
+
+    // Función para abrir el enlace de Google Maps
+    const handleOpenMaps = async (url) => {
+        if (!url) return;
+        // Verificar si el enlace es soportado
+        const supported = await Linking.canOpenURL(url);
+        if (supported) {
+            await Linking.openURL(url);
+        } else {
+            Alert.alert('Error', 'No se puede abrir este enlace');
+        }
+    };
 
     if (loading) {
         return (
@@ -104,7 +156,38 @@ export default function ArtesanoProfileVistaVisitante() {
                     </View>
 
                     <Text style={[styles.name, { fontFamily: 'Alan Sans' }]}>{artesano.nombre || 'Artesano sin nombre'}</Text>
-                    <Text style={styles.specialty}>{artesano.categoria || 'Ceramista'} - {artesano.ubicacion || 'Madrid, España'}</Text>
+                    <Text style={styles.specialty}>{artesano.categoria || 'Ceramista'}</Text>
+
+                    {/* Bloque de Ubicación con enlace a Google Maps */}
+                    {artesano?.link_ubicacion && artesano?.ubicacion && (
+                        <TouchableOpacity 
+                            style={styles.infoRow} 
+                            onPress={() => handleOpenMaps(artesano.link_ubicacion)}>
+                            <MaterialCommunityIcons name="map-marker-link" size={16} color="#34A853" />
+                            <Text style={[styles.specialty, styles.linkText, {fontFamily: 'Alan Sans'}]}>{artesano.ubicacion}</Text>
+                        </TouchableOpacity>
+                    )}
+
+                    {/* Botón de Seguir (solo para visitantes) */}
+                    {role === 'cliente' && (
+                        <TouchableOpacity
+                            style={[
+                                styles.followButton,
+                                isFollowing && styles.followingButton,
+                                followLoading && styles.followButtonLoading,
+                            ]}
+                            onPress={handleFollowToggle}
+                            disabled={followLoading}
+                        >
+                            {followLoading ? (
+                                <ActivityIndicator size="small" color={isFollowing ? '#333' : '#fff'} />
+                            ) : (
+                                <Text style={[styles.followButtonText, isFollowing && styles.followingButtonText]}>
+                                    {isFollowing ? 'Siguiendo' : 'Seguir'}
+                                </Text>
+                            )}
+                        </TouchableOpacity>
+                    )}
 
                     {/* Métricas: Seguidores, Publicaciones, Valoración */}
                     <View style={styles.metricsContainer}>
@@ -378,5 +461,44 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#555',
         marginLeft: 10,
+    },
+    infoRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 6,
+        justifyContent: 'center',
+    },
+    linkText: {
+        color: '#34A853', // Color distintivo para el enlace
+        textDecorationLine: 'underline',
+        marginLeft: 8,
+        marginBottom: 20,
+    },
+    // Estilos para el botón de seguir
+    followButton: {
+        marginTop: 16,
+        backgroundColor: '#9D046D',
+        paddingVertical: 10,
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '80%',
+        marginBottom: 20, // Añadido para dar espacio debajo del botón
+    },
+    followingButton: {
+        backgroundColor: '#e0e0e0',
+        borderWidth: 1,
+        borderColor: '#ccc',
+    },
+    followButtonLoading: {
+        opacity: 0.7,
+    },
+    followButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    followingButtonText: {
+        color: '#333',
     },
 });

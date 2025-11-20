@@ -4,8 +4,9 @@
 
 // Importaciones
 import React, { useState } from 'react'; // Importa React y el hook 'useState' para manejar el estado del componente.
-import { View, TextInput, TouchableOpacity, Alert, StyleSheet, Text } from 'react-native'; // Importa componentes visuales básicos de React Native.
+import { View, TextInput, TouchableOpacity, Alert, StyleSheet, Text, ActivityIndicator, SafeAreaView } from 'react-native'; // Importa componentes visuales básicos de React Native.
 import { sendArtesanoInvite } from '../../src/services/userService'; // Importa la función específica para enviar invitaciones desde un archivo de servicios.
+import { MaterialCommunityIcons } from '@expo/vector-icons'; // Importamos íconos
 
 // Componente principal
 export default function InviteArtesano() { // Define y exporta el componente de la pantalla para invitar artesanos.
@@ -44,47 +45,145 @@ export default function InviteArtesano() { // Define y exporta el componente de 
   };
 
   return (
-    <View style={styles.container}>
-      <Text className='top-1'style={styles.title}>Invitar a un Nuevo Artesano</Text>
-      <TextInput
-        color="#050505"
-        style={styles.input }
-        placeholder="Ingresa el correo del nuevo artesano"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        
-      />
-      <TouchableOpacity
-        style={[styles.button, loading && styles.buttonDisabled]}
-        onPress={handleSendInvite}
-        disabled={loading}
-      >
-        <Text style={styles.buttonText}>
-          {loading ? "Enviando..." : "Enviar Enlace de Registro"}
-        </Text>
-      </TouchableOpacity>
-    </View>
+    // Contenedor principal con fondo gris claro
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        {/* Tarjeta blanca que contiene todo */}
+        <View style={styles.card}>
+          
+          <Text style={styles.title}>Invita a un nuevo artesano</Text>
+
+          {/* Campo de Email con nuevo estilo (blanco) */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Correo Electrónico</Text>
+            <View style={styles.inputWrapper}>
+              <MaterialCommunityIcons name="email-outline" size={20} color="#8E8E93" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="correo.artesano@ejemplo.com" // Placeholder actualizado
+                placeholderTextColor="#BDBDBD" // Color de placeholder más claro
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+          </View>
+
+          {/* Nuevo texto descriptivo */}
+          <Text style={styles.description}>
+            Ayuda a crecer nuestra comunidad de talentos
+          </Text>
+
+          {/* Botón con texto actualizado */}
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
+            onPress={handleSendInvite}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#ffffff" /> // Spinner para el estado de carga
+            ) : (
+              <>
+                <Text style={styles.buttonText}>
+                  Enviar Invitación
+                </Text>
+                <MaterialCommunityIcons name="arrow-right" size={22} color="#ffffff" />
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: 'center' },
-  title: { fontSize: 22, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
-  input: { borderWidth: 1, borderColor: '#ccc', padding: 12, marginBottom: 20, borderRadius: 8 },
-  button: {
-    backgroundColor: '#9D046D',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 25, // Aumentamos el radio para hacerlo más redondeado
+  // NUEVO: SafeArea para evitar notches
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#f0f2f5', // Fondo gris claro de la imagen
+  },
+  // MODIFICADO: Contenedor principal
+  container: { 
+    flex: 1, 
+    justifyContent: 'center', // Centra la tarjeta verticalmente
+    padding: 20, // Espacio alrededor de la tarjeta
+  },
+  // NUEVO: Tarjeta blanca
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24, // Borde redondeado de la tarjeta
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  // MODIFICADO: Título
+  title: { 
+    fontSize: 24, // Tamaño de la imagen
+    fontWeight: 'bold', 
+    textAlign: 'left', // Alineado a la izquierda
+    marginBottom: 25, 
+    color: '#333',
+    // Se quitó el marginTop: 40
+  },
+  // MODIFICADO: Grupo de input
+  inputGroup: {
+    width: '100%',
+    marginBottom: 20, // Espacio antes de la descripción
+  },
+  // MODIFICADO: Etiqueta de input
+  inputLabel: {
+    fontSize: 14,
+    color: '#666', // Color de etiqueta
+    marginBottom: 8,
+  },
+  // MODIFICADO: Contenedor de input
+  inputWrapper: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: '#FFFFFF', // Fondo blanco
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    borderWidth: 1, // Borde como en la imagen
+    borderColor: '#E0E0E0', // Color de borde claro
+  },
+  inputIcon: {
+    marginRight: 10,
+  },
+  // MODIFICADO: Input
+  input: {
+    flex: 1,
+    height: 50,
+    fontSize: 16,
+    color: '#333', // Texto que escribe el usuario (oscuro)
+  },
+  // NUEVO: Texto descriptivo
+  description: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'left',
+    marginBottom: 30, // Espacio antes del botón
+    lineHeight: 21, // Espaciado de línea
+  },
+  // MODIFICADO: Botón
+  button: {
+    backgroundColor: '#9D046D', // COLOR DE BOTÓN SIN CAMBIOS
+    paddingVertical: 16, // Ligeramente más alto
+    borderRadius: 16, 
+    alignItems: 'center',
     elevation: 3,
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    paddingHorizontal: 20, 
   },
   buttonDisabled: {
     backgroundColor: '#cccccc',
     elevation: 0,
+    justifyContent: 'center' 
   },
   buttonText: {
     color: '#ffffff',

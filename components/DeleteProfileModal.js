@@ -1,6 +1,6 @@
 // Componente modal para eliminar perfil del cliente (requiere contraseña)
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function DeleteProfileModal({
@@ -19,112 +19,117 @@ export default function DeleteProfileModal({
   if (!visible) return null;
 
   return (
-    <View style={styles.modalOverlay}>
-      <View style={styles.modalContent}>
-        <View style={styles.modalHeader}>
-          <Text style={styles.modalTitle}>Eliminar Perfil</Text>
-          <TouchableOpacity 
-            onPress={onClose}
-            style={styles.closeButton}
-          >
-            <MaterialCommunityIcons name="close" size={24} color="#666" />
-          </TouchableOpacity>
-        </View>
-        
-        <View style={styles.deleteForm}>
-          <Text style={styles.deleteWarning}>
-            ⚠️ Esta acción es IRREVERSIBLE
-          </Text>
-          <Text style={styles.deleteDescription}>
-            Se eliminarán TODOS tus datos incluyendo:
-          </Text>
-          <Text style={styles.deleteList}>
-            • Perfil de cliente{'\n'}
-            • Avatar e imágenes{'\n'}
-            • Productos (si eres artesano){'\n'}
-            • Sesión actual (serás deslogueado){'\n'}
-            {'\n'}Nota: La cuenta de autenticación permanecerá pero sin datos asociados.
-          </Text>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.modalOverlay}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Eliminar Perfil</Text>
+            <TouchableOpacity 
+              onPress={onClose}
+              style={styles.closeButton}
+            >
+              <MaterialCommunityIcons name="close" size={24} color="#666" />
+            </TouchableOpacity>
+          </View>
           
-          {/* Contraseña actual para eliminación */}
-          <View style={styles.passwordInputContainer}>
-            <Text style={styles.passwordLabel}>
-              Contraseña actual
-              {deletePasswordValidated && (
-                <Text style={styles.validationSuccess}> ✓</Text>
-              )}
+          <View style={styles.deleteForm}>
+            <Text style={styles.deleteWarning}>
+              ⚠️ Esta acción es IRREVERSIBLE
             </Text>
-            <View style={[
-              styles.passwordInputWrapper,
-              deletePasswordValidated && styles.passwordInputValid,
-              deletePasswordAttempts > 0 && !deletePasswordValidated && styles.passwordInputError
-            ]}>
-              <TextInput
-                style={styles.passwordInput}
-                placeholder="Ingresa tu contraseña actual"
-                value={passwordData}
-                onChangeText={onPasswordChange}
-                secureTextEntry={!showDeletePassword}
-                editable={!deletePasswordLoading && !deletePasswordValidated}
-              />
-              <TouchableOpacity 
-                onPress={onTogglePasswordVisibility}
-                style={styles.eyeButton}
-              >
-                <MaterialCommunityIcons 
-                  name={showDeletePassword ? "eye-off" : "eye"} 
-                  size={20} 
-                  color="#666" 
-                />
-              </TouchableOpacity>
-            </View>
+            <Text style={styles.deleteDescription}>
+              Se eliminarán TODOS tus datos incluyendo:
+            </Text>
+            <Text style={styles.deleteList}>
+              • Perfil de cliente{'\n'}
+              • Avatar e imágenes{'\n'}
+              • Productos (si eres artesano){'\n'}
+              • Sesión actual (serás deslogueado){'\n'}
+              {'\n'}Nota: La cuenta de autenticación permanecerá pero sin datos asociados.
+            </Text>
             
-            {/* Botón de verificación para eliminación */}
-            {!deletePasswordValidated && (
-              <TouchableOpacity 
-                style={styles.verifyButton}
-                onPress={onVerifyPassword}
-                disabled={deletePasswordLoading || !passwordData.trim()}
-              >
-                <MaterialCommunityIcons name="check-circle" size={20} color="#fff" />
-                <Text style={styles.verifyButtonText}>Verificar contraseña</Text>
-              </TouchableOpacity>
-            )}
-            
-            {deletePasswordAttempts > 0 && !deletePasswordValidated && (
-              <Text style={styles.errorText}>
-                Contraseña incorrecta. Intentos restantes: {3 - deletePasswordAttempts}
+            {/* Contraseña actual para eliminación */}
+            <View style={styles.passwordInputContainer}>
+              <Text style={styles.passwordLabel}>
+                Contraseña actual
+                {deletePasswordValidated && (
+                  <Text style={styles.validationSuccess}> ✓</Text>
+                )}
               </Text>
-            )}
+              <View style={[
+                styles.passwordInputWrapper,
+                deletePasswordValidated && styles.passwordInputValid,
+                deletePasswordAttempts > 0 && !deletePasswordValidated && styles.passwordInputError
+              ]}>
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder="Ingresa tu contraseña actual"
+                  value={passwordData}
+                  onChangeText={onPasswordChange}
+                  secureTextEntry={!showDeletePassword}
+                  editable={!deletePasswordLoading && !deletePasswordValidated}
+                />
+                <TouchableOpacity 
+                  onPress={onTogglePasswordVisibility}
+                  style={styles.eyeButton}
+                >
+                  <MaterialCommunityIcons 
+                    name={showDeletePassword ? "eye-off" : "eye"} 
+                    size={20} 
+                    color="#666" 
+                  />
+                </TouchableOpacity>
+              </View>
+              
+              {/* Botón de verificación para eliminación */}
+              {!deletePasswordValidated && (
+                <TouchableOpacity 
+                  style={styles.verifyButton}
+                  onPress={onVerifyPassword}
+                  disabled={deletePasswordLoading || !passwordData.trim()}
+                >
+                  <MaterialCommunityIcons name="check-circle" size={20} color="#fff" />
+                  <Text style={styles.verifyButtonText}>Verificar contraseña</Text>
+                </TouchableOpacity>
+              )}
+              
+              {deletePasswordAttempts > 0 && !deletePasswordValidated && (
+                <Text style={styles.errorText}>
+                  Contraseña incorrecta. Intentos restantes: {3 - deletePasswordAttempts}
+                </Text>
+              )}
+            </View>
+          </View>
+          
+          <View style={styles.modalActions}>
+            <TouchableOpacity 
+              style={styles.cancelButton}
+              onPress={onClose}
+              disabled={deletePasswordLoading}
+            >
+              <Text style={styles.cancelButtonText}>Cancelar</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.deleteConfirmButton, !deletePasswordValidated && styles.deleteConfirmButtonDisabled]}
+              onPress={onConfirmDelete}
+              disabled={!deletePasswordValidated || deletePasswordLoading}
+            >
+              {deletePasswordLoading ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <>
+                  <MaterialCommunityIcons name="delete-forever" size={20} color="#fff" />
+                  <Text style={styles.deleteConfirmButtonText}>ELIMINAR DEFINITIVAMENTE</Text>
+                </>
+              )}
+            </TouchableOpacity>
           </View>
         </View>
-        
-        <View style={styles.modalActions}>
-          <TouchableOpacity 
-            style={styles.cancelButton}
-            onPress={onClose}
-            disabled={deletePasswordLoading}
-          >
-            <Text style={styles.cancelButtonText}>Cancelar</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.deleteConfirmButton, !deletePasswordValidated && styles.deleteConfirmButtonDisabled]}
-            onPress={onConfirmDelete}
-            disabled={!deletePasswordValidated || deletePasswordLoading}
-          >
-            {deletePasswordLoading ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <>
-                <MaterialCommunityIcons name="delete-forever" size={20} color="#fff" />
-                <Text style={styles.deleteConfirmButtonText}>ELIMINAR DEFINITIVAMENTE</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -139,6 +144,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1000,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
   },
   modalContent: {
     backgroundColor: '#fff',
@@ -300,4 +311,3 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
 });
-

@@ -104,7 +104,9 @@ export const createProduct = async (productData) => {
         precio: parseFloat(productData.precio) || 0, // Convertimos a número
         categoria: productData.categoria || 'general',
         imagen_url: imagenUrl,
-        estado: 'activo'
+        estado: productData.estado || 'activo',
+        stock: parseInt(productData.stock, 10) || 0,
+        min_may: productData.min_may || 'minoreo',
       })
       .select()
       .single();
@@ -250,7 +252,10 @@ export const updateProduct = async (productId, updateData, newImageAsset) => {
       nombre: updateData.nombre.trim(),
       precio: parseFloat(updateData.precio),
       categoria: updateData.categoria?.trim() || null,
+      stock: parseInt(updateData.stock, 10) || 0,
       descripcion: updateData.descripcion?.trim() || null,
+      estado: updateData.estado || 'activo',
+      min_may: updateData.min_may || 'minoreo',
     };
     
     // Solo actualizar imagen si hay una nueva imagen seleccionada
@@ -317,6 +322,19 @@ export const deleteProduct = async (productId) => {
         }
       } catch (storageError) {
       }
+    }
+
+    // Eliminar likes y guardados asociados. Con ON DELETE CASCADE en la DB, esto es una
+    // doble seguridad, pero no está de más y es crucial si la cascada no está configurada.
+    const { error: likesError } = await supabase
+        .from('likes_productos')
+        .delete()
+        .eq('producto_id', productId);
+
+    // Si hay un error eliminando los likes (y no es porque no había), detenemos el proceso.
+    if (likesError) {
+        console.error('Error eliminando likes del producto:', likesError.message);
+        // No lanzamos un error fatal aquí si ya tenemos ON DELETE CASCADE, pero es bueno saberlo.
     }
 
     // Eliminar el producto

@@ -5,7 +5,7 @@
 
 // Importaciones
 import React, { useState, useEffect } from 'react';
-import {View,Text,FlatList,Image,TouchableOpacity,StyleSheet,ActivityIndicator,RefreshControl,Alert,Dimensions,Modal,ScrollView,PanResponder,Animated,TextInput,} from 'react-native';
+import {View,Text,FlatList,Image,TouchableOpacity,StyleSheet,ActivityIndicator,RefreshControl,Alert,Dimensions,Modal,ScrollView,PanResponder,Animated,TextInput, SafeAreaView} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
@@ -32,8 +32,8 @@ export default function ArtesanoProducts() {
   const [selectedProducto, setSelectedProducto] = useState(null); // Estado para guardar el producto seleccionado
   const [selectedProductoIndex, setSelectedProductoIndex] = useState(0); // Estado para guardar el índice del producto seleccionado
   const [showProductoModal, setShowProductoModal] = useState(false); // Estado para guardar el estado del modal de producto
-  const [showEditModal, setShowEditModal] = useState(false); // Estado para guardar el estado del modal de edición
-  const [editData, setEditData] = useState({ nombre: '', precio: '', categoria: '', descripcion: '', imagen_url: '', estado: 'activo' }); // Estado para guardar los datos de edición
+  const [showEditModal, setShowEditModal] = useState(false); // Estado para guardar el estado del modal de edición de producto
+  const [editData, setEditData] = useState({ nombre: '', precio: '', categoria: '', descripcion: '', imagen_url: '', estado: 'activo', stock: '0', min_may: 'minoreo' }); // Estado para guardar los datos de edición
   const [selectedImage, setSelectedImage] = useState(null); // Estado para guardar la imagen seleccionada
   const [editLoading, setEditLoading] = useState(false); // Estado para guardar el estado de carga de edición
   const [showUploadModal, setShowUploadModal] = useState(false); // Estado para guardar el estado del modal de subida de producto
@@ -153,8 +153,10 @@ export default function ArtesanoProducts() {
         precio: selectedProducto.precio?.toString() || '', 
         categoria: selectedProducto.categoria || '', 
         descripcion: selectedProducto.descripcion || '',
-        imagen_url: selectedProducto.imagen_url || '',
-        estado: selectedProducto.estado || 'activo'
+        imagen_url: selectedProducto.imagen_url || '', // URL de la imagen actual
+        estado: selectedProducto.estado || 'activo',
+        stock: selectedProducto.stock?.toString() || '0',
+        min_may: selectedProducto.min_may || 'minoreo'
       });
       setSelectedImage(null);
       setShowEditModal(true);
@@ -194,8 +196,8 @@ export default function ArtesanoProducts() {
 
   // Función para cerrar el modal de edición
   const handleCloseEditModal = () => {
-    setShowEditModal(false);
-    setEditData({ nombre: '', precio: '', categoria: '', descripcion: '', imagen_url: '', estado: 'activo' });
+    setShowEditModal(false); // Ocultar el modal de edición
+    setEditData({ nombre: '', precio: '', categoria: '', descripcion: '', imagen_url: '', estado: 'activo', stock: '0', min_may: 'minoreo' });
     setSelectedImage(null);
   };
 
@@ -212,7 +214,9 @@ export default function ArtesanoProducts() {
         precio: editData.precio,
         categoria: editData.categoria,
         descripcion: editData.descripcion,
+        stock: editData.stock,
         estado: editData.estado,
+        min_may: editData.min_may,
       };
 
       await updateProduct(selectedProducto.id, updateData, selectedImage);
@@ -337,16 +341,15 @@ export default function ArtesanoProducts() {
 
   if (loading && productos.length === 0) {
     return (
-      <View style={styles.loadingContainer}>
-
+      <SafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#9D046D" />
         <Text style={styles.loadingText}>Cargando productos...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -362,15 +365,6 @@ export default function ArtesanoProducts() {
             {productos.length} {productos.length === 1 ? 'producto' : 'productos'}
           </Text>
         </View>
-        {isOwnProfile && (
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => setShowUploadModal(true)}
-          >
-
-            <MaterialCommunityIcons name="plus" size={24} color="#9D046D" />
-          </TouchableOpacity>
-        )}
       </View>
 
       <FlatList
@@ -391,7 +385,15 @@ export default function ArtesanoProducts() {
           />
         }
       />
-
+      {/* Botón Flotante (FAB) para agregar producto */}
+      {isOwnProfile && (
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => setShowUploadModal(true)}
+        >
+          <MaterialCommunityIcons name="plus" size={28} color="#fff" />
+        </TouchableOpacity>
+      )}
       {/* Modal de detalles de producto */}
       <Modal
         visible={showProductoModal}
@@ -460,6 +462,32 @@ export default function ArtesanoProducts() {
                       <MaterialCommunityIcons name="currency-usd" size={20} color="#28a745" />
                       <Text style={styles.infoLabel}>Precio:</Text>
                       <Text style={styles.infoValue}>{formatPrice(selectedProducto.precio)}</Text>
+                    </View>
+
+                    <View style={styles.infoRow}>
+                      <MaterialCommunityIcons name="package-variant" size={20} color="#6200ea" />
+                      <Text style={styles.infoLabel}>Stock:</Text>
+                      <Text style={styles.infoValue}>{selectedProducto.stock ?? '0'}</Text>
+                    </View>
+
+                    <View style={styles.infoRow}>
+                      <MaterialCommunityIcons name="storefront-outline" size={20} color="#333" />
+                      <Text style={styles.infoLabel}>Tipo Venta:</Text>
+                      <Text style={styles.infoValue}>
+                        {
+                          selectedProducto.min_may === 'ambas' ? 'Minorista y mayorista' :
+                          selectedProducto.min_may ? selectedProducto.min_may.charAt(0).toUpperCase() + selectedProducto.min_may.slice(1) :
+                          'No definido'
+                        }
+                      </Text>
+                    </View>
+
+                    <View style={styles.infoRow}>
+                      <MaterialCommunityIcons name="check-decagram" size={20} color="#00C853" />
+                      <Text style={styles.infoLabel}>Estado:</Text>
+                      <Text style={styles.infoValue}>
+                        {selectedProducto.estado ? selectedProducto.estado.charAt(0).toUpperCase() + selectedProducto.estado.slice(1) : 'No definido'}
+                      </Text>
                     </View>
 
                     {selectedProducto.categoria && (
@@ -533,7 +561,10 @@ export default function ArtesanoProducts() {
                         nombre: selectedProducto.nombre || '', 
                         precio: selectedProducto.precio?.toString() || '', 
                         categoria: selectedProducto.categoria || '', 
-                        descripcion: selectedProducto.descripcion || '' 
+                        descripcion: selectedProducto.descripcion || '',
+                        estado: selectedProducto.estado || 'activo', // Aseguramos que el estado se pase
+                        stock: selectedProducto.stock?.toString() || '0',
+                        min_may: selectedProducto.min_may || 'minoreo' // Pasamos el tipo de venta
                       });
                       setShowProductoModal(false);
                       setShowEditModal(true);
@@ -639,6 +670,42 @@ export default function ArtesanoProducts() {
                 />
               </View>
 
+              {/* Campo de stock */}
+              <View style={styles.editSection}>
+                <Text style={styles.editLabel}>Stock *</Text>
+                <TextInput
+                  style={styles.editTextInput}
+                  placeholder="Cantidad disponible"
+                  placeholderTextColor="#000"
+                  value={editData.stock}
+                  onChangeText={(text) => setEditData({ ...editData, stock: text })}
+                  keyboardType="numeric"
+                />
+              </View>
+
+              {/* Campo de Tipo de Venta */}
+              <View style={styles.editSection}>
+                <Text style={styles.editLabel}>Tipo de Venta</Text>
+                <View style={styles.statusContainer}>
+                  {['minoreo', 'mayoreo', 'ambas'].map(tipo => (
+                    <TouchableOpacity
+                      key={tipo}
+                      style={[
+                        styles.statusButton,
+                        editData.min_may === tipo && styles.statusButtonActive,
+                      ]}
+                      onPress={() => setEditData({ ...editData, min_may: tipo })}
+                    >
+                      <Text style={[
+                        styles.statusButtonText,
+                        editData.min_may === tipo && styles.statusButtonTextActive,
+                      ]}>
+                        {tipo.charAt(0).toUpperCase() + tipo.slice(1)}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
               {/* Campo de estado */}
               <View style={styles.editSection}>
                 <Text style={styles.editLabel}>Estado *</Text>
@@ -731,20 +798,20 @@ export default function ArtesanoProducts() {
           loadProductos();
         }}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#fff', // Cambiado a blanco para que coincida con el header
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#fff',
   },
   loadingText: {
     marginTop: 12,
@@ -781,8 +848,9 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   list: {
-    padding: 8,
+    padding: 9,
     paddingTop: 0,
+    backgroundColor: '#fff', // El color de fondo se aplica aquí
     paddingBottom: 80,
     paddingBottom1: 90, // Aumentado para más espacio inferior
   },
@@ -828,7 +896,7 @@ const styles = StyleSheet.create({
   gridItem: {
     width: imageSize,
     height: imageSize,
-    margin: 4,
+    margin: 6.7,
     backgroundColor: '#fff',
     borderRadius: 8,
     overflow: 'hidden',
@@ -1179,5 +1247,17 @@ const styles = StyleSheet.create({
   statusButtonTextActive: {
     color: '#9D046D',
     fontWeight: 'bold',
+  },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    width: 56,
+    height: 56,
+    backgroundColor: '#9D046D',
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
   },
 });

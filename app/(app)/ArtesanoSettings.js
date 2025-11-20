@@ -1,11 +1,11 @@
 // En: app/(app)/ArtesanoSettings.js -> Nueva pantalla de perfil único con diseño superior mejorado y botón de cerrar sesión
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text as DefaultText, StyleSheet, ScrollView, Image, TouchableOpacity, SafeAreaView, Dimensions, Alert, RefreshControl } from 'react-native';
+import { View, Text as DefaultText, StyleSheet, ScrollView, Image, TouchableOpacity, SafeAreaView, Dimensions, Alert, RefreshControl, Linking } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import useCustomFonts from '../../hooks/useFonts';
 import { useAuth } from '../../src/context/AuthContext';
 import { artesanoService } from '../../src/services/artesanoService';
-import { signOut } from '../../src/services/authService'; // Importar la función de cerrar sesión
 
 const { width } = Dimensions.get('window');
 
@@ -53,34 +53,23 @@ export default function ArtesanoSettings() {
         }
     }, []);
 
-    // Función para cerrar sesión
-    const handleLogout = async () => {
-        Alert.alert(
-            'Cerrar Sesión',
-            '¿Estás seguro de que deseas cerrar sesión?',
-            [
-                {
-                    text: 'Cancelar',
-                    style: 'cancel',
-                },
-                {
-                    text: 'Cerrar Sesión',
-                    style: 'destructive',
-                    onPress: async () => {
-                        await signOut();
-                        // Opcional: redirigir a la pantalla de inicio de sesión
-                        // router.replace('/(auth)/login'); // Descomenta si deseas redirigir
-                    }
-                }
-            ]
-        );
+    // *** Se mantiene la función para abrir el enlace de Google Maps ***
+    const handleOpenMaps = async (url) => {
+        if (!url) return;
+        // Verificar si el enlace es soportado
+        const supported = await Linking.canOpenURL(url);
+        if (supported) {
+        await Linking.openURL(url);
+        } else {
+        Alert.alert('Error', 'No se puede abrir este enlace');
+        }
     };
 
     if (loading) {
         return (
             <SafeAreaView style={styles.container}>
                 <View style={styles.loadingContainer}>
-                    <Text style={styles.loadingText}>Cargando perfil...</Text>
+                    <Text style={[styles.loadingText,{fontFamily: 'Alan Sans'}]}>Cargando perfil...</Text>
                 </View>
             </SafeAreaView>
         );
@@ -90,7 +79,7 @@ export default function ArtesanoSettings() {
         return (
             <SafeAreaView style={styles.container}>
                 <View style={styles.errorContainer}>
-                    <Text style={styles.errorText}>No se pudo cargar el perfil</Text>
+                    <Text style={[styles.errorText,{fontFamily: 'Alan Sans'}]}>No se pudo cargar el perfil</Text>
                 </View>
             </SafeAreaView>
         );
@@ -122,7 +111,17 @@ export default function ArtesanoSettings() {
                     </View>
 
                     <Text style={[styles.name,{fontFamily: 'Alan Sans'}]}>{artesano.nombre || 'Sin nombre'}</Text>
-                    <Text style={styles.specialty}>{artesano.categoria || 'Ceramista'} - {artesano.ubicacion || 'Madrid, España'}</Text>
+                    <Text style={[styles.specialty,{fontFamily: 'Alan Sans'}]}>{artesano.categoria || 'Ceramista'}</Text>
+
+                    {/* Bloque de Ubicación con enlace a Google Maps */}
+                    {artesano?.link_ubicacion && artesano?.ubicacion && (
+                        <TouchableOpacity 
+                            style={styles.infoRow} 
+                            onPress={() => handleOpenMaps(artesano.link_ubicacion)}>
+                            <MaterialCommunityIcons name="map-marker-link" size={16} color="#34A853" />
+                            <Text style={[styles.infoText, styles.linkText, {fontFamily: 'Alan Sans'}]}>{artesano.ubicacion}</Text>
+                        </TouchableOpacity>
+                    )}
 
                     <View style={styles.buttonRow}>
                         <TouchableOpacity 
@@ -133,10 +132,10 @@ export default function ArtesanoSettings() {
                         </TouchableOpacity>
                         <TouchableOpacity 
                             style={styles.editProfileButton}
-                            onPress={() => router.push({ pathname: 'ArtesanoProfile', params: { userId: session.user.id } })}
+                            onPress={() => router.push({ pathname: 'AjustesPerfilArtesano', params: { userId: session.user.id } })}
                         >
-                            <MaterialCommunityIcons name="pencil" size={16} color="#fff" />
-                            <Text style={[styles.editProfileText,{fontFamily: 'Alan Sans'}]}>Editar Perfil</Text>
+                            <MaterialCommunityIcons name="cog" size={16} color="#fff" />
+                            <Text style={[styles.editProfileText,{fontFamily: 'Alan Sans'}]}>Ajustes</Text>
                         </TouchableOpacity>
                     </View>
 
@@ -185,17 +184,17 @@ export default function ArtesanoSettings() {
 
                         {/* Sección de Contacto */}
                         <View style={styles.contactSection}>
-                            <Text style={styles.contactTitle}>Contacto</Text>
+                            <Text style={[styles.contactTitle,{fontFamily: 'Alan Sans'}]}>Contacto</Text>
                             {artesano?.telefono && (
                                 <View style={styles.contactRow}>
                                     <MaterialCommunityIcons name="phone" size={20} color="#9D046D" />
-                                    <Text style={styles.contactText}>{artesano.telefono}</Text>
+                                    <Text style={[styles.contactText,{fontFamily: 'Alan Sans'}]}>{artesano.telefono}</Text>
                                 </View>
                             )}
                             {session?.user?.email && (
                                 <View style={styles.contactRow}>
                                     <MaterialCommunityIcons name="email" size={20} color="#9D046D" />
-                                    <Text style={styles.contactText}>{session.user.email}</Text>
+                                    <Text style={[styles.contactText,{fontFamily: 'Alan Sans'}]}>{session.user.email}</Text>
                                 </View>
                             )}
                         </View>
@@ -204,9 +203,9 @@ export default function ArtesanoSettings() {
                 )}
 
                 {activeTab === 'miTrabajo' && (
-                    <View style={styles.gridContainer}> 
+                    <View style={styles.gridContainer}>
                         {productos.map(pub => ( // Renderizar productos aquí
-                            <TouchableOpacity key={pub.id} style={styles.gridItem}>
+                            <TouchableOpacity key={pub.id} style={styles.gridItem} onPress={() => router.push({ pathname: '/ArtesanoProducts', params: { userId: session.user.id } })}>
                                 {pub.imagen_url ? (
                                     <Image source={{ uri: pub.imagen_url }} style={styles.gridImage} />
                                 ) : (
@@ -220,7 +219,7 @@ export default function ArtesanoSettings() {
                 {activeTab === 'publicaciones' && (
                     <View style={styles.gridContainer}>
                         {publicaciones.map(pub => ( // Renderizar publicaciones aquí
-                            <TouchableOpacity key={pub.id} style={styles.gridItem}>
+                            <TouchableOpacity key={pub.id} style={styles.gridItem} onPress={() => router.push('/ArtesanoPublications')}>
                                 {pub.imagen_url ? (
                                     <Image source={{ uri: pub.imagen_url }} style={styles.gridImage} />
                                 ) : (
@@ -231,14 +230,6 @@ export default function ArtesanoSettings() {
                     </View>
                 )}
 
-
-                {/* Botón de Cerrar Sesión */}
-                <View style={styles.logoutSection}>
-                    <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                        <MaterialCommunityIcons name="logout" size={24} color="#fff" />
-                        <Text style={[styles.logoutButtonText, { fontFamily: 'Alan Sans' }]}>Cerrar Sesión</Text>
-                    </TouchableOpacity>
-                </View>
             </ScrollView>
         </SafeAreaView>
     );
@@ -347,6 +338,11 @@ const styles = StyleSheet.create({
         color: '#666',
         marginTop: 5,
     },
+    infoText: {
+        fontSize: 16,
+        color: '#666',
+        marginLeft: 8,
+    },
     tabsContainer: {
         flexDirection: 'row',
         borderBottomWidth: 1,
@@ -377,29 +373,6 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#555',
         lineHeight: 20,
-    },
-    logoutSection: {
-        paddingHorizontal: 20,
-        marginTop: 20,
-    },
-    logoutButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#db4437',
-        paddingVertical: 16,
-        borderRadius: 10,
-        elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.2,
-        shadowRadius: 2,
-    },
-    logoutButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginLeft: 8,
     },
     loadingContainer: {
         flex: 1,
@@ -460,5 +433,16 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#555',
         marginLeft: 10,
+    },
+    infoRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 6,
+        justifyContent: 'center',
+    },
+    linkText: {
+        color: '#34A853', // Color distintivo para el enlace
+        textDecorationLine: 'underline',
+        marginLeft: 8,
     },
 });

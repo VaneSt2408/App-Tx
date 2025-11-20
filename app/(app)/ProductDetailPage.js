@@ -9,13 +9,16 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router'; 
 import MarketplaceService from '../../src/services/MarketplaceService';
 import { toggleLikeProduct  } from '../../src/services/productService';
+import { useAuth } from '../../src/context/AuthContext';
 import useCustomFonts from '../../hooks/useFonts';
 
 // Componente principal
 export default function ProductDetailPage() {
   const router = useRouter(); // Obtener el router
   const { productId } = useLocalSearchParams(); // Obtener el id del producto
+  console.log('--- [ProductDetailPage] ID del producto recibido:', productId); // CONSOLE LOG
   const [product, setProduct] = useState(null); // Establecer el estado del producto
+  const { role } = useAuth(); // Obtener el rol del usuario
   const [loading, setLoading] = useState(true); // Establecer el estado de carga
   const [refreshing, setRefreshing] = useState(false); // Estado para el refresco
   const [saved, setSaved] = useState(false); // Establecer el estado de guardado
@@ -38,11 +41,16 @@ export default function ProductDetailPage() {
   const loadProductDetail = async () => {
     try {
       setLoading(true);
+      console.log(`--- [ProductDetailPage] Iniciando carga para productId: ${productId}`); // CONSOLE LOG
       const result = await MarketplaceService.getProducto(productId);
+      console.log('--- [ProductDetailPage] Respuesta completa del servicio:', JSON.stringify(result, null, 2)); // CONSOLE LOG
       
       if (result.success) {
+        console.log('--- [ProductDetailPage] Datos del producto a establecer:', JSON.stringify(result.data, null, 2)); // CONSOLE LOG
+        console.log('--- [ProductDetailPage] Datos del artesano:', JSON.stringify(result.data?.artesano, null, 2)); // CONSOLE LOG
         setProduct(result.data);
         setIsLiked(result.data.is_liked || false);
+        setSaved(result.data.is_saved || false); // <-- Actualizar el estado inicial de guardado
         setLikesCount(result.data.likes_count || 0); // Agregar esta línea
       } else {
         Alert.alert('Error', 'No se pudo cargar el producto');
@@ -76,12 +84,25 @@ export default function ProductDetailPage() {
   };
 
   // Handlers para botones (placeholders)
-  const handleSave = () => {
-    setSaved(!saved);
-    Alert.alert(
-      saved ? 'Eliminado' : 'Guardado',
-      saved ? 'Producto eliminado de guardados' : 'Producto guardado correctamente'
-    );
+  const handleSave = async () => {
+    try {
+      // Cambiamos el estado visual inmediatamente para una mejor experiencia de usuario
+      setSaved(current => !current);
+
+      const result = await MarketplaceService.toggleSaveProduct(productId);
+
+      if (result.success) {
+        // Sincronizamos el estado final con la respuesta del servidor
+        setSaved(result.saved);
+      } else {
+        // Si falla, revertimos el cambio visual y mostramos una alerta
+        setSaved(current => !current);
+        Alert.alert('Error', result.error || 'No se pudo guardar el producto.');
+      }
+    } catch (error) {
+      setSaved(current => !current); // Revertir si hay una excepción
+      Alert.alert('Error', 'Ocurrió un error inesperado al guardar.');
+    }
   };
 
   // Función para contactar al artesano
@@ -171,7 +192,7 @@ const handleLike = async (productID) => {
   const handleArtesanoPress = () => {
     if (product?.artesano?.id) {
       router.push({
-        pathname: '/ArtesanoProfile',
+        pathname: '/ArtesanoProfileVistaVisitante', // Cambiar a la ruta correcta
         params: { userId: product.artesano.id.toString() }
       });
     }
@@ -258,21 +279,55 @@ const handleLike = async (productID) => {
             </Text>
           </View>
 
+          {/* Stock Disponible */}
+          {product.estado === 'activo' && product.stock !== null && product.stock > 0 && (
+            <View style={styles.availabilityContainer}>
+              <MaterialCommunityIcons 
+                name="package-variant-closed"
+                size={20}
+                color="#6200ea"
+              />
+              <Text style={[styles.availabilityText, { color: "#6200ea" }]}>
+                {product.stock} {product.stock === 1 ? 'unidad disponible' : 'unidades disponibles'}
+              </Text>
+            </View>
+          )}
+
+          {/* Tipo de Venta */}
+          {product.min_may && (
+            <View style={styles.availabilityContainer}>
+              <MaterialCommunityIcons 
+                name="storefront-outline"
+                size={20}
+                color="#333"
+              />
+              <Text style={[styles.availabilityText, { color: "#333" }]}>
+                {
+                  product.min_may === 'minoreo' ? 'Venta por minoreo' :
+                  product.min_may === 'mayoreo' ? 'Venta por mayoreo' :
+                  'Venta minorista y mayorista'
+                }
+              </Text>
+            </View>
+          )}
+
           {/* Botones de Acción */}
           <View style={styles.actionsContainer}>
-            <TouchableOpacity 
-              style={[styles.actionButton, styles.saveButton, saved && styles.savedButton]}
-              onPress={handleSave}
-            >
-              <MaterialCommunityIcons 
-                name={saved ? "bookmark" : "bookmark-outline"}
-                size={20}
-                color={saved ? "#9D046D" : "#666"}
-              />
-              <Text style={[styles.actionButtonText, saved && styles.savedButtonText]}>
-                {saved ? "Guardado" : "Guardar"}
-              </Text>
-            </TouchableOpacity>
+            {role === 'cliente' && (
+              <TouchableOpacity 
+                style={[styles.actionButton, styles.saveButton, saved && styles.savedButton]}
+                onPress={handleSave}
+              >
+                <MaterialCommunityIcons 
+                  name={saved ? "bookmark" : "bookmark-outline"}
+                  size={20}
+                  color={saved ? "#9D046D" : "#666"}
+                />
+                <Text style={[styles.actionButtonText, saved && styles.savedButtonText]}>
+                  {saved ? "Guardado" : "Guardar"}
+                </Text>
+              </TouchableOpacity>
+            )}
 
             {/* Contactar al artesano */}
             <TouchableOpacity 
@@ -367,12 +422,16 @@ const handleLike = async (productID) => {
           {/* Ubicación */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Ubicación</Text>
-            <View style={styles.locationContainer}>
-              <MaterialCommunityIcons name="map-marker" size={20} color="#F54927" />
-              <Text style={styles.locationText}>
-                {product.artesano.ubicacion || 'Ubicación no especificada'}
-              </Text>
-            </View>
+            {/* Lógica de ubicación unificada para que el nombre sea el enlace */}
+            {product?.artesano?.link_ubicacion && product?.artesano?.ubicacion ? (
+              <TouchableOpacity 
+                style={styles.infoRow} 
+                onPress={() => Linking.openURL(product.artesano.link_ubicacion)}
+              >
+                <MaterialCommunityIcons name="map-marker-link" size={16} color="#34A853" />
+                <Text style={[styles.infoText, styles.linkText]}>{product.artesano.ubicacion}</Text>
+              </TouchableOpacity>
+            ) : null}
           </View>
 
           {/* Espaciado inferior */}
@@ -622,15 +681,20 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '',
   },
-  locationContainer: {
+  infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 6,
   },
-  locationText: {
-    fontSize: 15,
+  infoText: {
+    fontSize: 14,
     color: '#333',
     marginLeft: 8,
     flex: 1,
+  },
+  linkText: {
+    color: '#34A853',
+    textDecorationLine: 'underline',
   },
   bottomSpacer: {
     height: 32,

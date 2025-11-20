@@ -1,14 +1,12 @@
-// app/(app)/ClientProfile.js
-// Perfil del cliente con edición, cambio de contraseña y eliminación de perfil   
+// app/(app)/AjustesPerfilArtesano.js
+// Pantalla de ajustes para el perfil del Artesano, replicando el estilo de ClientSettings.
 import React, { useState, useEffect } from 'react';
 import { View, Text as DefaultText, ScrollView, ActivityIndicator, Alert, TouchableOpacity, Image } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import useCustomFonts from '../../hooks/useFonts';
 import { supabase } from '../../src/supabase/client';
-import { 
-  getClientProfile, 
-} from '../../src/services/profileInfo';
+import { artesanoService } from '../../src/services/artesanoService';
 import { useAuth } from '../../src/context/AuthContext';
 
 // Componente Text personalizado con la fuente AlanSans
@@ -16,7 +14,7 @@ const Text = (props) => (
   <DefaultText {...props} style={[{ fontFamily: 'AlanSans' }, props.style]} />
 );
 
-export default function ClientProfile() {
+export default function AjustesPerfilArtesano() {
   const { signOut } = useAuth();
   const fontsLoaded = useCustomFonts();
   const [profile, setProfile] = useState(null);
@@ -36,12 +34,13 @@ export default function ClientProfile() {
         Alert.alert('Error', 'No se encontró la sesión del usuario');
         return;
       }
-      const { data, error } = await getClientProfile(user.id);
+      // Usamos el servicio de artesano para obtener el perfil
+      const { artesano, error } = await artesanoService.getArtesanoCompleto(user.id);
       if (error) {
         Alert.alert('Error', 'No se pudo cargar el perfil: ' + error);
         return;
       }
-      setProfile(data);
+      setProfile(artesano);
     } catch (error) {
       Alert.alert('Error', 'Ocurrió un error inesperado');
     } finally {
@@ -49,12 +48,9 @@ export default function ClientProfile() {
     }
   };
 
-  const navigateToProfile = () => {
-    router.push('/perfilcliente');
-  };
-
   const navigateToAccountManagement = () => {
-    router.push('/gestionCuentaCliente');
+    // Navega a la nueva pantalla de gestión de cuenta del artesano
+    router.push('/gestionCuentaArtesano');
   };
 
   const navigateToNotifications = () => {
@@ -90,21 +86,12 @@ export default function ClientProfile() {
       ]
     );
   };
-  // Primero verifica si las fuentes están cargadas
-  if (!fontsLoaded) {
-    return (
-      <View className="flex-1 justify-center items-center bg-gray-50">
-        <ActivityIndicator size="large" color="#2575fc" />
-        <Text className="mt-3 text-sm text-gray-600">Cargando...</Text>
-      </View>
-    );
-  }
 
-  if (loading) {
+  if (!fontsLoaded || loading) {
     return (
       <View className="flex-1 justify-center items-center bg-gray-50">
-        <ActivityIndicator size="large" color="#2575fc" />
-        <Text className="mt-3 text-sm text-gray-600">Cargando perfil...</Text>
+        <ActivityIndicator size="large" color="#9D046D" />
+        <Text className="mt-3 text-sm text-gray-600">Cargando...</Text>
       </View>
     );
   }
@@ -127,28 +114,12 @@ export default function ClientProfile() {
   return (
     <View className="flex-1 bg-gray-50">
       {/* Header */}
-      <View className="bg-white py-4 px-4 flex-row items-center justify-between border-b border-gray-200">
-        <View style={{ width: 40 }} />
+      <View className="bg-white py-3 px-4 flex-row items-center justify-between border-b border-gray-200">
+        <TouchableOpacity onPress={() => router.back()} className="p-2">
+          <MaterialCommunityIcons name="chevron-left" size={28} color="#333" />
+        </TouchableOpacity>
         <Text style={{fontFamily: 'Alan Sans', fontSize:24, fontWeight: 'bold'}} className="text-2xl text-gray-700 flex-1 text-center">Mi Cuenta</Text>
         <View style={{ width: 40 }} />
-      </View>
-
-      {/* Sección de Perfil */}
-      <View className="bg-white p-4 mb-4">
-        <TouchableOpacity className="flex-row items-center" onPress={navigateToProfile}>
-          <View className="w-12 h-12 bg-gray-300 rounded-full mr-3 justify-center items-center">
-            {profile.avatar_url ? (
-              <Image source={{ uri: profile.avatar_url }} className="w-12 h-12 rounded-full" />
-            ) : (
-              <MaterialCommunityIcons name="account" size={24} color="#666"/>
-            )}
-          </View>
-          <View className="flex-1">
-            <Text style={{fontFamily: 'Alan Sans', fontSize:20,}} className="text-base font-semibold text-gray-900">{profile.nombre_completo}</Text>
-            <Text style={{fontFamily: 'Alan Sans', fontSize:15}} className=" text-[#9D046D] text-semibold">Ver mi perfil</Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#ccc" />
-        </TouchableOpacity>
       </View>
 
       {/* Sección Gestión */}
@@ -239,5 +210,4 @@ export default function ClientProfile() {
   );
 }
 
-// 👇 ESTA LÍNEA ES CRUCIAL PARA EVITAR EL ERROR DE EXPO ROUTER 👇
-ClientProfile.displayName = 'ClientProfile';
+AjustesPerfilArtesano.displayName = 'AjustesPerfilArtesano';

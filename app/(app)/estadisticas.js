@@ -1,27 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text as DefaultText, FlatList, StyleSheet, ActivityIndicator, Image, TouchableOpacity } from 'react-native';
+import { View, Text as DefaultText, FlatList, StyleSheet, ActivityIndicator, Image, TouchableOpacity, SafeAreaView } from 'react-native';
 import { estadisticasService } from '../../src/services/estadisticasService';
 import useCustomFonts from '../../hooks/useFonts';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-
-//Componente de texto alan sans
+//Componente de texto Alan Sans
 const Text = (props) => (
-  <DefaultText {...props} style={[{ fontFamily: 'AlanSans' }, props.style]} />
+  <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
 );
 
-// Componente principal
 export default function EstadisticasPage() {
   const [artesanosByLikes, setArtesanosByLikes] = useState([]);
   const [artesanosByProduct, setArtesanosByProduct] = useState([]);
   const [artesanosByAntiguedad, setArtesanosByAntiguedad] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [view, setView] = useState('likes'); // 'likes' | 'products' | 'antiguedad'
+  const [view, setView] = useState('likes');
   const router = useRouter();
 
-  // Efecto para cargar las estadísticas
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -29,13 +26,15 @@ export default function EstadisticasPage() {
         const likesData = await estadisticasService.getArtesanosByLikes();
         const productsData = await estadisticasService.getProductsCountByArtesano();
         const antiguedadData = await estadisticasService.getArtesanosByAntiguedad();
-        setArtesanosByLikes(likesData || []);
-        setArtesanosByProduct(productsData || []);
-        setArtesanosByAntiguedad(antiguedadData || []);
+
+        setArtesanosByLikes((likesData || []).slice(0, 3));
+        setArtesanosByProduct((productsData || []).slice(0, 3));
+        setArtesanosByAntiguedad((antiguedadData || []).slice(0, 3));
+
         setError(null);
       } catch (e) {
-        setError('Error al cargar las estadísticas');
         console.error(e);
+        setError('Error al cargar las estadísticas');
       } finally {
         setLoading(false);
       }
@@ -43,184 +42,219 @@ export default function EstadisticasPage() {
     fetchStats();
   }, []);
 
-  // Función para navegar al perfil del artesano
   const handlePressArtesano = (userId) => {
-    router.push({ pathname: "/(app)/ArtesanoProfile", params: { userId } });
+    router.push({ pathname: "/(app)/ArtesanoProfileVistaVisitante", params: { userId } }); //Cambiar a la ruta correcta
   };
 
-  // Función para formatear la fecha
   const formatDate = (dateString) => {
-    if (!dateString) return 'Sin fecha';
+    if (!dateString) return 'N/A';
     try {
       const d = new Date(dateString);
-      return d.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+      return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
     } catch {
-      return 'Sin fecha';
+      return 'N/A';
     }
   };
 
-  // Función para renderizar cada artesano en la lista
-  const renderItem = ({ item, index }) => (
-    <TouchableOpacity onPress={() => handlePressArtesano(item.user_id)} style={styles.itemContainer}>
-      <Text style={styles.rank}>{index + 1}</Text>
-      {item.avatar_url ? (
-        <Image source={{ uri: item.avatar_url }} style={styles.avatar} />
-      ) : (
-        <View style={[styles.avatar, styles.avatarPlaceholder]}>
-          <MaterialCommunityIcons name="account" size={30} color="#666" />
+  const getStatInfo = (item) => {
+    switch (view) {
+      case 'likes':
+        return { icon: 'heart', value: item?.total_likes ?? '0' };
+      case 'products':
+        return { icon: 'cart-outline', value: item?.total_productos ?? '0' };
+      case 'antiguedad':
+        return { icon: 'calendar-clock', value: formatDate(item?.created_at) };
+      default:
+        return { icon: 'heart', value: item?.total_likes ?? '0' };
+    }
+  };
+
+  const renderItem = ({ item, index }) => {
+    const statInfo = getStatInfo(item);
+
+    return (
+      <TouchableOpacity onPress={() => handlePressArtesano(item.user_id)} style={styles.itemContainer}>
+        <View style={styles.rankPill}>
+          <Text style={styles.rankText}>#{index + 1}</Text>
         </View>
-      )}
-      <View style={styles.infoContainer}>
-        <Text style={styles.name}>{item.nombre}</Text>
-        {view === 'likes' && (
-          <Text style={styles.stat}>Likes: {item.total_likes}</Text>
+
+        {item?.avatar_url ? (
+          <Image source={{ uri: item.avatar_url }} style={styles.avatar} />
+        ) : (
+          <View style={[styles.avatar, styles.avatarPlaceholder]}>
+            <MaterialCommunityIcons name="account" size={60} color="#999" />
+          </View>
         )}
-        {view === 'products' && (
-          <Text style={styles.stat}>Productos: {item.total_productos}</Text>
-        )}
-        {view === 'antiguedad' && (
-          <Text style={styles.stat}>Registrado: {formatDate(item.created_at)}</Text>
-        )}
-      </View>
-    </TouchableOpacity>
-  );
+
+        <Text style={styles.name}>{String(item?.nombre || 'Sin nombre')}</Text>
+
+        <View style={styles.statContainer}>
+          <MaterialCommunityIcons
+            name={statInfo.icon}
+            size={22}
+            color="#9D046D"
+            style={styles.statIcon}
+          />
+          <Text style={styles.statValue}>{String(statInfo.value ?? 'N/A')}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color="#9D046D" />
+        </View>
+      </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>{error}</Text>
-      </View>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.centered}>
+          <Text style={styles.errorText}>{String(error)}</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Clasificación de Artesanos</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.headerContainer}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
+        </TouchableOpacity>
+        <Text style={styles.title}>Clasificación</Text>
+        <View style={{ width: 40 }} />
+      </View>
+
       <View style={styles.toggleContainer}>
-        <TouchableOpacity 
-          style={[styles.toggleButton, view === 'likes' && styles.activeButton]} 
-          onPress={() => setView('likes')}>
-          <Text style={[styles.toggleButtonText, view === 'likes' && styles.activeButtonText]}>Por Likes</Text>
+        <TouchableOpacity
+          style={[styles.toggleButton, view === 'likes' && styles.activeButton]}
+          onPress={() => setView('likes')}
+        >
+          <Text style={[styles.toggleButtonText, view === 'likes' && styles.activeButtonText]}>
+            Por Likes
+          </Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.toggleButton, view === 'products' && styles.activeButton]} 
-          onPress={() => setView('products')}>
-          <Text style={[styles.toggleButtonText, view === 'products' && styles.activeButtonText]}>Por Productos</Text>
+        <TouchableOpacity
+          style={[styles.toggleButton, view === 'products' && styles.activeButton]}
+          onPress={() => setView('products')}
+        >
+          <Text style={[styles.toggleButtonText, view === 'products' && styles.activeButtonText]}>
+            Por Productos
+          </Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.toggleButton, view === 'antiguedad' && styles.activeButton]} 
-          onPress={() => setView('antiguedad')}>
-          <Text style={[styles.toggleButtonText, view === 'antiguedad' && styles.activeButtonText]}>Por Antigüedad</Text>
+        <TouchableOpacity
+          style={[styles.toggleButton, view === 'antiguedad' && styles.activeButton]}
+          onPress={() => setView('antiguedad')}
+        >
+          <Text style={[styles.toggleButtonText, view === 'antiguedad' && styles.activeButtonText]}>
+            Por Antigüedad
+          </Text>
         </TouchableOpacity>
       </View>
+
       <FlatList
         data={
-          view === 'likes' ? artesanosByLikes :
-          view === 'products' ? artesanosByProduct :
-          artesanosByAntiguedad
+          view === 'likes'
+            ? artesanosByLikes
+            : view === 'products'
+            ? artesanosByProduct
+            : artesanosByAntiguedad
         }
         renderItem={renderItem}
-        keyExtractor={(item) => item.user_id}
+        keyExtractor={(item, index) => item?.user_id?.toString() ?? index.toString()}
         contentContainerStyle={styles.listContainer}
+        showsVerticalScrollIndicator={false}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
+// --- ESTILOS --- (no se tocó nada)
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: '#f5f5f5',
+  safeArea: { flex: 1, backgroundColor: '#fff' },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
+  backButton: { padding: 8, marginLeft: -8 },
+  title: { fontSize: 20, fontWeight: 'bold', color: '#333' },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f0f2f5' },
+  errorText: { fontSize: 16, color: 'red' },
   toggleContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 16,
+    alignItems: 'center',
+    marginVertical: 14,
+    paddingHorizontal: 16,
   },
   toggleButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    backgroundColor: '#ddd',
-    borderRadius: 20,
-    marginHorizontal: 5,
-  },
-  activeButton: {
-    backgroundColor: '#007bff',
-  },
-  toggleButtonText: {
-    color: '#333',
-    fontWeight: 'bold',
-  },
-  activeButtonText: {
-    color: '#fff',
-  },
-  listContainer: {
-    paddingBottom: 16,
-  },
-  itemContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    marginHorizontal: 6,
+    backgroundColor: '#FFFFFF',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 3,
   },
-  rank: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginRight: 12,
-    width: 30,
-    textAlign: 'center',
+  activeButton: { backgroundColor: '#9D046D' },
+  toggleButtonText: { color: '#6E6E73', fontWeight: '600', fontSize: 13 },
+  activeButtonText: { color: '#FFFFFF' },
+  listContainer: { paddingHorizontal: 16, paddingBottom: 16 },
+  itemContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 4,
+    position: 'relative',
   },
+  rankPill: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    backgroundColor: '#9D046D',
+    borderRadius: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    zIndex: 2,
+  },
+  rankText: { color: '#FFFFFF', fontSize: 14, fontWeight: 'bold' },
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 12,
-    justifyContent: 'center',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 16,
+    borderWidth: 3,
+    borderColor: '#E0E0E0',
+  },
+  avatarPlaceholder: { backgroundColor: '#f0f0f0', justifyContent: 'center', alignItems: 'center' },
+  name: { fontSize: 20, fontWeight: 'bold', color: '#333', marginBottom: 16, textAlign: 'center' },
+  statContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-  },
-  avatarPlaceholder: {
-    backgroundColor: '#ccc',
-  },
-  infoContainer: {
-    flex: 1,
-  },
-  name: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  stat: {
-    fontSize: 14,
-    color: '#888',
-  },
-  centered: {
-    flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: '#F7F7F7',
+    borderRadius: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
   },
-  errorText: {
-    fontSize: 16,
-    color: 'red',
-  },
+  statIcon: { marginRight: 8 },
+  statValue: { fontSize: 22, fontWeight: 'bold', color: '#333' },
 });

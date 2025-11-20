@@ -4,13 +4,13 @@
 
 // Importaciones
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, SafeAreaView } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import FeedPage from './FeedPage';
 import MarketplacePage from './MarketplacePage';
 import ArtesanoList from './ArtesanoList';
-import ClientProfile from './clientProfile';
+import ClientSettings from './ClientSettings';
 import Estadisticas from './estadisticas';
 
 const Tab = createBottomTabNavigator(); // Crear el tab navigator
@@ -19,6 +19,7 @@ const Tab = createBottomTabNavigator(); // Crear el tab navigator
 function ClientPage() {
     // Renderizado
     return (
+        <SafeAreaView style={styles.container}>
         <Tab.Navigator
             screenOptions={({ route }) => ({
                 tabBarIcon: ({ focused, color, size }) => {
@@ -44,10 +45,9 @@ function ClientPage() {
                 tabBarStyle: {
 
                     backgroundColor: '#fff',
-
                     borderTopWidth: 1,
                     borderTopColor: '#e1e8ed',
-                    height: 60,
+                    height: 40,
                     paddingBottom: 8,
                     paddingTop: 8,
                 },
@@ -88,19 +88,20 @@ function ClientPage() {
             />
             <Tab.Screen 
                 name="Profile" 
-                component={ClientProfile}
+                component={ClientSettings}
                 options={{
                     tabBarLabel: 'Perfil',
                 }}
             />
         </Tab.Navigator>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#fff', // Se ajusta al color de la barra de pestañas
     },
 });
 

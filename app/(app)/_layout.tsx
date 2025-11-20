@@ -4,13 +4,13 @@ import { Stack, useRouter, Href } from 'expo-router';
 import { useEffect } from 'react'; // ⬅️ Reutilizamos el hook con tu lógica de App.js
 import { ActivityIndicator, View } from 'react-native';
 import { useAuth } from '../../src/context/AuthContext';
-import {FilterProvider} from '../../src/context/FilterContext';
+import { FilterProvider } from '../../src/context/FilterContext';
 
 // Componente de carga, similar al de tu App.js
 const LoadingScreen = () => (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#2575fc" />
-    </View>
+  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+    <ActivityIndicator size="large" color="#9D046D" />
+  </View>
 );
 
 export default function AppLayout() {
@@ -19,7 +19,7 @@ export default function AppLayout() {
   const router = useRouter();
 
   useEffect(() => {
-    
+
     if (!session) {
       return;
     }
@@ -57,17 +57,48 @@ export default function AppLayout() {
   // Esto reemplaza tener que listarlas dentro de cada 'case' del switch.
   return (
     <FilterProvider>
+<<<<<<< HEAD
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="PageAdmin" options={{ title: "Modo Admin" }} />
+        <Stack.Screen name="MagicLink" options={{ title: "Envio de link" }} />
+        <Stack.Screen name="RegisterArtesano" options={{ headerShown: false }} />
+        <Stack.Screen name="ArtPage" options={{ headerShown: false }} />
+        <Stack.Screen name="ClientPage" options={{ headerShown: false }} />
+        <Stack.Screen name="ChangePassword" options={{ title: "Confirmar contraseña" }} />
+        <Stack.Screen name="NotFoundPage" options={{ title: "Error de permisos" }} />
+        <Stack.Screen name="clientProfile" options={{ title: "" }} />
+        <Stack.Screen name="ArtesanoProfile" options={{ title: "Perfil del Artesano", headerShown: false }} />
+        <Stack.Screen name="ArtesanoList" options={{ title: "Lista de artesanos" }} />
+        <Stack.Screen name="ArtesanoPublications" options={{ title: "Mis Publicaciones" }} />
+        <Stack.Screen name="ArtesanoProducts" options={{ title: "Mis Productos" }} />
+        <Stack.Screen name="CreatePostPage" options={{ title: "Crea una publicacion" }} />
+        <Stack.Screen name="FeedPage" options={{ title: "Publicaciones" }} />
+        <Stack.Screen name="MarketplacePage" options={{ title: "Marketplace" }} />
+        <Stack.Screen name="ProductDetailPage" options={{ title: "Detalle del Producto" }} />
+        <Stack.Screen name="estadisticas" options={{ title: "Estadisticas" }} />
+        <Stack.Screen name="Eventos" options={{ title: "Eventos" }} />
+        <Stack.Screen name="EditEventPage" options={{ title: "Editar evento" }} />
+        <Stack.Screen name="CreateEventPage" options={{ title: "Crear evento" }} />
+        <Stack.Screen name="ArtesanoSettings" options={{ title: "Ajustes de perfil del artesano" }} />
+        <Stack.Screen name="ArtesanoProfileVistaVisitante" options={{ title: "Ver perfil como visitante", headerBackVisible: false }} />
+        <Stack.Screen name="MarketplaceFilters" options={{ title: "Filtros de Marketplace", headerShown: false }} />
+        <Stack.Screen name="perfilcliente" options={{ title: "Perfil del cliente", headerBackVisible: false }} />
+        <Stack.Screen name="gestionCuentaCliente" options={{ headerShown: false, headerBackVisible: false }} />
+        <Stack.Screen name="ayudaSoporte" options={{ headerShown: false }} />
+        <Stack.Screen name="TerminoCondiciones" options={{ headerShown: false }} />
+        <Stack.Screen name="AppSettings" options={{ headerShown: false , headerBackVisible: false }} />
+      </Stack>
+    </FilterProvider>
+=======
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="PageAdmin" options={{ title: "Modo Admin" }} />
       <Stack.Screen name="MagicLink" options={{ title: "Envio de link" }} />
       <Stack.Screen name="RegisterArtesano" options={{ headerShown: false}} />
-      <Stack.Screen name="ArtPage" options={{ title: "Pagina del artesano" }} />
-      <Stack.Screen name="ClientPage" options={{ title: "Pagina del cliente" }} />
-      <Stack.Screen name="ChangePassword" options={{ title: "Confirmar contraseña" }} />
+      <Stack.Screen name="ArtPage" options={{ headerShown: false}} />
+      <Stack.Screen name="ClientPage" options={{headerShown: false }} />
       <Stack.Screen name="NotFoundPage" options={{ title: "Error de permisos" }} />
-      <Stack.Screen name="clientProfile" options={{ title: "" }} />
-      <Stack.Screen name="ArtesanoProfile" options={{ title: "Perfil del Artesano" }} />
       <Stack.Screen name="ArtesanoList" options={{ title: "Lista de artesanos" }} />
       <Stack.Screen name="ArtesanoPublications" options={{ title: "Mis Publicaciones" }} />
       <Stack.Screen name="ArtesanoProducts" options={{ title: "Mis Productos" }} />
@@ -81,9 +112,17 @@ export default function AppLayout() {
       <Stack.Screen name="CreateEventPage" options={{title: "Crear evento"}}/>
       <Stack.Screen name="ArtesanoSettings" options={{title: "Ajustes de perfil del artesano"}}/>
       <Stack.Screen name="ArtesanoProfileVistaVisitante" options={{title: "Ver perfil como visitante", headerBackVisible: false}}/>
-      <Stack.Screen name="MarketplaceFilters" options={{title: "Filtros de Marketplace", headerBackVisible: false}}/>
-
+      <Stack.Screen name="MarketplaceFilters" options={{title: "Filtros de Marketplace", headerShown: false}}/>
+      <Stack.Screen name="perfilcliente" options={{title: "Perfil del cliente", headerBackVisible: false}}/>
+      <Stack.Screen name="gestionCuentaCliente" options={{ title: "Gestion de cuenta del cliente", headerBackVisible: false }} />
+      <Stack.Screen name="ayudaSoporte" options={{ headerShown: false}} />
+      <Stack.Screen name="TerminoCondiciones" options={{ headerShown: false}} />
+      <Stack.Screen name="AppSettings" options={{ title: "Configuración de la App", headerBackVisible: false }} />
+      <Stack.Screen name="AjustesPerfilArtesano" options={{ title: "Configuración de la App", headerBackVisible: false }} />
+      <Stack.Screen name="gestionCuentaArtesano" options={{ title: "Configuración de la App", headerBackVisible: false }} />
+      <Stack.Screen name="completeArtesanoProfile" options={{ headerShown: false }} />
     </Stack>
         </FilterProvider>
+>>>>>>> c7a920edb26e12690ddc7a2506edf47812b34d0d
   );
 }
