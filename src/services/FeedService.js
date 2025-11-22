@@ -149,6 +149,103 @@ export class FeedService {
   }
 
   /**
+   * Obtiene un feed personalizado para el cliente: primero las publicaciones de los artesanos que sigue.
+   * @param {number} limit - Cantidad de publicaciones por página.
+   * @param {number} page - Número de página.
+   * @param {string} currentUserId - ID del cliente actual.
+   * @returns {Promise<{success: boolean, data?: array, error?: string, hasMore?: boolean}>}
+   */
+  static async getCustomizedFeedForClient(limit = 10, page = 0, currentUserId) {
+    try {
+      const offset = page * limit;
+
+      // 1. Obtener la lista de artesanos que el cliente sigue.
+      const { data: followedArtisans, error: followedError } = await supabase
+        .from('seguidores_artesanos')
+        .select('artesano_id')
+        .eq('cliente_id', currentUserId);
+
+      if (followedError) {
+        // Si falla, simplemente devolvemos el feed normal.
+        console.error("Error al obtener artesanos seguidos, mostrando feed general:", followedError.message);
+        return this.getFeed(limit, page, currentUserId);
+      }
+
+      const followedIds = followedArtisans.map(f => f.artesano_id);
+
+      // 2. Llamar a una función RPC en Supabase para obtener el feed ordenado.
+      // Esta función prioriza las publicaciones de los artesanos seguidos.
+      const { data: publicaciones, error: rpcError, count } = await supabase
+        .rpc('get_feed_prioritizing_followed', {
+          p_followed_ids: followedIds,
+          p_limit: limit,
+          p_offset: offset
+        }, { count: 'exact' });
+
+      if (rpcError) {
+        return { success: false, error: rpcError.message };
+      }
+
+      if (!publicaciones || publicaciones.length === 0) {
+        return { success: true, data: [], hasMore: false };
+      }
+
+      // 3. Obtener likes y estado de like del usuario (lógica similar a getFeed).
+      const publicacionIds = publicaciones.map(p => p.id);
+
+      const { data: likesData, error: likesError } = await supabase
+        .from('likes')
+        .select('publicacion_id')
+        .in('publicacion_id', publicacionIds);
+
+      const likesCount = {};
+      if (likesData) {
+        likesData.forEach(like => {
+          likesCount[like.publicacion_id] = (likesCount[like.publicacion_id] || 0) + 1;
+        });
+      }
+
+      let userLikes = {};
+      if (currentUserId) {
+        const { data: userLikesData, error: userLikesError } = await supabase
+          .from('likes')
+          .select('publicacion_id')
+          .eq('user_id', currentUserId)
+          .in('publicacion_id', publicacionIds);
+
+        if (!userLikesError && userLikesData) {
+          userLikesData.forEach(like => {
+            userLikes[like.publicacion_id] = true;
+          });
+        }
+      }
+
+      // 4. Combinar todos los datos.
+      const publicacionesConLikes = publicaciones.map(pub => ({
+        ...pub, // Mantenemos los datos que ya vienen del RPC
+        artesano: { // El RPC ya nos devuelve el artesano anidado
+          id: pub.artesano.id,
+          nombre: pub.artesano.nombre || 'Artesano',
+          ubicacion: pub.artesano.ubicacion || '',
+          categoria: pub.artesano.categoria || '',
+          avatar_url: pub.artesano.avatar_url || null,
+        },
+        likes_count: likesCount[pub.id] || 0,
+        liked_by_user: userLikes[pub.id] || false,
+      }));
+
+      return {
+        success: true,
+        data: publicacionesConLikes,
+        hasMore: count ? (offset + limit < count) : false,
+        totalCount: count || 0,
+      };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
    * Da o quita like a una publicación para el usuario actual (toggle)
    * Obtiene el usuario de la sesión automáticamente
    * @param {string} publicacionId - ID de la publicación

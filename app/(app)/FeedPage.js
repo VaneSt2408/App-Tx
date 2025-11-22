@@ -12,7 +12,7 @@ import { useAuth } from '../../src/context/AuthContext';
 
 const FeedPage = () => {
   const router = useRouter();
-  const { role } = useAuth(); // Obtener el rol del usuario
+  const { role, session } = useAuth(); // Obtener el rol y la sesión del usuario
   const [posts, setPosts] = useState([]);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,7 +35,16 @@ const FeedPage = () => {
   const loadFeed = async (page = 0) => {
     try {
       if (page === 0) setLoading(true);
-      const result = await FeedService.getFeedForCurrentUser(10, page);
+
+      let result;
+      // Si el usuario es un cliente, usamos el nuevo feed personalizado.
+      if (role === 'cliente' && session?.user?.id) {
+        result = await FeedService.getCustomizedFeedForClient(10, page, session.user.id);
+      } else {
+        // Para artesanos o si no hay sesión, usamos el feed general.
+        result = await FeedService.getFeedForCurrentUser(10, page);
+      }
+
       if (result.success) {
         if (page === 0) {
           setPosts(result.data);
@@ -46,7 +55,11 @@ const FeedPage = () => {
         setCurrentPage(page);
       }
     } catch (error) {
-      // Manejo de errores original
+      // Manejo de errores mejorado
+      Alert.alert(
+        "Error al cargar el feed",
+        error.message || "No se pudieron obtener las publicaciones. Intenta de nuevo."
+      );
     } finally {
       setLoading(false);
       setRefreshing(false);
