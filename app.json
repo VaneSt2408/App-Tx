@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "TxApp",
-    "slug": "TxApp",
+    "name": "DöniApp",
+    "slug": "DöniApp",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/LogoSV.png",
+    "icon": "./assets/images/LogoDöniAppOficial.png",
     "scheme": "txapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -17,7 +17,7 @@
         { "action": "VIEW", "data": [{ "scheme": "https", "host": "*.txapp.example.com" }], "category": ["BROWSABLE", "DEFAULT"] }
       ],
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#000000",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -28,7 +28,7 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/LogoSV.png",
+      "favicon": "./assets/images/LogoDöniAppOficial.png",
       "bundler": "metro"
     },
     "plugins": [

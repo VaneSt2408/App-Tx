@@ -1,9 +1,9 @@
 {
-  "name": "txapp",
+  "name": "DöniApp",
   "main": "expo-router/entry",
   "version": "1.0.0",
-  "slug": "TxApp",
-  "scheme": "TxApp",
+  "slug": "DöniApp",
+  "scheme": "DöniApp",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",

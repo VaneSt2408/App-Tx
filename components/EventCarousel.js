@@ -35,8 +35,8 @@ const EventCarousel = ({ events = [], onEventPress }) => {
     <View className="mb-4">
       {/* Header "Próximos Eventos" */}
       <View className="flex-row items-center mb-2 px-4">
-        <MaterialCommunityIcons name="calendar-multiselect" size={28} color="#9D046D" />
-        <Text style={{fontFamily: 'AlanSans'}} className="ml-1 text-xl font-semibold text-gray-900">Próximos Eventos</Text>
+        <MaterialCommunityIcons name="calendar-multiselect" size={28} color="#000" />
+        <Text style={{fontFamily: 'Alan Sans'}} className="ml-1 text-xl font-semibold text-gray-900">Próximos Eventos</Text>
       </View>
 
       {/* Carrusel Horizontal */}
@@ -62,18 +62,18 @@ const EventCarousel = ({ events = [], onEventPress }) => {
 
             {/* Contenido */}
             <View className="p-4">
-              <Text style={{fontFamily: 'AlanSans'}} className="text-base font-semibold text-gray-900 mb-2">{event.nombre}</Text>
+              <Text style={{fontFamily: 'Alan Sans'}} className="text-base font-semibold text-gray-900 mb-2">{event.nombre}</Text>
               <View className="flex-row items-center mb-1">
                 <MaterialCommunityIcons name="calendar" size={14} color="#666" />
-                <Text style={{fontFamily: 'AlanSans'}} className="ml-1 text-xs text-gray-600">{formatDate(event.fecha)}</Text>
+                <Text style={{fontFamily: 'Alan Sans'}} className="ml-1 text-xs text-gray-600">{formatDate(event.fecha)}</Text>
               </View>
               <View className="flex-row items-center mb-1">
                 <MaterialCommunityIcons name="clock-outline" size={14} color="#666" />
-                <Text style={{fontFamily: 'AlanSans'}} className="ml-1 text-xs text-gray-600">{formatTime(event.hora)}</Text>
+                <Text style={{fontFamily: 'Alan Sans'}} className="ml-1 text-xs text-gray-600">{formatTime(event.hora)}</Text>
               </View>
               <View className="flex-row items-start">
                 <MaterialCommunityIcons name="map-marker" size={14} color="#666" />
-                <Text style={{fontFamily: 'AlanSans'}} className="ml-1 text-xs text-gray-600 flex-1">{event.ubicacion}</Text>
+                <Text style={{fontFamily: 'Alan Sans'}} className="ml-1 text-xs text-gray-600 flex-1">{event.ubicacion}</Text>
               </View>
             </View>
           </TouchableOpacity>

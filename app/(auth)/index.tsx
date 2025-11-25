@@ -110,8 +110,8 @@ export default function Index() {
           transition={{ type: 'timing', duration: 800 }}
         >
           <MotiImage
-            source={require('../../assets/images/LogoSV.png')}
-            className="w-89 h-80 mb-4" // Ajusta el tamaño según necesites
+            source={require('../../assets/images/LogoDöniAppOficial.png')}
+            className="w-80 h-80 mb-4" // Ajusta el tamaño según necesites
             style={{ resizeMode: 'contain' }}
           />
 
@@ -123,7 +123,7 @@ export default function Index() {
             transition={{ type: 'timing', duration: 800, delay: 300 }}
             
           >
-            Tx Guide
+            DöniApp
           </MotiText>
         </MotiView>
 
@@ -136,7 +136,7 @@ export default function Index() {
           <Link href="/auth" asChild replace>
             <TouchableOpacity className="w-11/12 bg-white/20 p-5 rounded-3xl items-center mb-8 border border-white/30">
               <Text style={{fontFamily: 'Alan Sans', fontSize: 20, fontWeight: 'bold'}} className="text-white">
-                BIENVENIDO DE VUELTA →
+                BIENVENIDO →
               </Text>
             </TouchableOpacity>
           </Link>
