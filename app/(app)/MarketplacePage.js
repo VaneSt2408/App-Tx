@@ -170,7 +170,7 @@ const MarketplacePage = () => {
 
     return (
       <TouchableOpacity
-        className={`flex-1 m-2 bg-white rounded-xl overflow-hidden shadow-sm border-[#9D046D] ${isOwnProduct ? 'border-2' : 'border'}`}
+        className={`flex-1 m-2 bg-white shadow-lg rounded-md`}
         onPress={() => navigateToProduct(item.id)}
         activeOpacity={0.7}
       >
@@ -180,14 +180,14 @@ const MarketplacePage = () => {
             <Image source={{ uri: item.imagen_url }} className="w-full h-full object-cover" />
           ) : (
             <View className="w-full h-full justify-center items-center bg-gray-200">
-              <MaterialCommunityIcons name="package-variant" size={40} color="#ccc" />
+              <MaterialCommunityIcons name="package-variant" size={40} color="#fff" />
             </View>
           )}
         </View>
 
         {/* Información */}
         <View className="p-3">
-          <Text className="text-sm font-semibold text-gray-900 mb-1" numberOfLines={2}>
+          <Text className="text-sm font-semibold text-gray-700 mb-1" numberOfLines={2}>
             {item.nombre}
           </Text>
           <Text className="text-lg font-bold text-[#9D046D]">{formatPrice(item.precio)}</Text>
@@ -252,7 +252,7 @@ const MarketplacePage = () => {
       {/* Header */}
       <View className="bg-white pb-3">
         <View className="px-4 flex-row items-center justify-between pt-4">          
-          <Text className="text-3xl font-bold text-gray-900 mb-4">Marketplace</Text>
+          <Text className="text-3xl font-bold text-[#9D046D] mb-4">Mercadito</Text>
           {role === 'artesano' ? (
             <TouchableOpacity
               onPress={() =>
@@ -270,12 +270,13 @@ const MarketplacePage = () => {
         </View>
 
         {/* Barra de Búsqueda */}
-        <View className="px-4 mt-2">
-          <View className="flex-row items-center bg-gray-200 rounded-xl px-4 py-2 border-2 border-[#9D046D]/50">
+        <View className="px-2.5 mt-2">
+          <View className="flex-row items-center bg-gray-200 rounded-xl px-4 border-2 border-[#000]/35 mb-3 h-12">
             <MaterialCommunityIcons name="magnify" size={20} color="#666" />
             <TextInput
-              className="flex-1 ml-2 text-base"
-              placeholder="Buscar y presionar Enter..."
+              className="flex-1 ml-4 text-base text-black h-full"
+              placeholder="Buscar algun producto...."
+              placeholderTextColor="#666"
               value={searchInput} // Controlado por searchInput
               onChangeText={setSearchInput} // Actualiza searchInput al escribir
               onSubmitEditing={handleSearchSubmit} // <-- Se activa al presionar Enter
@@ -304,7 +305,7 @@ const MarketplacePage = () => {
             <MaterialCommunityIcons 
               name={'tune'} 
               size={20}
-              color={Object.values(filters).some(f => Array.isArray(f) ? f.length > 0 : !!f) ? '#fff' : '#333'} />
+              color={Object.values(filters).some(f => Array.isArray(f) ? f.length > 0 : !!f) ? '#000' : '#333'} />
           </TouchableOpacity>
           <TouchableOpacity
             className={`px-4 py-2 mr-2 rounded-xl ${
@@ -362,7 +363,7 @@ const MarketplacePage = () => {
         data={productos}
         renderItem={renderProduct}
         keyExtractor={(item) => item.id.toString()}
-        numColumns={3}
+        numColumns={2}
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
         contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 90 }}

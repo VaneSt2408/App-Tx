@@ -1,6 +1,6 @@
 // app/(app)/FeedPage.js
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, FlatList, RefreshControl, ActivityIndicator, Text as DefaultText, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View,Alert, FlatList, RefreshControl, ActivityIndicator, Text as DefaultText, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import FeedService from '../../src/services/FeedService';
 import PostCard from '../../components/PostCard';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
