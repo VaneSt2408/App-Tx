@@ -259,23 +259,23 @@ const handleLike = async (productID) => {
             <MaterialCommunityIcons 
               name={
                 product.estado === 'activo' ? "check-circle" :
-                product.estado === 'vendido' ? "cart-off" : "close-circle"
+                product.estado === 'vendido' ? "alert-circle-outline" : "close-circle"
               }
               size={20}
               color={
                 product.estado === 'activo' ? "#4caf50" :
-                product.estado === 'vendido' ? "#ff9800" : "#f44336"
+                product.estado === 'vendido' ? "#e5be01" : "#f44336"
               }
             />
             <Text style={[
               styles.availabilityText,
               { color: 
                   product.estado === 'activo' ? "#4caf50" :
-                  product.estado === 'vendido' ? "#ff9800" : "#f44336"
+                  product.estado === 'vendido' ? "#e5be01" : "#f44336"
               }
             ]}>
-              {product.estado === 'activo' ? 'Disponible' : 
-               product.estado === 'vendido' ? 'Vendido' : 'No Disponible'}
+              {product.estado === 'activo' ? 'Publicación disponible' : 
+               product.estado === 'vendido' ? 'Publicación pausada' : 'Publicación detenida'}
             </Text>
           </View>
 

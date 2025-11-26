@@ -321,7 +321,7 @@ const MarketplacePage = () => {
             }`}
             onPress={() => handleFilterChange('disponibles')}
           >
-            <Text className={`font-medium ${filter === 'disponibles' ? 'text-white' : 'text-gray-800'}`}>Disponibles</Text>
+            <Text className={`font-medium ${filter === 'disponibles' ? 'text-white' : 'text-gray-800'}`}>Publicación disponible</Text>
           </TouchableOpacity>
           <TouchableOpacity
             className={`px-4 py-2 mr-2 rounded-xl ${
@@ -329,7 +329,7 @@ const MarketplacePage = () => {
             }`}
             onPress={() => handleFilterChange('vendidos')}
           >
-            <Text className={`font-medium ${filter === 'vendidos' ? 'text-white' : 'text-gray-800'}`}>Vendidos</Text>
+            <Text className={`font-medium ${filter === 'vendidos' ? 'text-white' : 'text-gray-800'}`}>Publicación pausada</Text>
           </TouchableOpacity>
           <TouchableOpacity
             className={`px-4 py-2 mr-2 rounded-xl ${
@@ -337,7 +337,7 @@ const MarketplacePage = () => {
             }`}
             onPress={() => handleFilterChange('no-disponible')}
           >
-            <Text className={`font-medium ${filter === 'no-disponible' ? 'text-white' : 'text-gray-800'}`}>No Disponible</Text>
+            <Text className={`font-medium ${filter === 'no-disponible' ? 'text-white' : 'text-gray-800'}`}>Publicación detenida</Text>
           </TouchableOpacity>
           <TouchableOpacity
             className={`px-4 py-2 mr-2 rounded-xl ${

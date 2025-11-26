@@ -20,6 +20,20 @@ import UploadProductModal from '../../components/UploadProductModal';
 const { width } = Dimensions.get('window'); // Obtener el ancho de la ventana
 const imageSize = (width - 60) / 3; // Para grid de 3 columnas
 
+// Mapa para los nombres de los estados a mostrar en la UI
+const statusDisplayMap = {
+  activo: 'Publicación disponible',
+  vendido: 'Publicación pausada',
+  inactivo: 'Publicación detenida',
+};
+
+// Mapa para los estilos (ícono y color) de cada estado
+const statusStyleMap = {
+  activo: { icon: 'check-circle', color: '#4caf50' },
+  vendido: { icon: 'alert-circle-outline', color: '#e5be01' },
+  inactivo: { icon: 'close-circle', color: '#f44336' },
+};
+
 // Componente principal
 export default function ArtesanoProducts() {
   const router = useRouter(); // Router de expo-router para navegar entre pantallas
@@ -483,10 +497,19 @@ export default function ArtesanoProducts() {
                     </View>
 
                     <View style={styles.infoRow}>
-                      <MaterialCommunityIcons name="check-decagram" size={20} color="#00C853" />
+                      {/* Ícono y color dinámicos según el estado del producto */}
+                      <MaterialCommunityIcons
+                        name={selectedProducto.estado ? statusStyleMap[selectedProducto.estado].icon : 'help-circle'}
+                        size={20}
+                        color={selectedProducto.estado ? statusStyleMap[selectedProducto.estado].color : '#666'}
+                      />
                       <Text style={styles.infoLabel}>Estado:</Text>
-                      <Text style={styles.infoValue}>
-                        {selectedProducto.estado ? selectedProducto.estado.charAt(0).toUpperCase() + selectedProducto.estado.slice(1) : 'No definido'}
+                      <Text style={[
+                        styles.infoValue,
+                        { color: selectedProducto.estado ? statusStyleMap[selectedProducto.estado].color : '#666', fontWeight: 'bold' }
+                      ]}>
+                        {/* Usamos el mapa para mostrar el texto descriptivo */}
+                        {selectedProducto.estado ? statusDisplayMap[selectedProducto.estado] : 'No definido'}
                       </Text>
                     </View>
 
@@ -710,20 +733,21 @@ export default function ArtesanoProducts() {
               <View style={styles.editSection}>
                 <Text style={styles.editLabel}>Estado *</Text>
                 <View style={styles.statusContainer}>
-                  {['activo', 'vendido', 'inactivo'].map(status => (
+                  {Object.keys(statusDisplayMap).map(statusKey => (
                     <TouchableOpacity
-                      key={status}
+                      key={statusKey}
                       style={[
                         styles.statusButton,
-                        editData.estado === status && styles.statusButtonActive,
+                        editData.estado === statusKey && styles.statusButtonActive,
                       ]}
-                      onPress={() => setEditData({ ...editData, estado: status })}
+                      onPress={() => setEditData({ ...editData, estado: statusKey })}
                     >
                       <Text style={[
                         styles.statusButtonText,
-                        editData.estado === status && styles.statusButtonTextActive,
+                        editData.estado === statusKey && styles.statusButtonTextActive,
                       ]}>
-                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                        {/* Usamos el mapa para mostrar el texto deseado */}
+                        {statusDisplayMap[statusKey]}
                       </Text>
                     </TouchableOpacity>
                   ))}
