@@ -17,7 +17,7 @@
         { "action": "VIEW", "data": [{ "scheme": "https", "host": "*.txapp.example.com" }], "category": ["BROWSABLE", "DEFAULT"] }
       ],
       "adaptiveIcon": {
-        "backgroundColor": "#000000",
+        "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"

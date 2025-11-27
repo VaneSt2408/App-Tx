@@ -3,16 +3,22 @@
 // Muestra la página de administración registrada en la base de datos y permite cerrar sesión, navegar a la página de invitación de enlace mágico, lista de artesanos, estadísticas, modificación/eliminación y configuración general.
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text as DefaultText, StyleSheet, ActivityIndicator, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import { signOut } from '../../src/services/authService'; // Asumo que la ruta es correcta
 import { supabase } from '../../src/supabase/client'; // Asumo que la ruta es correcta
 import { Ionicons } from '@expo/vector-icons'; // Importamos Ionicons para los iconos
+import useCustomFonts from '../../hooks/useFonts';
+
+    const Text = (props) => (
+    <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
+    );
 
 function PageAdmin() {
     const router = useRouter();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    
 
     // useEffect no se toca, la lógica se mantiene
     useEffect(() => {
@@ -52,7 +58,7 @@ function PageAdmin() {
                     <Text style={styles.headerSubtitle}>Administrador</Text>
                 </View>
                 {/* Icono oscuro para fondo claro */}
-                <Ionicons name="shield-outline" size={28} color="#555555" />
+                <Ionicons name="shield-outline" size={28} color="#000" />
             </View>
 
             {/* Contenedor de botones del menú */}
@@ -123,7 +129,7 @@ function PageAdmin() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5', // Color de fondo original
+        backgroundColor: '#fff', // Color de fondo original
     },
     loadingContainer: {
         justifyContent: 'center',
@@ -211,7 +217,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         // CAMBIO: Se usa rgba para la transparencia (R=219, G=68, B=55, A=0.9)
-        backgroundColor: 'rgba(219, 68, 55, 0.9)', 
+        backgroundColor: 'rgba(219, 68, 55)', 
         marginHorizontal: 15,
         paddingVertical: 18,
         borderRadius: 9, //CAMBIO: De 12 a 6 (rounded-sm)

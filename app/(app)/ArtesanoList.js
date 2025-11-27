@@ -7,10 +7,12 @@
 // Importaciones
 // En: app/(app)/ArtesanoList.js -> Archivo de la lista de artesanos (Frontend)
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, ActivityIndicator, Alert, TouchableOpacity, SafeAreaView, TextInput, Platform } from 'react-native';
+import { View, Text as DefaultText, StyleSheet, FlatList, Image, ActivityIndicator, Alert, TouchableOpacity, SafeAreaView, TextInput, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { artesanoService } from '../../src/services/artesanoService';
 import { useRouter } from 'expo-router';
+import useCustomFonts from '../../hooks/useFonts';
+
 
 export default function ArtesanoList() {
   const router = useRouter();
@@ -19,6 +21,10 @@ export default function ArtesanoList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const Text = (props) => (
+      <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
+  );
 
   const loadArtesanos = async () => {
     try {
@@ -83,7 +89,7 @@ export default function ArtesanoList() {
       onPress={() => navigateToProfile(item.user_id)}
       activeOpacity={0.8}
     >
-      {/* Cabecera Magenta */}
+      
       <View style={styles.cardHeader}>
         {item.avatar_url ? (
           <Image
@@ -181,12 +187,10 @@ export default function ArtesanoList() {
   return (
     <SafeAreaView style={styles.safeArea}>
       {/* Encabezado con Título y Flecha */}
-      <View style={styles.headerContainer}>
+      <View style={[styles.headerContainer, { justifyContent: 'flex-start' }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.title}>Lista de Artesanos</Text>
-        <View style={{ width: 40 }} />
+        <Text style={[styles.title,{fontFamily: 'Alan Sans'},{fontWeight: 'bold'},{color: '#9D046D'},{fontSize: 25}]}>Lista de Artesanos</Text>
       </View>
 
       {/* Barra de búsqueda */}
@@ -195,10 +199,11 @@ export default function ArtesanoList() {
           <MaterialCommunityIcons
             name="magnify"
             size={25}
-            color="#666"
+            color="#000"
             style={styles.searchIcon}
           />
           <TextInput
+            fontFamily='Alan Sans'
             style={styles.searchInput}
             placeholder="Buscar por nombre, folio..."
             placeholderTextColor="#999"

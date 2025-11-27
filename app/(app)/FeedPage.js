@@ -93,8 +93,8 @@ const FeedPage = () => {
   };
 
   const renderPostsHeader = () => (
-    <View className="bg-white py-3 px-4 border-b border-gray-200 mb-3">
-      <Text style={{fontFamily: 'Alan Sans'}} className=" font-semibold text-3xl text-[#9D046D]">Mis Publicaciones</Text>
+    <View className="bg-white py-4 px-4 border-b border-gray-200 mb-7">
+      <Text style={{fontFamily: 'Alan Sans'}} className=" font-bold text-3xl text-[#9D046D]">Mis Publicaciones</Text>
     </View>
   );
 
@@ -156,7 +156,7 @@ const FeedPage = () => {
             setModalVisible(true);
           }} />
 
-        {/* Lista de Publicaciones */}
+        {/* Publicaciones */}
         <FlatList
           data={posts}
           renderItem={({ item }) => <PostCard post={item} onLike={handleLike} />}

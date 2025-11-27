@@ -1,7 +1,7 @@
 // app/(app)/MarketplaceFilters.js
 // Pantalla de filtros para el Marketplace
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFilter } from '../../src/context/FilterContext'; // Corregido de useFilters a useFilter si es necesario
@@ -72,7 +72,7 @@ export default function MarketplaceFilters() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
@@ -155,14 +155,14 @@ export default function MarketplaceFilters() {
           <Text style={styles.applyButtonText}>Aplicar Filtros</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#fff',
   },
   header: {
     flexDirection: 'row',

@@ -123,12 +123,10 @@ export default function EstadisticasPage() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.headerContainer}>
+            <View style={[styles.headerContainer, { justifyContent: 'flex-start' }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.title}>Clasificación</Text>
-        <View style={{ width: 40 }} />
+        <Text style={[styles.title,{fontFamily: 'Alan Sans'},{fontWeight: 'bold'},{color: '#9D046D'},{fontSize: 25}]}>Clasificación</Text>
       </View>
 
       <View style={styles.toggleContainer}>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   View,
-  Text,
+  Text as DefaultText,
   StyleSheet,
   ScrollView,
   SafeAreaView,
@@ -26,6 +26,9 @@ const AppSettingsScreen = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [cacheSize, setCacheSize] = useState("Calculando...");
 
+  const Text = (props) => (
+      <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
+    );
   // Función para formatear bytes a un formato legible (KB, MB, GB)
   const formatBytes = (bytes, decimals = 2) => {
     if (bytes === 0) return "0 Bytes";
