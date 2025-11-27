@@ -3,6 +3,8 @@ import { supabase } from '../supabase/client';
 import { Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
+import { decode } from 'base64-arraybuffer'; // Importar decode aquí
+import * as ImageManipulator from 'expo-image-manipulator'; // Importamos el manipulador de imágenes
 
 // --- Función para seleccionar y comprimir imagen (siguiendo la lógica de completeProfile) ---
 export const selectAndCompressImage = async () => {
@@ -34,6 +36,68 @@ export const selectAndCompressImage = async () => {
     return null;
   }
 };
+
+/**
+ * Permite seleccionar MÚLTIPLES imágenes de la galería y las comprime.
+ * @param {number} selectionLimit - El número máximo de imágenes que se pueden seleccionar.
+ * @returns {Promise<Array<object>|null>} - Un array de assets de imagen o null.
+ */
+export const selectMultipleAndCompressImages = async (selectionLimit = 5) => {
+  try {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permisos requeridos', 'Necesitamos acceso a tu galería para seleccionar imágenes.');
+      return null;
+    }
+
+    // 1. Seleccionamos las imágenes SIN compresión para obtener su tamaño original
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images, // CORRECCIÓN: Usar la nueva sintaxis
+      allowsEditing: true, // ¡CLAVE! Habilita el editor de recorte para cada imagen.
+      aspect: [1, 1], // Fija el recorte a un formato cuadrado.
+      quality: 1, // Mantenemos la calidad alta antes de nuestra propia compresión.
+      // NOTA: allowsMultipleSelection se omite, ya que el usuario seleccionará una por una.
+    });
+
+    if (result.canceled || !result.assets) {
+      return null;
+    }
+
+    console.log(`[productService] ==> Se seleccionaron ${result.assets.length} imágenes. Comprimiendo...`);
+    // Con allowsEditing, el resultado siempre es un array con un solo asset.
+    const asset = result.assets[0];
+
+    // LOG del tamaño original (después del recorte)
+    const originalSizeInBytes = asset.fileSize || (asset.base64 ? (asset.base64.length * 3) / 4 : 0);
+    if (originalSizeInBytes > 0) {
+      const originalSizeMB = (originalSizeInBytes / (1024 * 1024)).toFixed(2);
+      console.log(`[productService] Imagen (Después de recortar): ${originalSizeMB} MB`);
+    }
+
+    // 2. Comprimimos la imagen recortada
+    const manipulatedImage = await ImageManipulator.manipulateAsync(
+      asset.uri,
+      [], // Sin acciones de redimensionamiento, solo compresión
+      { 
+        compress: 0.5, // Nivel de compresión (0.5 = 50% de calidad, puedes ajustarlo)
+        format: ImageManipulator.SaveFormat.JPEG, // Formato de salida
+        base64: true, // ¡Crucial! Pedimos el base64
+      }
+    );
+
+    // LOG del tamaño comprimido
+    const compressedSizeInBytes = (manipulatedImage.base64.length * 3) / 4;
+    const compressedSizeMB = (compressedSizeInBytes / (1024 * 1024)).toFixed(2);
+    console.log(`[productService] Imagen (Comprimida): ${compressedSizeMB} MB`);
+
+    return [manipulatedImage]; // Devolvemos un array para mantener la compatibilidad
+  } catch (error) {
+    console.error('Error al seleccionar múltiples imágenes:', error);
+    Alert.alert('Error', 'No se pudieron seleccionar las imágenes.');
+    return null;
+  }
+};
+
 
 // --- Función para subir imagen a Supabase Storage (siguiendo la lógica de completeProfile) ---
 export const uploadImageToSupabase = async (imageAsset, productId) => {
@@ -78,44 +142,113 @@ export const uploadImageToSupabase = async (imageAsset, productId) => {
 };
 
 // --- Función para crear un nuevo producto (siguiendo la lógica de completeProfile) ---
-export const createProduct = async (productData) => {
+export const createProduct = async (productData, imageAssets) => {
+  // LOG: Inicio de la función
+  console.log('[productService] ==> Inicia createProduct.');
+  console.log('[productService] Datos del producto:', JSON.stringify(productData, null, 2));
+  console.log(`[productService] Número de imágenes a subir: ${imageAssets.length}`);
+
+  // 1. Validación de la cantidad de imágenes
+  if (!imageAssets || imageAssets.length < 3 || imageAssets.length > 5) {
+    throw new Error('Debes seleccionar entre 3 y 5 imágenes para el producto.');
+  }
+
   try {
-    
     // Obtener usuario actual
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       throw new Error('No hay sesión activa');
     }
+    console.log(`[productService] Usuario autenticado: ${user.id}`);
 
-    let imagenUrl = null;
-
-    // --- Subida de la imagen (si se proporcionó) ---
-    if (productData.imageAsset) {
-      imagenUrl = await uploadImageToSupabase(productData.imageAsset, null);
-    }
-
-    // Insertar producto en la base de datos con la URL de la imagen
-    const { data, error } = await supabase
+    // --- PASO 2: Insertar datos principales del producto ---
+    console.log('[productService] ==> Paso 2: Insertando registro principal del producto...');
+    const { data: newProduct, error: productError } = await supabase
       .from('productos')
       .insert({
+        ...productData,
+        // CORRECCIÓN: La columna se llama 'artesano_id', no 'user_id'.
         artesano_id: user.id,
-        nombre: productData.nombre,
-        descripcion: productData.descripcion,
-        precio: parseFloat(productData.precio) || 0, // Convertimos a número
-        categoria: productData.categoria || 'general',
-        imagen_url: imagenUrl,
-        estado: productData.estado || 'activo',
-        stock: parseInt(productData.stock, 10) || 0,
-        min_may: productData.min_may || 'minoreo',
+        imagen_url: 'URL_TEMPORAL_DE_PORTADA', // Se actualizará después
       })
       .select()
       .single();
 
-    if (error) {
-      throw new Error(`Error al crear producto: ${error.message}`);
+    if (productError) {
+      console.error('[productService] ERROR en Paso 2:', productError);
+      throw new Error('No se pudo crear el registro del producto: ' + productError.message);
     }
-    return data;
+    console.log('[productService] <== Paso 2: Registro principal creado con éxito. ID:', newProduct.id);
+
+    const productId = newProduct.id;
+
+    // --- PASO 3: Subir todas las imágenes a Supabase Storage ---
+    // CAMBIO: Se procesan las imágenes una por una en lugar de en paralelo.
+    console.log('[productService] ==> Paso 3 y 4: Procesando imágenes secuencialmente...');
+    
+    let firstImageUrl = null;
+
+    for (const [index, asset] of imageAssets.entries()) {
+      console.log(`[productService] Procesando imagen ${index + 1} de ${imageAssets.length}...`);
+      const fileExt = asset.uri.split('.').pop();
+      const fileName = `producto_${productId}_${Date.now()}_${index}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+      console.log(`[productService]   - Ruta de archivo: ${filePath}`);
+
+      const decodedData = decode(asset.base64);
+      
+      // CORRECCIÓN: Asegurar que el tipo MIME sea 'image/jpeg' para archivos .jpg
+      const mimeType = fileExt === 'jpg' ? 'image/jpeg' : `image/${fileExt}`;
+      console.log(`[productService]   - Tipo MIME: ${mimeType}`);
+
+      // 3a. Subir la imagen
+      const { error: uploadError } = await supabase.storage
+        .from('productos') // CORRECCIÓN: Usar el bucket 'productos'
+        .upload(filePath, decodedData, { contentType: mimeType });
+
+      if (uploadError) {
+        console.error(`[productService] ERROR al subir imagen ${index + 1}:`, uploadError);
+        throw new Error(`Fallo al subir la imagen ${index + 1}.`);
+      }
+      console.log(`[productService]   - Imagen ${index + 1} subida con éxito.`);
+
+      // 3b. Obtener la URL pública
+      const { data: { publicUrl } } = supabase.storage.from('productos').getPublicUrl(filePath); // CORRECCIÓN: Usar el bucket 'productos'
+      console.log(`[productService]   - URL pública obtenida: ${publicUrl}`);
+
+      // Guardar la URL de la primera imagen para la portada
+      if (index === 0) {
+        firstImageUrl = publicUrl;
+      }
+
+      // 4. Insertar la URL en la base de datos INMEDIATAMENTE
+      const { error: insertImageError } = await supabase.from('producto_imagenes').insert({
+        producto_id: productId,
+        imagen_url: publicUrl,
+        orden: index
+      });
+      if (insertImageError) {
+        console.error(`[productService] ERROR al guardar URL de imagen ${index + 1}:`, insertImageError);
+        throw new Error(`No se pudo guardar la URL de la imagen ${index + 1}.`);
+      }
+      console.log(`[productService]   - URL de imagen ${index + 1} guardada en la base de datos.`);
+    }
+    console.log('[productService] <== Pasos 3 y 4: Todas las imágenes han sido procesadas.');
+
+    // --- PASO 5: Actualizar la imagen de portada en la tabla `productos` ---
+    console.log('[productService] ==> Paso 5: Actualizando imagen de portada del producto...');
+    const { error: updateCoverError } = await supabase
+      .from('productos')
+      .update({ imagen_url: firstImageUrl })
+      .eq('id', productId);
+
+    if (updateCoverError) console.error('Error al actualizar la portada:', updateCoverError);
+    console.log('[productService] <== Paso 5: Portada actualizada.');
+
+    console.log('[productService] <== Fin de createProduct: Proceso completado con éxito.');
+    return { success: true, data: newProduct };
   } catch (error) {
+    console.error('[productService] ERROR FATAL en createProduct:', error.message);
     throw error;
   }
 };
@@ -235,7 +368,7 @@ export const uploadProductImageForEdit = async (imageAsset, oldImageUrl) => {
 };
 
 // --- Función para actualizar un producto ---
-export const updateProduct = async (productId, updateData, newImageAsset) => {
+export const updateProductDetails = async (productId, updateData, newImageAsset) => {
   try {
     
     // Validaciones
@@ -286,64 +419,127 @@ export const updateProduct = async (productId, updateData, newImageAsset) => {
   }
 };
 
-// --- Función para eliminar un producto ---
-export const deleteProduct = async (productId) => {
+/**
+ * Actualiza un producto con su galería de imágenes completa.
+ * Sube nuevas imágenes, elimina las viejas y actualiza la base de datos.
+ * @param {string} productId - El ID del producto a actualizar.
+ * @param {object} productData - Datos del producto (nombre, precio, etc.).
+ * @param {Array<object>} newImageAssets - El nuevo array de assets de imagen.
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export const updateProductWithImages = async (productId, productData, newImageAssets) => {
+  console.log(`[productService] ==> Iniciando actualización completa para producto ID: ${productId}`);
   try {
-    
-    // Obtener datos del producto para eliminar la imagen
-    const { data: producto, error: fetchError } = await supabase
-      .from('productos')
-      .select('imagen_url')
-      .eq('id', productId)
-      .single();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Usuario no autenticado.');
 
-    if (fetchError && fetchError.code !== 'PGRST116') {
-      throw new Error('No se pudo obtener el producto: ' + fetchError.message);
-    }
+    // --- PASO 1: Obtener la lista de imágenes ACTUALES del producto ---
+    console.log('[productService] PASO 1: Obteniendo imágenes antiguas...' );
+    const { data: oldImages, error: oldImagesError } = await supabase
+      .from('producto_imagenes')
+      .select('id, imagen_url')
+      .eq('producto_id', productId);
 
-    // Eliminar imagen del storage si existe
-    if (producto?.imagen_url) {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          // Extraer el path del storage de la URL
-          const urlParts = producto.imagen_url.split('/');
-          const fileName = urlParts[urlParts.length - 1];
-          const filePath = `${user.id}/${fileName}`;
+    if (oldImagesError) throw new Error('No se pudo obtener la galería de imágenes actual.');
+    console.log('[productService] PASO 1: Completado.');
 
-          
-          const { error: storageError } = await supabase.storage
-            .from('productos')
-            .remove([filePath]);
+    const oldImageUrls = oldImages.map(img => img.imagen_url);
+    console.log(`[productService] Se encontraron ${oldImageUrls.length} imágenes antiguas.`);
 
-          if (storageError) {
-          } else {
-          }
-        }
-      } catch (storageError) {
+    // --- PASO 2: Procesar y subir las NUEVAS imágenes ---
+    const newImageUrls = [];
+    let firstImageUrl = null;
+    console.log('[productService] PASO 2: Procesando y subiendo nuevas imágenes...');
+
+    for (const [index, asset] of newImageAssets.entries()) {
+      // Si el asset ya tiene una URL (es una imagen que no se cambió), la reutilizamos.
+      if (asset.uri && asset.uri.startsWith('https://')) {
+        console.log(`[productService] Reutilizando imagen existente: ${asset.uri}`);
+        newImageUrls.push(asset.uri);
+        if (index === 0) firstImageUrl = asset.uri;
+        continue;
+      }
+
+      // Si es una imagen nueva (base64), la subimos.
+      if (asset.base64) {
+        console.log(`[productService] Subiendo nueva imagen ${index + 1}...`);
+        const fileExt = asset.uri.split('.').pop() || 'jpg';
+        const fileName = `producto_${productId}_${Date.now()}_${index}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
+        const mimeType = asset.mimeType ?? 'image/jpeg';
+
+        const { error: uploadError } = await supabase.storage
+          .from('productos')
+          .upload(filePath, decode(asset.base64), { contentType: mimeType });
+
+        if (uploadError) throw new Error(`Fallo al subir la nueva imagen ${index + 1}.`);
+
+        const { data: { publicUrl } } = supabase.storage.from('productos').getPublicUrl(filePath);
+        newImageUrls.push(publicUrl);
+        if (index === 0) firstImageUrl = publicUrl;
+        console.log(`[productService] Nueva imagen ${index + 1} subida a: ${publicUrl}`);
       }
     }
 
-    // Eliminar likes y guardados asociados. Con ON DELETE CASCADE en la DB, esto es una
-    // doble seguridad, pero no está de más y es crucial si la cascada no está configurada.
-    const { error: likesError } = await supabase
-        .from('likes_productos')
-        .delete()
-        .eq('producto_id', productId);
+    if (newImageUrls.length === 0) throw new Error('El producto debe tener al menos una imagen.');
+    if (!firstImageUrl) firstImageUrl = newImageUrls[0];
+    console.log('[productService] PASO 2: Completado.');
 
-    // Si hay un error eliminando los likes (y no es porque no había), detenemos el proceso.
-    if (likesError) {
-        console.error('Error eliminando likes del producto:', likesError.message);
-        // No lanzamos un error fatal aquí si ya tenemos ON DELETE CASCADE, pero es bueno saberlo.
+    // --- PASO 3: Actualizar la tabla `productos` con los nuevos datos y la portada ---
+    // CORRECCIÓN: Solo actualizamos los datos de texto. La portada la actualizará la función RPC.
+    console.log('[productService] PASO 3: Actualizando datos principales del producto...');
+    const { error: updateProductError } = await supabase
+      .from('productos')
+      .update(productData) // Ya no pasamos 'imagen_url' aquí
+      .eq('id', productId);
+
+    if (updateProductError) throw new Error('No se pudo actualizar la información principal del producto.');
+    console.log('[productService] PASO 3: Completado.');
+
+    // --- PASO 4: Borrar y reinsertar las URLs en `producto_imagenes` ---
+    // CAMBIO RADICAL: En lugar de borrar e insertar desde el cliente,
+    // llamamos a una función RPC de la base de datos que lo hace de forma segura.
+    console.log(`[productService] PASO 4: Llamando a RPC 'update_product_gallery' para el producto ID: ${productId}...`);
+    
+    const { error: rpcError } = await supabase.rpc('update_product_gallery', {
+      p_product_id: productId,
+      p_image_urls: newImageUrls
+    });
+
+    if (rpcError) {
+      console.error('[productService] ERROR en RPC (update_product_gallery):', JSON.stringify(rpcError, null, 2));
+      throw new Error('No se pudo actualizar la galería de imágenes: ' + rpcError.message);
     }
+    console.log('[productService] PASO 4: Completado.');
 
-    // Eliminar el producto
+    // El PASO 5 (borrar imágenes del Storage) ha sido eliminado.
+    // La limpieza de imágenes huérfanas ahora será manejada por la función de base de datos 'delete_orphaned_files'.
+
+    console.log(`[productService] <== Actualización completa para producto ID: ${productId} finalizada con éxito.`);
+    return { success: true };
+  } catch (error) {
+    console.error('[productService] ERROR FATAL en updateProductWithImages:', error.message);
+    throw error;
+  }
+};
+
+// --- Función para eliminar un producto ---
+export const deleteProduct = async (productId) => {
+  try {
+    // Al eliminar un producto de la tabla 'productos', la base de datos
+    // debería encargarse de borrar en cascada (ON DELETE CASCADE) todos los
+    // registros relacionados en 'producto_imagenes', 'likes_productos', etc.
+    // La limpieza de los archivos en el Storage será manejada por la función
+    // de base de datos 'delete_orphaned_files' que se ejecuta periódicamente.
+    console.log(`[productService] Eliminando producto ID: ${productId} de la base de datos...`);
+
     const { error: deleteError } = await supabase
       .from('productos')
       .delete()
       .eq('id', productId);
 
     if (deleteError) {
+      console.error(`[productService] Error al eliminar el producto:`, deleteError);
       throw new Error('No se pudo eliminar el producto: ' + deleteError.message);
     }
     return { success: true };

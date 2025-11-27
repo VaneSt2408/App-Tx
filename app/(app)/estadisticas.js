@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text as DefaultText, FlatList, StyleSheet, ActivityIndicator, Image, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text as DefaultText, FlatList, StyleSheet, ActivityIndicator, Image, TouchableOpacity, SafeAreaView, RefreshControl } from 'react-native';
 import { estadisticasService } from '../../src/services/estadisticasService';
 import useCustomFonts from '../../hooks/useFonts';
 import { useRouter } from 'expo-router';
@@ -15,12 +15,12 @@ export default function EstadisticasPage() {
   const [artesanosByProduct, setArtesanosByProduct] = useState([]);
   const [artesanosByAntiguedad, setArtesanosByAntiguedad] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [view, setView] = useState('likes');
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchStats = async () => {
+  const fetchStats = async () => {
       try {
         setLoading(true);
         const likesData = await estadisticasService.getArtesanosByLikes();
@@ -37,11 +37,18 @@ export default function EstadisticasPage() {
         setError('Error al cargar las estadísticas');
       } finally {
         setLoading(false);
+        setRefreshing(false);
       }
     };
+
+  useEffect(() => {
     fetchStats();
   }, []);
 
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchStats();
+  };
   const handlePressArtesano = (userId) => {
     router.push({ pathname: "/(app)/ArtesanoProfileVistaVisitante", params: { userId } }); //Cambiar a la ruta correcta
   };
@@ -167,6 +174,13 @@ export default function EstadisticasPage() {
         renderItem={renderItem}
         keyExtractor={(item, index) => item?.user_id?.toString() ?? index.toString()}
         contentContainerStyle={styles.listContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#9D046D']}
+          />
+        }
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>

@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from '../src/context/AuthContext'; // Asegúrat
 import { Slot, useRouter, useSegments, Href } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const LoadingScreen = () => (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -90,8 +91,10 @@ function RootLayoutNav() {
 // Su única función es envolver la app con el AuthProvider.
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <RootLayoutNav />
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AuthProvider>
+        <RootLayoutNav />
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 }

@@ -10,7 +10,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import { artesanoService } from '../../src/services/artesanoService';
-import { updateProduct, deleteProduct } from '../../src/services/productService';
+import { updateProductWithImages, deleteProduct, selectMultipleAndCompressImages } from '../../src/services/productService';
 import { supabase } from '../../src/supabase/client';
 import * as ImagePicker from 'expo-image-picker';
 import UploadProductModal from '../../components/UploadProductModal';
@@ -34,6 +34,22 @@ const statusStyleMap = {
   inactivo: { icon: 'close-circle', color: '#f44336' },
 };
 
+// Lista de categorías disponibles para los productos
+const categoriasDisponibles = [
+  'Joyería',
+  'Alfarería',
+  'Vidrio',
+  'Metal',
+  'Cestería',
+  'Fibras',
+  'Minerales',
+  'Textil',
+  'Cerámica',
+  'Madera',
+  'Piel',
+  'Piedra',
+  'Otro'
+];
 // Componente principal
 export default function ArtesanoProducts() {
   const router = useRouter(); // Router de expo-router para navegar entre pantallas
@@ -48,7 +64,7 @@ export default function ArtesanoProducts() {
   const [showProductoModal, setShowProductoModal] = useState(false); // Estado para guardar el estado del modal de producto
   const [showEditModal, setShowEditModal] = useState(false); // Estado para guardar el estado del modal de edición de producto
   const [editData, setEditData] = useState({ nombre: '', precio: '', categoria: '', descripcion: '', imagen_url: '', estado: 'activo', stock: '0', min_may: 'minoreo' }); // Estado para guardar los datos de edición
-  const [selectedImage, setSelectedImage] = useState(null); // Estado para guardar la imagen seleccionada
+  const [imageAssets, setImageAssets] = useState([]); // ESTADO PARA LA GALERÍA DE IMÁGENES EN EDICIÓN
   const [editLoading, setEditLoading] = useState(false); // Estado para guardar el estado de carga de edición
   const [showUploadModal, setShowUploadModal] = useState(false); // Estado para guardar el estado del modal de subida de producto
   const productoSliderAnim = React.useRef(new Animated.Value(0)).current; // Referencia para la animación del slider de productos
@@ -86,12 +102,6 @@ export default function ArtesanoProducts() {
     }
   };
 
-
-  // Función para refrescar los productos
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadProductos();
-  };
 
   // Función para seleccionar un producto
   const handleSelectProducto = (producto, index) => {
@@ -159,60 +169,28 @@ export default function ArtesanoProducts() {
   ).current;
 
 
-  // Función para editar un producto
-  const handleEditProducto = () => {
-    if (selectedProducto) {
-      setEditData({ 
-        nombre: selectedProducto.nombre || '', 
-        precio: selectedProducto.precio?.toString() || '', 
-        categoria: selectedProducto.categoria || '', 
-        descripcion: selectedProducto.descripcion || '',
-        imagen_url: selectedProducto.imagen_url || '', // URL de la imagen actual
-        estado: selectedProducto.estado || 'activo',
-        stock: selectedProducto.stock?.toString() || '0',
-        min_may: selectedProducto.min_may || 'minoreo'
-      });
-      setSelectedImage(null);
-      setShowEditModal(true);
-    }
-  };
-
-  // Función para seleccionar una imagen de producto
-  const selectProductImage = async () => {
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permisos necesarios', 'Se requiere acceso a la galería para cambiar la imagen del producto');
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.7,
-        base64: true,
-      });
-
-      if (!result.canceled && result.assets && result.assets[0]) {
-        setSelectedImage(result.assets[0]);
-        setEditData(prev => ({
-          ...prev,
-          imagen_url: result.assets[0].uri
-        }));
-      }
-    } catch (error) {
-      console.error('Error al seleccionar imagen:', error);
-      Alert.alert('Error', 'No se pudo seleccionar la imagen: ' + error.message);
-    }
-  };
-
-
   // Función para cerrar el modal de edición
   const handleCloseEditModal = () => {
     setShowEditModal(false); // Ocultar el modal de edición
     setEditData({ nombre: '', precio: '', categoria: '', descripcion: '', imagen_url: '', estado: 'activo', stock: '0', min_may: 'minoreo' });
-    setSelectedImage(null);
+    setImageAssets([]); // Limpiar la galería de imágenes
+  };
+
+  // Función para añadir imágenes a la galería del modal de edición
+  const handleAddImageToGallery = async () => {
+    if (imageAssets.length >= 5) {
+      Alert.alert('Límite alcanzado', 'Puedes seleccionar un máximo de 5 imágenes.');
+      return;
+    }
+    const newAssets = await selectMultipleAndCompressImages(1); // Seleccionar de una en una
+    if (newAssets) {
+      setImageAssets(prevAssets => [...prevAssets, ...newAssets]);
+    }
+  };
+
+  // Función para eliminar una imagen de la galería del modal de edición
+  const handleRemoveImageFromGallery = (index) => {
+    setImageAssets(prevAssets => prevAssets.filter((_, i) => i !== index));
   };
 
   // Función para guardar la edición del producto
@@ -222,20 +200,20 @@ export default function ArtesanoProducts() {
     setEditLoading(true);
     try {
       console.log('✏️ [PRODUCTOS] Editando producto:', selectedProducto.id);
-      
+
       const updateData = {
         nombre: editData.nombre,
         precio: editData.precio,
         categoria: editData.categoria,
         descripcion: editData.descripcion,
-        stock: editData.stock,
+        stock: parseInt(editData.stock, 10) || 0,
         estado: editData.estado,
         min_may: editData.min_may,
       };
 
-      await updateProduct(selectedProducto.id, updateData, selectedImage);
+      await updateProductWithImages(selectedProducto.id, updateData, imageAssets);
 
-      Alert.alert('Éxito', 'Producto editado correctamente');
+      Alert.alert('Éxito', 'Producto actualizado correctamente');
       handleCloseEditModal();
       handleCloseProductoModal();
       // Recargar los productos
@@ -389,15 +367,6 @@ export default function ArtesanoProducts() {
         ListEmptyComponent={renderEmpty}
         contentContainerStyle={productos.length === 0 ? styles.emptyList : styles.list}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-
-            colors={['#9D046D']}
-            tintColor="#9D046D"
-          />
-        }
       />
       {/* Botón Flotante (FAB) para agregar producto */}
       {isOwnProfile && (
@@ -578,16 +547,34 @@ export default function ArtesanoProducts() {
               <View style={styles.modalActions}>
                 <TouchableOpacity
                   style={styles.editButton}
-                  onPress={() => {
+                  onPress={async () => {
                     if (selectedProducto) {
+                      // Obtener la galería de imágenes actual del producto
+                      const { data: currentImages, error } = await supabase
+                        .from('producto_imagenes')
+                        .select('imagen_url, orden')
+                        .eq('producto_id', selectedProducto.id)
+                        .order('orden', { ascending: true });
+
+                      const gallery = currentImages ? currentImages.map(img => ({ uri: img.imagen_url })) : [];
+                      setImageAssets(gallery);
+
+                      // --- LÓGICA CORREGIDA PARA LA CATEGORÍA ---
+                      const currentCategory = selectedProducto.categoria || '';
+                      // Comprueba si la categoría actual NO está en la lista de botones predefinidos.
+                      const isCustomCategory = currentCategory && !categoriasDisponibles.includes(currentCategory);
+
                       setEditData({ 
                         nombre: selectedProducto.nombre || '', 
                         precio: selectedProducto.precio?.toString() || '', 
-                        categoria: selectedProducto.categoria || '', 
+                        // Si es personalizada, selecciona 'Otro'. Si no, usa la categoría actual.
+                        categoria: isCustomCategory ? 'Otro' : currentCategory,
+                        // Rellena el campo de texto 'customCategory' si es una categoría personalizada.
+                        customCategory: isCustomCategory ? currentCategory : '',
                         descripcion: selectedProducto.descripcion || '',
-                        estado: selectedProducto.estado || 'activo', // Aseguramos que el estado se pase
+                        estado: selectedProducto.estado || 'activo',
                         stock: selectedProducto.stock?.toString() || '0',
-                        min_may: selectedProducto.min_may || 'minoreo' // Pasamos el tipo de venta
+                        min_may: selectedProducto.min_may || 'minoreo'
                       });
                       setShowProductoModal(false);
                       setShowEditModal(true);
@@ -628,51 +615,40 @@ export default function ArtesanoProducts() {
             </View>
 
             <ScrollView style={styles.modalBody}>
-              {/* Sección de imagen */}
-              <View style={styles.imageEditSection}>
-                <Text style={styles.editLabel}>Imagen del producto</Text>
-                <TouchableOpacity
-                  style={styles.imageButton}
-                  onPress={selectProductImage}
-                  disabled={editLoading}
-                >
-                  {editLoading ? (
-                    <View style={styles.imagePreview}>
-                      <ActivityIndicator size="small" color="#666" />
-                      <Text style={styles.uploadingText}>Procesando...</Text>
+              {/* --- SECCIÓN DE GALERÍA DE IMÁGENES (COMO EN UPLOAD MODAL) --- */}
+              <View style={styles.editSection}>
+                <Text style={styles.editLabel}>Imágenes del Producto (3 a 5)</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imagePreviewContainer}>
+                  {imageAssets.map((asset, index) => (
+                    <View key={index} style={styles.imagePreviewWrapper}>
+                      <Image source={{ uri: asset.uri }} style={styles.imagePreview} />
+                      <TouchableOpacity
+                        style={styles.thumbnailDeleteButton}
+                        onPress={() => handleRemoveImageFromGallery(index)}
+                      >
+                        <MaterialCommunityIcons name="close" size={18} color="#fff" />
+                      </TouchableOpacity>
                     </View>
-                  ) : (editData.imagen_url && editData.imagen_url.startsWith('file://')) || selectedImage ? (
-                    // Mostrar nueva imagen seleccionada (vista previa local)
-                    <Image source={{ uri: selectedImage?.uri || editData.imagen_url }} style={styles.imagePreview} />
-                  ) : selectedProducto?.imagen_url ? (
-                    // Mostrar imagen actual del producto
-                    <Image source={{ uri: selectedProducto.imagen_url }} style={styles.imagePreview} />
-                  ) : (
-                    // Sin imagen
-                    <View style={styles.imagePlaceholder}>
-                      <MaterialCommunityIcons name="camera" size={30} color="#666" />
-                      <Text style={styles.imagePlaceholderText}>Sin imagen</Text>
-                    </View>
+                  ))}
+                  {imageAssets.length < 5 && (
+                    <TouchableOpacity
+                      style={styles.addImageButton}
+                      onPress={handleAddImageToGallery}
+                    >
+                      <MaterialCommunityIcons name="camera-plus" size={30} color="#9D046D" />
+                      <Text style={styles.addImageText}>Añadir</Text>
+                    </TouchableOpacity>
                   )}
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.changeImageButton}
-                  onPress={selectProductImage}
-                  disabled={editLoading}
-                >
-                  <MaterialCommunityIcons name="camera-plus" size={20} color="#9D046D" />
-                  <Text style={styles.changeImageButtonText}>
-                    {editLoading ? 'Procesando...' : 'Cambiar imagen'}
-                  </Text>
-                </TouchableOpacity>
+                </ScrollView>
               </View>
+              {/* --- FIN DE SECCIÓN DE GALERÍA --- */}
 
               {/* Campo de nombre */}
               <View style={styles.editSection}>
                 <Text style={styles.editLabel}>Nombre *</Text>
                 <TextInput
                   style={styles.editTextInput}
-                  placeholder="Nombre del producto"
+                  placeholder="Ej: Collar de Chaquira"
                   placeholderTextColor="#000"
                   value={editData.nombre}
                   onChangeText={(text) => setEditData({ ...editData, nombre: text })}
@@ -685,7 +661,7 @@ export default function ArtesanoProducts() {
                 <Text style={styles.editLabel}>Precio *</Text>
                 <TextInput
                   style={styles.editTextInput}
-                  placeholder="0.00"
+                  placeholder="Ej: 250.00"
                   placeholderTextColor="#000"
                   value={editData.precio}
                   onChangeText={(text) => setEditData({ ...editData, precio: text })}
@@ -698,7 +674,7 @@ export default function ArtesanoProducts() {
                 <Text style={styles.editLabel}>Stock *</Text>
                 <TextInput
                   style={styles.editTextInput}
-                  placeholder="Cantidad disponible"
+                  placeholder="Ej: 10"
                   placeholderTextColor="#000"
                   value={editData.stock}
                   onChangeText={(text) => setEditData({ ...editData, stock: text })}
@@ -756,23 +732,48 @@ export default function ArtesanoProducts() {
 
               {/* Campo de categoría */}
               <View style={styles.editSection}>
-                <Text style={styles.editLabel}>Categoría</Text>
-                <TextInput
-                  style={styles.editTextInput}
-                  placeholder="Categoría del producto"
-                  placeholderTextColor="#000"
-                  value={editData.categoria}
-                  onChangeText={(text) => setEditData({ ...editData, categoria: text })}
-                  maxLength={50}
-                />
+                <Text style={styles.editLabel}>Categoría *</Text>
+                <View style={styles.categoryContainer}>
+                  {categoriasDisponibles.map(categoria => (
+                    <TouchableOpacity
+                      key={categoria}
+                      style={[
+                        styles.categoryButton,
+                        editData.categoria === categoria && styles.statusButtonActive,
+                      ]}
+                      onPress={() => setEditData({ ...editData, categoria: categoria })}
+                    >
+                      <Text style={[
+                        styles.statusButtonText,
+                        editData.categoria === categoria && styles.statusButtonTextActive,
+                      ]}>
+                        {categoria}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
+              
+              {/* Campo de texto para "Otra" categoría */}
+              {editData.categoria === 'Otro' && (
+                <View style={styles.editSection}>
+                  <Text style={styles.editLabel}>Especifica la categoría</Text>
+                  <TextInput
+                    style={styles.editTextInput}
+                    placeholder="Ej: Arte Huichol"
+                    value={editData.customCategory}
+                    onChangeText={(text) => setEditData({ ...editData, customCategory: text })}
+                    maxLength={50}
+                  />
+                </View>
+              )}
 
               {/* Campo de descripción */}
               <View style={styles.editSection}>
                 <Text style={styles.editLabel}>Descripción</Text>
                 <TextInput
                   style={styles.editTextArea}
-                  placeholder="Descripción del producto"
+                  placeholder="Describe tu producto, materiales, técnica, etc."
                   placeholderTextColor="#000"
                   multiline
                   value={editData.descripcion}
@@ -795,9 +796,12 @@ export default function ArtesanoProducts() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.saveButton, editLoading && styles.disabledButton]}
+                style={[
+                  styles.saveButton, 
+                  (editLoading || imageAssets.length < 3 || imageAssets.length > 5) && styles.disabledButton
+                ]}
                 onPress={handleSaveEdit}
-                disabled={editLoading}
+                disabled={editLoading || imageAssets.length < 3 || imageAssets.length > 5}
               >
                 {editLoading ? (
                   <ActivityIndicator size="small" color="#fff" />
@@ -930,6 +934,45 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     position: 'relative',
+  },
+  // Estilos para la galería de imágenes en el modal
+  imagePreviewContainer: {
+    flexDirection: 'row',
+    paddingVertical: 10,
+  },
+  imagePreviewWrapper: {
+    width: 100,
+    height: 100,
+    marginRight: 10,
+    position: 'relative',
+  },
+  imagePreview: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 8,
+    backgroundColor: '#f0f0f0',
+  },
+  thumbnailDeleteButton: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: 'rgba(220, 53, 69, 0.9)',
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addImageButton: {
+    width: 100,
+    height: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#ddd',
+    borderStyle: 'dashed',
   },
   gridImage: {
     width: '100%',
@@ -1212,12 +1255,12 @@ const styles = StyleSheet.create({
   imagePlaceholder: {
     width: '100%',
     height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: '#f0f0f0',
     borderWidth: 2,
     borderColor: '#ddd',
     borderStyle: 'dashed',
+    justifyContent: 'center', // Centra verticalmente
+    alignItems: 'center',     // Centra horizontalmente
   },
   imagePlaceholderText: {
     marginTop: 8,
@@ -1248,12 +1291,27 @@ const styles = StyleSheet.create({
   statusContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    flexWrap: 'wrap', // Permite que los botones pasen a la siguiente línea
+    gap: 10,
+  },
+  categoryContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 10,
   },
   statusButton: {
     flex: 1,
     paddingVertical: 12,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ced4da',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+  },
+  categoryButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: '#ced4da',
     alignItems: 'center',
