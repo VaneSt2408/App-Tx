@@ -2,7 +2,7 @@
 // Este archivo es el encargado de mostrar el detalle de un producto en la aplicación.
 // Muestra el detalle de un producto registrado en la base de datos y permite guardar el producto, contactar al artesano y compartir el producto.
 
-// Importaciones (Añadir Modal y Linking)
+// Importaciones (Añadir FlatList y Dimensions)
 import React, { useState, useEffect, useCallback } from 'react';
 import {View,Text as DefaultText,Image,ScrollView,TouchableOpacity,StyleSheet,ActivityIndicator,Alert, RefreshControl, Modal, Linking, Share, Platform} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -10,6 +10,8 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import MarketplaceService from '../../src/services/MarketplaceService';
 import { toggleLikeProduct  } from '../../src/services/productService';
 import { useAuth } from '../../src/context/AuthContext';
+import { FlatList as GestureFlatList } from 'react-native-gesture-handler';
+import { Dimensions } from 'react-native';
 import useCustomFonts from '../../hooks/useFonts';
 
 // Componente principal
@@ -27,6 +29,8 @@ export default function ProductDetailPage() {
   const [likesCount, setLikesCount] = useState(0); // Estado para contar los likes
   const [contactInfo, setContactInfo] = useState({ email: null, telefono: null }); // Estado para la info de contacto
   const [loadingContact, setLoadingContact] = useState(false); // Estado para la carga de la info de contacto
+  const [imageGallery, setImageGallery] = useState([]); // Estado para la galería de imágenes
+  const [activeIndex, setActiveIndex] = useState(0); // Estado para el índice de la imagen activa
 
   const Text = (props) => (
       <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
@@ -52,6 +56,18 @@ export default function ProductDetailPage() {
         setIsLiked(result.data.is_liked || false);
         setSaved(result.data.is_saved || false); // <-- Actualizar el estado inicial de guardado
         setLikesCount(result.data.likes_count || 0); // Agregar esta línea
+
+        // Construir la galería de imágenes
+        const coverImage = { id: 'cover', imagen_url: result.data.imagen_url };
+        const galleryImages = result.data.producto_imagenes 
+          ? result.data.producto_imagenes.map((img, index) => ({ ...img, id: `gallery-${index}` }))
+          : [];
+        
+        // Unir la portada con el resto, evitando duplicados si la portada ya está en la galería
+        const allImages = [coverImage, ...galleryImages.filter(img => img.imagen_url !== coverImage.imagen_url)];
+        setImageGallery(allImages);
+
+        console.log('--- [ProductDetailPage] Galería de imágenes construida:', JSON.stringify(allImages, null, 2));
       } else {
         Alert.alert('Error', 'No se pudo cargar el producto');
         router.back();
@@ -66,6 +82,12 @@ export default function ProductDetailPage() {
     }
   };
 
+  // Callback para actualizar el índice activo del carrusel
+  const onViewableItemsChanged = useCallback(({ viewableItems }) => {
+    if (viewableItems.length > 0) {
+      setActiveIndex(viewableItems[0].index);
+    }
+  }, []);
   // Función para refrescar la pantalla
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -233,12 +255,31 @@ const handleLike = async (productID) => {
       >
         {/* Imagen del Producto */}
         <View style={styles.imageContainer}>
-          {product.imagen_url ? (
-            <Image 
-              source={{ uri: product.imagen_url }} 
-              style={styles.image}
-              resizeMode="cover"
-            />
+          {imageGallery.length > 0 ? (
+            <>
+              <GestureFlatList
+                data={imageGallery}
+                renderItem={({ item }) => (
+                  <Image source={{ uri: item.imagen_url }} style={styles.image} resizeMode="cover" />
+                )}
+                keyExtractor={(item) => item.id.toString()}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                onViewableItemsChanged={onViewableItemsChanged}
+                viewabilityConfig={{
+                  itemVisiblePercentThreshold: 50,
+                }}
+              />
+              <View style={styles.pagination}>
+                {imageGallery.map((_, index) => (
+                  <View
+                    key={index}
+                    style={[styles.dot, index === activeIndex ? styles.dotActive : {}]}
+                  />
+                ))}
+              </View>
+            </>
           ) : (
             <View style={[styles.image, styles.imagePlaceholder]}>
               <MaterialCommunityIcons name="image-off" size={80} color="#ccc" />
@@ -428,7 +469,7 @@ const handleLike = async (productID) => {
                 style={styles.infoRow} 
                 onPress={() => Linking.openURL(product.artesano.link_ubicacion)}
               >
-                <MaterialCommunityIcons name="map-marker-link" size={16} color="#34A853" />
+                <MaterialCommunityIcons name="map-marker-outline" size={16} color="#ED2100" />
                 <Text style={[styles.infoText, styles.linkText]}>{product.artesano.ubicacion}</Text>
               </TouchableOpacity>
             ) : null}
@@ -523,18 +564,36 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   imageContainer: {
-    width: '100%',
+    width: Dimensions.get('window').width,
     aspectRatio: 1,
     backgroundColor: '#f0f0f0',
   },
   image: {
-    width: '100%',
+    width: Dimensions.get('window').width,
     height: '100%',
   },
   imagePlaceholder: {
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#f5f5f5',
+  },
+  pagination: {
+    position: 'absolute',
+    bottom: 10,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)', // Color para los puntos inactivos
+    marginHorizontal: 4,
+  },
+  dotActive: {
+    backgroundColor: '#9D046D', // Color para el punto activo (color de la marca)
   },
   content: {
     padding: 16,
@@ -688,12 +747,12 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 14,
-    color: '#333',
+    color: '#000000',
     marginLeft: 8,
     flex: 1,
   },
   linkText: {
-    color: '#34A853',
+    color: '#000000',
     textDecorationLine: 'underline',
   },
   bottomSpacer: {
