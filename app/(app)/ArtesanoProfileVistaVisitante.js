@@ -159,14 +159,14 @@ export default function ArtesanoProfileVistaVisitante() {
                     <Text style={styles.specialty}>{artesano.categoria || 'Ceramista'}</Text>
 
                     {/* Bloque de Ubicación con enlace a Google Maps */}
-                    {artesano?.link_ubicacion && artesano?.ubicacion && (
-                        <TouchableOpacity 
-                            style={styles.infoRow} 
-                            onPress={() => handleOpenMaps(artesano.link_ubicacion)}>
-                            <MaterialCommunityIcons name="map-marker-link" size={16} color="#34A853" />
-                            <Text style={[styles.specialty, styles.linkText, {fontFamily: 'Alan Sans'}]}>{artesano.ubicacion}</Text>
-                        </TouchableOpacity>
-                    )}
+                     {artesano?.link_ubicacion && artesano?.ubicacion && (
+                         <TouchableOpacity 
+                             style={styles.infoRow} 
+                             onPress={() => handleOpenMaps(artesano.link_ubicacion)}>
+                             <MaterialCommunityIcons name="map-marker-outline" size={16} color="#FD2D1C" />
+                             <Text style={[styles.infoText, styles.linkText, {fontFamily: 'Alan Sans'}]}>{artesano.ubicacion}</Text>
+                         </TouchableOpacity>
+                     )}
 
                     {/* Botón de Seguir (solo para visitantes) */}
                     {role === 'cliente' && (
@@ -183,7 +183,7 @@ export default function ArtesanoProfileVistaVisitante() {
                                 <ActivityIndicator size="small" color={isFollowing ? '#333' : '#fff'} />
                             ) : (
                                 <Text style={[styles.followButtonText, isFollowing && styles.followingButtonText]}>
-                                    {isFollowing ? 'Siguiendo' : 'Seguir'}
+                                    {isFollowing ? 'Eliminar de favoritos' : 'Agregar a favoritos'}
                                 </Text>
                             )}
                         </TouchableOpacity>
@@ -331,10 +331,10 @@ const styles = StyleSheet.create({
         color: '#333',
         marginTop: 10,
     },
-    specialty: {
+    infoText: {
         fontSize: 16,
         color: '#666',
-        marginBottom: 20,
+        marginLeft: 8,
     },
     buttonRow: {
         flexDirection: 'row',
@@ -469,7 +469,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     linkText: {
-        color: '#34A853', // Color distintivo para el enlace
+        color: '#000000', // Color distintivo para el enlace
         textDecorationLine: 'underline',
         marginLeft: 8,
         marginBottom: 20,

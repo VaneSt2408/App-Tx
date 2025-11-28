@@ -4,10 +4,13 @@
 
 // Importaciones
 import React, { useState, useEffect } from 'react';
-import { View, Text as DefaultText, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text as DefaultText, Image, TouchableOpacity, StyleSheet, Dimensions, FlatList, ActivityIndicator } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import useCustomFonts from '../hooks/useFonts';
+
+const { width } = Dimensions.get('window');
+const cardWidth = width; // La tarjeta ocupará todo el ancho
 
 /**
  * Componente de tarjeta de publicación (estilo Facebook)
@@ -19,13 +22,14 @@ const Text = (props) => (
   
 const PostCard = ({ post, onLike }) => {
   const router = useRouter();
-  const [liked, setLiked] = useState(post.liked_by_user);
+  const [isLiked, setIsLiked] = useState(post.liked_by_user);
   const [likesCount, setLikesCount] = useState(post.likes_count);
-  const [isLiking, setIsLiking] = useState(false);
+  const [likeLoading, setLikeLoading] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0); // Estado para el carrusel
 
   // Sincronizar estado cuando cambia el post (útil al recargar)
   useEffect(() => {
-    setLiked(post.liked_by_user);
+    setIsLiked(post.liked_by_user);
     setLikesCount(post.likes_count);
   }, [post.id, post.liked_by_user, post.likes_count]);
 
@@ -55,38 +59,40 @@ const PostCard = ({ post, onLike }) => {
   };
 
   // Manejar like
-  const handleLike = async () => {
-    if (isLiking) return;
+  const handleLikePress = async () => {
+    if (likeLoading) return;
+    setLikeLoading(true);
 
-    setIsLiking(true);
+    // Actualización visual inmediata
+    setIsLiked(!isLiked);
+    setLikesCount(prev => (isLiked ? prev - 1 : prev + 1));
 
-    // Optimistic update
-    const wasLiked = liked;
-    const previousCount = likesCount;
-    
-    setLiked(!liked);
-    setLikesCount(liked ? likesCount - 1 : likesCount + 1);
-
-    try {
-      const result = await onLike(post.id);
-      
-      if (result.success) {
-        // Actualizar con datos reales del servidor
-        setLiked(result.liked);
-        setLikesCount(result.likes_count);
-      } else {
-        // Revertir en caso de error
-        setLiked(wasLiked);
-        setLikesCount(previousCount);
-      }
-    } catch (error) {
-      // Revertir en caso de error
-      setLiked(wasLiked);
-      setLikesCount(previousCount);
-    } finally {
-      setIsLiking(false);
+    const result = await onLike(post.id);
+    if (!result.success) {
+      // Si falla, revertimos el cambio visual
+      setIsLiked(post.liked_by_user);
+      setLikesCount(post.likes_count);
+    } else {
+      // Sincronizamos con la respuesta final del servidor
+      setIsLiked(result.liked);
+      setLikesCount(result.likes_count);
     }
+    setLikeLoading(false);
   };
+
+  // Construir la galería de imágenes
+  const imageGallery = [
+    // La imagen de portada siempre va primero
+    { id: 'cover', imagen_url: post.imagen_url },
+    // El resto de imágenes, filtrando para no duplicar la portada
+    ...(post.imagenes?.filter(img => img.imagen_url !== post.imagen_url).map((img, index) => ({ ...img, id: `gallery-${index}` })) || [])
+  ].filter(img => img.imagen_url); // Filtrar cualquier imagen que pueda ser nula
+
+  const onViewableItemsChanged = React.useCallback(({ viewableItems }) => {
+    if (viewableItems.length > 0) {
+      setActiveIndex(viewableItems[0].index || 0);
+    }
+  }, []);
 
   return (
     <View style={styles.card}>
@@ -97,10 +103,6 @@ const PostCard = ({ post, onLike }) => {
             <Image 
               source={{ uri: post.artesano.avatar_url }} 
               style={styles.avatar}
-              onError={(error) => {
-              }}
-              onLoad={() => {
-              }}
             />
           ) : (
             <View style={[styles.avatar, styles.avatarPlaceholder]}>
@@ -133,31 +135,52 @@ const PostCard = ({ post, onLike }) => {
         </View>
       )}
 
-      {/* Imagen de la publicación */}
-      {post.imagen_url && (
+      {/* Galería de Imágenes */}
+      {imageGallery.length > 0 ? (
         <View style={styles.imageContainer}>
-          <Image 
-            source={{ uri: post.imagen_url }} 
-            style={styles.image}
-            resizeMode="cover"
+          <FlatList
+            data={imageGallery}
+            renderItem={({ item }) => (
+              <Image source={{ uri: item.imagen_url }} style={styles.image} />
+            )}
+            keyExtractor={(item) => item.id.toString()}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onViewableItemsChanged={onViewableItemsChanged}
+            viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
           />
+          {imageGallery.length > 1 && (
+            <View style={styles.pagination}>
+              {imageGallery.map((_, index) => (
+                <View
+                  key={index}
+                  style={[styles.dot, index === activeIndex ? styles.dotActive : {}]}
+                />
+              ))}
+            </View>
+          )}
         </View>
-      )}
+      ) : null}
 
       {/* Footer: Likes */}
       <View style={styles.footer}>
         <TouchableOpacity 
           style={styles.likeButton}
-          onPress={handleLike}
-          disabled={isLiking}
+          onPress={handleLikePress}
+          disabled={likeLoading}
           activeOpacity={0.7}
         >
-          <MaterialCommunityIcons 
-            name={liked ? "heart" : "heart-outline"} 
-            size={24} 
-            color={liked ? "#e74c3c" : "#666"}
-          />
-          <Text style={[styles.likeCount, liked && styles.likeCountActive]}>
+          {likeLoading ? (
+            <ActivityIndicator size="small" color="#e91e63" />
+          ) : (
+            <MaterialCommunityIcons
+              name={isLiked ? 'heart' : 'heart-outline'}
+              size={28}
+              color={isLiked ? '#e91e63' : '#333'}
+            />
+          )}
+          <Text style={[styles.likeCount, isLiked && styles.likeCountActive]}>
             {likesCount}
           </Text>
         </TouchableOpacity>
@@ -171,7 +194,7 @@ const PostCard = ({ post, onLike }) => {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#fff',
-    marginBottom: 10,
+    marginBottom: 20,
     borderRadius: 8,
     overflow: 'hidden',
     elevation: 2,
@@ -231,11 +254,28 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     width: '100%',
+    height: cardWidth, // Imagen cuadrada
     backgroundColor: '#f0f0f0',
   },
   image: {
-    width: '100%',
-    height: 300,
+    width: cardWidth,
+    height: cardWidth,
+  },
+  pagination: {
+    position: 'absolute',
+    bottom: 10,
+    flexDirection: 'row',
+    alignSelf: 'center',
+  },
+  dot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)', // Color de punto inactivo (gris)
+    marginHorizontal: 3,
+  },
+  dotActive: {
+    backgroundColor: '#9D046D', // Color de punto activo (color de la marca)
   },
   footer: {
     flexDirection: 'row',
@@ -257,7 +297,7 @@ const styles = StyleSheet.create({
     marginLeft: 6,
     fontSize: 14,
     color: '#666',
-    fontWeight: '500',
+    fontWeight: 'bold',
   },
   likeCountActive: {
     color: '#e74c3c',

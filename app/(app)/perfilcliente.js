@@ -404,7 +404,7 @@ export default function PerfilClienteScreen() {
         <View className="mt-8">
           {/* 3. Aplicar la fuente personalizada y el peso */}
           <Text className="text-lg text-gray-900 mb-4 font-['AlanSans-VariableFont_wght'] font-bold">
-            Artesanos seguidos
+            Artesanos agregados a favoritos
           </Text>
           {followedArtisans.length > 0 ? (
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>

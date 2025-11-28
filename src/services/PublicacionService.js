@@ -1,57 +1,133 @@
 import { supabase } from '../supabase/client';
 import { decode } from 'base64-arraybuffer';
 import 'react-native-get-random-values'; // Para generar nombres de archivo únicos si es necesario
-import { Alert } from 'react-native'; // <-- ¡NUEVA IMPORTACIÓN!
+import { Alert } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
+
+/**
+ * Abre la galería, permite seleccionar y recortar una imagen, y la comprime.
+ * Es una réplica de la función en productService para mantener consistencia.
+ * Devuelve un array con un solo asset para ser compatible con la lógica de galerías.
+ * @returns {Promise<Array<object>|null>} - Un array con un objeto de asset o null.
+ */
+export const selectMultipleAndCompressImages = async () => {
+  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (status !== 'granted') {
+    Alert.alert('Permisos requeridos', 'Necesitamos acceso a tu galería para seleccionar una imagen.');
+    return null;
+  }
+
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    aspect: [1, 1], // Formato cuadrado para el feed
+    quality: 1, // Calidad alta antes de la compresión manual.
+  });
+
+  if (result.canceled || !result.assets) return null;
+
+  const asset = result.assets[0];
+
+  // LOG del tamaño original (después del recorte)
+  const originalSizeInBytes = asset.fileSize || (asset.base64 ? (asset.base64.length * 3) / 4 : 0);
+  if (originalSizeInBytes > 0) {
+    const originalSizeMB = (originalSizeInBytes / (1024 * 1024)).toFixed(2);
+    console.log(`[PublicacionService] Imagen (Después de recortar): ${originalSizeMB} MB`);
+  }
+
+  // Comprimir la imagen seleccionada
+  const manipulatedImage = await ImageManipulator.manipulateAsync(
+    asset.uri,
+    [],
+    { compress: 0.5, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+  );
+
+  const compressedSizeInBytes = (manipulatedImage.base64.length * 3) / 4;
+  const compressedSizeMB = (compressedSizeInBytes / (1024 * 1024)).toFixed(2);
+  console.log(`[PublicacionService] Imagen (Comprimida): ${compressedSizeMB} MB`);
+
+  const originalSize = asset.fileSize ? (asset.fileSize / 1024 / 1024).toFixed(2) : 'N/A';
+  const compressedSize = (manipulatedImage.base64.length * 3 / 4 / 1024 / 1024).toFixed(2);
+
+  return [manipulatedImage]; // Devolvemos un array para mantener la compatibilidad
+};
 
 // Función para crear una nueva publicación
-export const createPost = async (userId, text, imageBase64, imageMimeType) => {
-    let imageUrl = null;
-
-    // 1. Si hay una imagen, subirla a Supabase Storage
-    if (imageBase64) {
-        try {
-            const fileExt = imageMimeType ? imageMimeType.split('/')[1] : 'jpg'; // Extrae la extensión o usa 'jpg' por defecto
-            const fileName = `${Date.now()}.${fileExt}`;
-            const filePath = `${userId}/${fileName}`; // Guarda en una carpeta con el ID del artesano
-
-            const { data: uploadData, error: uploadError } = await supabase.storage
-                .from('imagenes-publicaciones') // Nombre del bucket que creamos
-                .upload(filePath, decode(imageBase64), {
-                    contentType: imageMimeType ?? 'image/jpeg',
-                    upsert: false // No sobrescribir si ya existe (opcional)
-                });
-
-            if (uploadError) {
-                throw new Error('Error al subir la imagen: ' + uploadError.message);
-            }
-
-            // Obtener la URL pública de la imagen subida
-            const { data: urlData } = supabase.storage.from('imagenes-publicaciones').getPublicUrl(filePath);
-            imageUrl = urlData.publicUrl;
-
-        } catch (error) {
-            // Decide si quieres detener el proceso si la imagen falla o continuar sin imagen
-            // throw error; // Descomenta si la imagen es obligatoria
-            Alert.alert("Error de Imagen", "No se pudo subir la imagen, pero se intentará guardar el texto.")
-        }
-    }
-
-    // 2. Insertar los datos de la publicación en la tabla 'publicaciones'
+export const createPost = async (userId, text, imageAssets = []) => {
+    console.log('--- [createPost] INICIO (Lógica Múltiples Imágenes) ---');
+    console.log(`[createPost] User ID: ${userId}, Texto: "${text}", Imágenes: ${imageAssets.length}`);
+    // 1. Insertar la publicación principal para obtener un ID
     const { data: postData, error: insertError } = await supabase
         .from('publicaciones')
         .insert({
             artesano_user_id: userId,
             texto: text,
-            imagen_url: imageUrl // Puede ser null si no se subió imagen o falló
+            imagen_url: 'URL_TEMPORAL' // Se actualizará después con la primera imagen
         })
-        .select() // Opcional: devuelve el post creado
-        .single(); // Esperamos un solo resultado
+        .select()
+        .single();
 
     if (insertError) {
+        console.error('[createPost] ERROR en supabase.from("publicaciones").insert():', JSON.stringify(insertError, null, 2));
         throw new Error('Error al guardar la publicación: ' + insertError.message);
     }
 
-    return postData; // Devuelve la publicación creada
+    const postId = postData.id;
+    console.log(`[createPost] Registro principal de publicación creado con ID: ${postId}`);
+
+    let firstImageUrl = null;
+
+    // 2. Si hay imágenes, subirlas una por una
+    if (imageAssets.length > 0) {
+        for (const [index, asset] of imageAssets.entries()) {
+            const fileExt = asset.uri.split('.').pop() || 'jpg';
+            const fileName = `publicacion_${postId}_${Date.now()}_${index}.${fileExt}`;
+            const filePath = `${userId}/${fileName}`;
+            const mimeType = asset.mimeType ?? 'image/jpeg';
+
+            console.log(`[createPost] Subiendo imagen ${index + 1}/${imageAssets.length} a la ruta: ${filePath}`);
+            const { error: uploadError } = await supabase.storage
+                .from('imagenes-publicaciones')
+                .upload(filePath, decode(asset.base64), { contentType: mimeType });
+
+            if (uploadError) {
+                console.error(`[createPost] ERROR al subir la imagen ${index + 1}:`, uploadError.message);
+                continue;
+            }
+
+            const { data: { publicUrl } } = supabase.storage.from('imagenes-publicaciones').getPublicUrl(filePath);
+            console.log(`[createPost] Imagen ${index + 1} subida. URL: ${publicUrl}`);
+
+            if (index === 0) {
+                firstImageUrl = publicUrl;
+            }
+
+            // Guardar la URL de la imagen en la nueva tabla 'publicacion_imagenes'
+            const { error: insertImageError } = await supabase.from('publicacion_imagenes').insert({
+                publicacion_id: postId,
+                imagen_url: publicUrl,
+                orden: index
+            });
+            if (insertImageError) {
+                console.error(`[createPost] ERROR al guardar la URL de la imagen ${index + 1} en la BD:`, insertImageError.message);
+            }
+        }
+    }
+
+    // 3. Actualizar la publicación con la URL de la primera imagen como portada
+    if (firstImageUrl) {
+        console.log(`[createPost] Actualizando publicación con imagen de portada: ${firstImageUrl}`);
+        const { error: updateError } = await supabase
+            .from('publicaciones')
+            .update({ imagen_url: firstImageUrl })
+            .eq('id', postId);
+
+        if (updateError) console.error('[createPost] ERROR al actualizar la imagen de portada:', updateError.message);
+    }
+
+    console.log('--- [createPost] FIN ---');
+    return { ...postData, imagen_url: firstImageUrl };
 };
 
 /**
@@ -61,31 +137,39 @@ export const createPost = async (userId, text, imageBase64, imageMimeType) => {
  * @param {Object} imageAsset - Objeto de imagen de ImagePicker (opcional) con base64 y mimeType
  * @returns {Promise<Object>} - Datos de la publicación creada
  */
-export async function createPostForCurrentUser(text, imageAsset) {
+export async function createPostForCurrentUser(text, imageAssets = []) {
+  console.log('--- [createPostForCurrentUser] INICIO (Lógica Múltiples Imágenes) ---');
+  console.log(`[createPostForCurrentUser] Texto recibido: "${text}", Número de imágenes: ${imageAssets?.length || 0}`);
   try {
     
     // Validar que haya texto o imagen
-    if (!text?.trim() && !imageAsset?.base64) {
+    if (!text?.trim() && imageAssets.length === 0) {
+      console.error('[createPostForCurrentUser] ERROR: Validación fallida. No hay texto ni imágenes.');
       throw new Error('Escribe algo o selecciona una imagen para publicar');
     }
 
     // Obtener el usuario actual
+    console.log('[createPostForCurrentUser] Obteniendo usuario de la sesión...');
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     
     if (userError || !user) {
+      console.error('[createPostForCurrentUser] ERROR: No se pudo obtener el usuario de la sesión.', userError?.message);
       throw new Error('Usuario no autenticado');
     }
+
+    console.log(`[createPostForCurrentUser] Usuario autenticado: ${user.id}. Llamando a createPost...`);
 
     // Crear la publicación usando la función existente
     const postData = await createPost(
       user.id,
       text || '',
-      imageAsset?.base64 || null,
-      imageAsset?.mimeType || null
+      imageAssets
     );
-
+    
+    console.log('--- [createPostForCurrentUser] FIN ---');
     return postData;
   } catch (error) {
+    console.error('[createPostForCurrentUser] ERROR FATAL en el proceso. El error se originó en una de las funciones internas.', error);
     throw error;
   }
 }
