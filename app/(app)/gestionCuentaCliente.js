@@ -25,7 +25,7 @@ import ChangePasswordModal from "../../components/ChangePasswordModal";
 const Text = (props) => {
   const { style, children, ...otherProps } = props;
   return (
-    <DefaultText {...otherProps} style={[{ fontFamily: "AlanSans" }, style]}>
+    <DefaultText {...otherProps} style={[{ fontFamily: "Alan Sans" }, style]}>
       {children}
     </DefaultText>
   );

@@ -19,7 +19,7 @@ const Text = (props) => {
   return (
     <DefaultText 
       {...otherProps} 
-      style={[{ fontFamily: 'AlanSans' }, style]} 
+      style={[{ fontFamily: 'Alan Sans' }, style]} 
     >
       {children}
     </DefaultText>

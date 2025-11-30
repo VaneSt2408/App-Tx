@@ -16,7 +16,7 @@ import {
   Platform,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { selectAndCompressImage, createProduct } from '../src/services/productService';
+import { selectMultipleAndCompressImages, createProduct } from '../src/services/productService';
 
 const CATEGORIAS_EJEMPLO = [
   'Textil', 'Alfarería', 'Joyería', 
@@ -36,7 +36,7 @@ const UploadProductModal = ({ visible, onClose, onProductUploaded }) => {
   });
   const [manualCategoria, setManualCategoria] = useState('');
 
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedImages, setSelectedImages] = useState([]); // Ahora es un array
   const [loading, setLoading] = useState(false);
 
   const handleInputChange = (field, value) => {
@@ -47,27 +47,40 @@ const UploadProductModal = ({ visible, onClose, onProductUploaded }) => {
   };
 
   const handleSelectImage = async () => {
+    console.log('[UploadProductModal] ==> handleSelectImage: Iniciando selección de imágenes.');
+    if (selectedImages.length >= 5) {
+      Alert.alert('Límite alcanzado', 'Puedes seleccionar un máximo de 5 imágenes.');
+      return;
+    }
     try {
-      const imageAsset = await selectAndCompressImage();
-      if (imageAsset) {
-        setSelectedImage(imageAsset);
+      // Usamos la nueva función para selección múltiple
+      const imageAssets = await selectMultipleAndCompressImages(5 - selectedImages.length);
+      if (imageAssets) {
+        console.log('[UploadProductModal] <== handleSelectImage: Imágenes seleccionadas:', imageAssets.length);
+        
+        // ¡LOG CLAVE! Verificamos el tamaño de cada imagen seleccionada.
+        imageAssets.forEach((asset, index) => {
+          const sizeInBytes = (asset.base64.length * 3) / 4; // Cálculo aproximado del tamaño en bytes
+          const sizeInMB = sizeInBytes / (1024 * 1024);
+          console.log(`[UploadProductModal] Tamaño de Imagen ${index + 1}: ${sizeInMB.toFixed(2)} MB`);
+        });
+
+        setSelectedImages(prev => [...prev, ...imageAssets].slice(0, 5));
       }
     } catch (error) {
+      console.error('[UploadProductModal] Error en handleSelectImage:', error);
       Alert.alert('Error', 'No se pudo seleccionar la imagen');
     }
   };
 
   const handleSubmit = async () => {
+    console.log('[UploadProductModal] ==> handleSubmit: Iniciando proceso de subida.');
+    console.log('[UploadProductModal] Datos del formulario:', formData);
+    console.log('[UploadProductModal] Imágenes seleccionadas:', selectedImages.length);
+
     // Validar campos requeridos
-    if (!formData.nombre.trim()) {
-      Alert.alert('Error', 'El nombre del producto es requerido');
-      return;
-    }
-    if (!formData.descripcion.trim()) {
-      Alert.alert('Error', 'La descripción es requerida');
-      return;
-    }
-    if (!formData.precio.trim()) {
+    if (!formData.nombre.trim() || !formData.descripcion.trim() || !formData.precio.trim()) {
+      console.log('[UploadProductModal] Validación fallida: Campos de texto requeridos no completados.');
       Alert.alert('Error', 'El precio es requerido');
       return;
     }
@@ -75,17 +88,27 @@ const UploadProductModal = ({ visible, onClose, onProductUploaded }) => {
     // Validar que el precio sea un número válido
     const precio = parseFloat(formData.precio);
     if (isNaN(precio) || precio <= 0) {
+      console.log('[UploadProductModal] Validación fallida: El precio no es un número válido > 0.');
       Alert.alert('Error', 'El precio debe ser un número válido mayor a 0');
       return;
     }
 
     const stock = parseInt(formData.stock, 10);
     if (isNaN(stock) || stock < 0) {
+      console.log('[UploadProductModal] Validación fallida: El stock no es un número válido >= 0.');
       Alert.alert('Error', 'El stock debe ser un número válido igual o mayor a 0');
       return;
     }
 
+    // Nueva validación para el número de imágenes
+    if (selectedImages.length < 3) {
+      console.log('[UploadProductModal] Validación fallida: Se requieren al menos 3 imágenes.');
+      Alert.alert('Imágenes insuficientes', 'Debes seleccionar al menos 3 imágenes.');
+      return;
+    }
+
     setLoading(true);
+    console.log('[UploadProductModal] Estado de carga activado (loading: true).');
     try {
       // Preparar datos del producto incluyendo la imagen
       const finalCategoria = formData.categoria === 'Otro' 
@@ -93,19 +116,20 @@ const UploadProductModal = ({ visible, onClose, onProductUploaded }) => {
         : formData.categoria;
 
       if (!finalCategoria) {
+        console.log('[UploadProductModal] Validación fallida: No se especificó una categoría.');
         Alert.alert('Error', 'Debes seleccionar o especificar una categoría');
         setLoading(false);
         return;
       }
 
-      const productData = {
-        ...formData,
-        categoria: finalCategoria,
-        imageAsset: selectedImage,
-      };
+      const productPayload = { ...formData, categoria: finalCategoria };
+      console.log('[UploadProductModal] ==> createProduct: Llamando al servicio para crear el producto.');
+      console.log('[UploadProductModal] Datos enviados a createProduct:', productPayload);
 
-      const result = await createProduct(productData);
+      // Llamamos a la función createProduct con el array de imágenes
+      const result = await createProduct(productPayload, selectedImages);
       
+      console.log('[UploadProductModal] <== createProduct: Respuesta del servicio:', result);
       Alert.alert('Éxito', 'Producto subido correctamente');
       // Limpiar formulario
       setFormData({
@@ -117,20 +141,23 @@ const UploadProductModal = ({ visible, onClose, onProductUploaded }) => {
         min_may: 'minoreo',
       });
       setManualCategoria('');
-      setSelectedImage(null);
+      setSelectedImages([]);
       onClose();
       if (onProductUploaded) {
         onProductUploaded();
       }
     } catch (error) {
+      console.error('[UploadProductModal] Error en handleSubmit:', error.message);
       Alert.alert('Error', error.message || 'Ocurrió un error inesperado');
     } finally {
       setLoading(false);
+      console.log('[UploadProductModal] <== handleSubmit: Proceso finalizado (loading: false).');
     }
   };
 
   const handleClose = () => {
     if (!loading) {
+      console.log('[UploadProductModal] ==> handleClose: Limpiando formulario y cerrando modal.');
       setFormData({
         nombre: '',
         descripcion: '',
@@ -140,7 +167,7 @@ const UploadProductModal = ({ visible, onClose, onProductUploaded }) => {
         min_may: 'minoreo',
       });
       setManualCategoria('');
-      setSelectedImage(null);
+      setSelectedImages([]);
       onClose();
     }
   };
@@ -173,12 +200,24 @@ const UploadProductModal = ({ visible, onClose, onProductUploaded }) => {
               onPress={handleSelectImage}
               disabled={loading}
             >
-              {selectedImage ? (
-                <Image source={{ uri: selectedImage.uri }} style={styles.selectedImage} />
+              {selectedImages.length > 0 ? (
+                <ScrollView horizontal contentContainerStyle={styles.galleryContainer}>
+                  {selectedImages.map((image, index) => (
+                    <View key={index} style={styles.imagePreviewContainer}>
+                      <Image source={{ uri: image.uri }} style={styles.imagePreview} />
+                      <TouchableOpacity 
+                        style={styles.removeButton} 
+                        onPress={() => setSelectedImages(prev => prev.filter((_, i) => i !== index))}
+                      >
+                        <MaterialCommunityIcons name="close-circle" size={24} color="rgba(0,0,0,0.7)" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </ScrollView>
               ) : (
                 <View style={styles.imagePlaceholder}>
                   <MaterialCommunityIcons name="camera-plus" size={40} color="#999" />
-                  <Text style={styles.imagePlaceholderText}>Toca para seleccionar imagen</Text>
+                  <Text style={styles.imagePlaceholderText}>Toca para seleccionar (3 a 5 imágenes)</Text>
                 </View>
               )}
             </TouchableOpacity>
@@ -360,12 +399,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#fafafa',
   },
-  selectedImage: {
-    width: '100%',
-    height: '100%',
+  galleryContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+  },
+  imagePreviewContainer: {
+    position: 'relative',
+    marginRight: 10,
+  },
+  imagePreview: {
+    width: 120,
+    height: 120,
     borderRadius: 8,
   },
+  removeButton: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    borderRadius: 12,
+  },
   imagePlaceholder: {
+    width: '100%',
+    height: '100%',
     alignItems: 'center',
   },
   imagePlaceholderText: {

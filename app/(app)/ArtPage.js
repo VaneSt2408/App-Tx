@@ -75,7 +75,7 @@ function ArtPage() {
                 name="Marketplace" 
                 component={MarketplacePage}
                 options={{
-                    tabBarLabel: 'Marketplace',
+                    tabBarLabel: 'Mercadito',
                 }}
             />
             <Tab.Screen 

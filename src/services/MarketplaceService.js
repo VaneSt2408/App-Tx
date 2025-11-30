@@ -190,6 +190,10 @@ export class MarketplaceService {
             avatar_url,
             curp,
             numero_ine
+          ),
+          producto_imagenes (
+            imagen_url,
+            orden
           )
         `)
         .eq('id', productoId)
@@ -199,6 +203,10 @@ export class MarketplaceService {
         return { success: false, error: error.message };
       }
       
+      // Ordenar las imágenes de la galería por la columna 'orden'
+      if (producto.producto_imagenes) {
+        producto.producto_imagenes.sort((a, b) => a.orden - b.orden);
+      }
       // Verificar si el usuario actual ha guardado el producto
       let isSaved = false;
       if (user) {
