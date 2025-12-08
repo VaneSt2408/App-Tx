@@ -54,13 +54,13 @@ export default function InviteArtesano() { // Define y exporta el componente de 
         {/* Tarjeta blanca que contiene todo */}
         <View style={styles.card}>
           
-          <Text style={styles.title}>Invita a un nuevo artesano</Text>
+          <Text style={styles.title}>Invitar a un nuevo artesano</Text>
 
           {/* Campo de Email con nuevo estilo (blanco) */}
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Correo Electrónico</Text>
             <View style={styles.inputWrapper}>
-              <MaterialCommunityIcons name="email-outline" size={20} color="#8E8E93" style={styles.inputIcon} />
+              <MaterialCommunityIcons name="email-outline" size={20} color="#000" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="correo.artesano@ejemplo.com" // Placeholder actualizado
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 15,
     borderWidth: 1, // Borde como en la imagen
-    borderColor: '#E0E0E0', // Color de borde claro
+    borderColor: '#000',// Color de borde claro
   },
   inputIcon: {
     marginRight: 10,

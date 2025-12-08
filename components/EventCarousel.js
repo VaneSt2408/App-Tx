@@ -5,7 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import useCustomFonts from '../hooks/useFonts';
 
 const Text = (props) => (
-    <DefaultText {...props} style={[{ fontFamily: 'AlanSans' }, props.style]} />
+    <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
   );
 
 const EventCarousel = ({ events = [], onEventPress }) => {

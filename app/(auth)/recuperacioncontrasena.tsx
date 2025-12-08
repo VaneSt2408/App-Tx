@@ -51,7 +51,7 @@ export default function RecuperacionContrasena() {
 
     return (
         <LinearGradient
-            colors={['#FDFAF1', '#FDFAF1']}
+            colors={['#FFFF', '#FFFF']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{ flex: 1 }}
@@ -130,8 +130,8 @@ export default function RecuperacionContrasena() {
                         </MotiView>
 
                         <Link href="/auth" asChild>
-                            <TouchableOpacity className='w-full items-center mt-4'>
-                                <Text className= 'text-base font-semibold underline' style={{color: '#9D046D'}}>
+                            <TouchableOpacity className='w-full items-center mb-6 rounded-2xl shadow-lg p-6 justify-center top-7'>
+                                <Text className= 'text-base font-bold top-1.5' style={{color: '#9D046D'}}>
                                     Volver al inicio de sesión
                                 </Text>
                             </TouchableOpacity>

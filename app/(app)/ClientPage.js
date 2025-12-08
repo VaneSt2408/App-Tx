@@ -4,7 +4,7 @@
 
 // Importaciones
 import React from 'react';
-import { StyleSheet, SafeAreaView } from 'react-native';
+import { StyleSheet, SafeAreaView, Text as DefaultText } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import FeedPage from './FeedPage';
@@ -14,6 +14,10 @@ import ClientSettings from './ClientSettings';
 import Estadisticas from './estadisticas';
 
 const Tab = createBottomTabNavigator(); // Crear el tab navigator
+
+const Text = (props) => (
+    <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
+  );
 
 // Componente principal
 function ClientPage() {

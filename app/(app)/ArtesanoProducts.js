@@ -5,7 +5,7 @@
 
 // Importaciones
 import React, { useState, useEffect } from 'react';
-import {View,Text,FlatList,Image,TouchableOpacity,StyleSheet,ActivityIndicator,RefreshControl,Alert,Dimensions,Modal,ScrollView,PanResponder,Animated,TextInput, SafeAreaView} from 'react-native';
+import {View,Text as DefaultText,FlatList,Image,TouchableOpacity,StyleSheet,ActivityIndicator,RefreshControl,Alert,Dimensions,Modal,ScrollView,PanResponder,Animated,TextInput, SafeAreaView} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
@@ -19,6 +19,10 @@ import UploadProductModal from '../../components/UploadProductModal';
 // Constantes
 const { width } = Dimensions.get('window'); // Obtener el ancho de la ventana
 const imageSize = (width - 60) / 3; // Para grid de 3 columnas
+
+const Text = (props) => (
+    <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
+  );
 
 // Mapa para los nombres de los estados a mostrar en la UI
 const statusDisplayMap = {

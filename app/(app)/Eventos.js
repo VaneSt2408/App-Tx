@@ -82,7 +82,7 @@ useFocusEffect(
 
         {/* Botón de Editar (NUEVO) */}
         <TouchableOpacity
-          className="bg-blue-500 px-3 py-1.5 rounded-lg mr-2" // Añadimos margen a la derecha
+          className="bg-[#9D046D] px-4 py-1.5 rounded-lg mr-4 left-3" // Añadimos margen a la derecha
           onPress={() => handleEditEvent(item)} // Necesitarás crear esta función
         >
           <Text className="text-white text-sm font-medium">Editar</Text>

@@ -11,7 +11,7 @@ import { useAuth } from '../../src/context/AuthContext';
 
 // Componente Text personalizado con la fuente AlanSans
 const Text = (props) => (
-  <DefaultText {...props} style={[{ fontFamily: 'AlanSans' }, props.style]} />
+  <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
 );
 
 export default function AjustesPerfilArtesano() {

@@ -7,7 +7,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { updateEventForCurrentUser } from '../../src/services/eventsService';
 
 const Text = (props) => (
-    <DefaultText {...props} style={[{ fontFamily: 'AlanSans' }, props.style]} />
+    <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
   );
 
 const EVENTOS_KEY = '@eventos_admin';
