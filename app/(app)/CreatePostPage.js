@@ -5,11 +5,13 @@
 // Importaciones
 import React, { useState } from 'react';
 import { View, TextInput, Button, Image, StyleSheet, Alert, ActivityIndicator, ScrollView, Text as DefaultText, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import * as ImagePicker from 'expo-image-picker';
-import { createPostForCurrentUser } from '../../src/services/PublicacionService';
+import { useRouter } from 'expo-router';
+import { 
+  createPostForCurrentUser, 
+  selectMultipleAndCompressImages // 1. Importamos la función de selección
+} from '../../src/services/PublicacionService';
 import useCustomFonts from '../../hooks/useFonts';
-import { MaterialCommunityIcons } from '@expo/vector-icons'; // Para el icono de imagen
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const Text = (props) => (
     <DefaultText {...props} style={[{ fontFamily: 'AlanSans' }, props.style]} />
@@ -17,40 +19,44 @@ const Text = (props) => (
 
 // Componente principal
 export default function CreatePostPage() {
-    const navigation = useNavigation(); // Obtener el navigation
-    const [text, setText] = useState(''); // Establecer el estado del texto
-    const [image, setImage] = useState(null); // Guardará el objeto de imagen seleccionado
-    const [loading, setLoading] = useState(false); // Establecer el estado de carga
+    const router = useRouter();
+    const [text, setText] = useState('');
+    const [selectedImages, setSelectedImages] = useState([]); // 2. Estado para múltiples imágenes
+    const [loading, setLoading] = useState(false);
+    const MAX_IMAGES = 5; // Límite de imágenes
 
-    // Función para seleccionar imagen de la galería
-    const pickImage = async () => {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== 'granted') {
-            Alert.alert('Permiso necesario', 'Se necesita acceso a la galería.');
+    // 3. Función para AÑADIR una imagen a la galería
+    const handleAddImage = async () => {
+        if (selectedImages.length >= MAX_IMAGES) {
+            Alert.alert('Límite alcanzado', `Puedes subir un máximo de ${MAX_IMAGES} imágenes.`);
             return;
         }
-        //Para comprimir imagens de posts
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [4, 3], // Proporción común para posts
-            quality: 0.8, // Calidad de la imagen comprimida al 80%
-            base64: true, // ¡Importante para subir!
-        });
-
-        if (!result.canceled) {
-            setImage(result.assets[0]);
+        // Usamos la función del servicio que ya comprime y recorta
+        const newImageAssets = await selectMultipleAndCompressImages();
+        if (newImageAssets && newImageAssets.length > 0) {
+            setSelectedImages(prevImages => [...prevImages, ...newImageAssets]);
         }
+    };
+
+    // 4. Función para QUITAR una imagen de la galería
+    const handleRemoveImage = (indexToRemove) => {
+        setSelectedImages(prevImages => prevImages.filter((_, index) => index !== indexToRemove));
     };
 
     // Función para manejar la publicación
     const handlePublish = async () => {
+        if (!text.trim() && selectedImages.length === 0) {
+            Alert.alert('Publicación vacía', 'Escribe algo o añade al menos una imagen.');
+            return;
+        }
+
         setLoading(true);
         try {
-            await createPostForCurrentUser(text, image);
+            // 5. Enviamos el array completo de imágenes
+            await createPostForCurrentUser(text, selectedImages);
 
             Alert.alert('Éxito', 'Publicación creada correctamente.');
-            navigation.goBack(); // Regresa a la pantalla anterior
+            router.back(); // Regresa a la pantalla anterior
 
         } catch (error) {
             Alert.alert('Error', error.message || 'No se pudo crear la publicación');
@@ -60,7 +66,7 @@ export default function CreatePostPage() {
     };
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 50 }}>
             <Text style={styles.title}>Crear Nueva Publicación</Text>
 
             {/* Input para el texto */}
@@ -70,25 +76,32 @@ export default function CreatePostPage() {
                 placeholderTextColor="rgba(0,0,0,0.3)"
                 multiline
                 value={text}
+                maxLength={2000}
                 onChangeText={setText}
             />
+            <Text style={styles.characterCount}>
+              {text.length}/2000 caracteres
+            </Text>
 
-            {/* Previsualización de la imagen seleccionada */}
-            {image && (
-                <View style={styles.imagePreviewContainer}>
-                    <Image source={{ uri: image.uri }} style={styles.imagePreview} />
-                    {/* Botón para quitar la imagen seleccionada */}
-                    <TouchableOpacity style={styles.removeImageButton} onPress={() => setImage(null)}>
-                         <MaterialCommunityIcons name="close-circle" size={24} color="rgba(0,0,0,0.6)" />
+            {/* 6. Galería de imágenes seleccionadas */}
+            <Text style={styles.label}>Imágenes (hasta {MAX_IMAGES})</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.galleryContainer}>
+                {selectedImages.map((asset, index) => (
+                    <View key={index} style={styles.imagePreviewContainer}>
+                        <Image source={{ uri: asset.uri }} style={styles.imagePreview} />
+                        <TouchableOpacity style={styles.removeImageButton} onPress={() => handleRemoveImage(index)}>
+                            <MaterialCommunityIcons name="close-circle" size={24} color="#fff" />
+                        </TouchableOpacity>
+                    </View>
+                ))}
+                {/* Botón para añadir más imágenes */}
+                {selectedImages.length < MAX_IMAGES && (
+                    <TouchableOpacity style={styles.addImageButton} onPress={handleAddImage}>
+                        <MaterialCommunityIcons name="camera-plus" size={32} color="#9D046D" />
+                        <Text style={styles.addImageText}>Añadir</Text>
                     </TouchableOpacity>
-                </View>
-            )}
-
-            {/* Botón para seleccionar imagen */}
-            <TouchableOpacity style={styles.imagePickerButton} onPress={pickImage}>
-                <MaterialCommunityIcons name="image-plus" size={24} color="#9D046D" />
-                <Text style={styles.imagePickerText}>Añadir Foto</Text>
-            </TouchableOpacity>
+                )}
+            </ScrollView>
 
             {/* Botón de publicar */}
             <View style={styles.publishButtonContainer}>
@@ -98,9 +111,6 @@ export default function CreatePostPage() {
                     <Button title="Publicar" onPress={handlePublish} color="#9D046D" />
                 )}
             </View>
-
-             {/* Botón para regresar (alternativa al header) */}
-             {/* <Button title="Cancelar" onPress={() => navigation.goBack()} color="#888" /> */}
 
         </ScrollView>
     );
@@ -131,48 +141,59 @@ const styles = StyleSheet.create({
         textAlignVertical: 'top', // Para que el texto empiece arriba en multiline (Android)
         backgroundColor: '#fff',
     },
-    imagePickerButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#e9ecef',
-        paddingVertical: 12,
-        paddingHorizontal: 15,
-        borderRadius: 8,
-        marginBottom: 20,
-        justifyContent: 'center',
-    },
-    imagePickerText: {
-        marginLeft: 10,
+    label: {
         fontSize: 16,
-        color: '#9D046D',
-        fontWeight: '500',
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 10,
+    },
+    galleryContainer: {
+        marginBottom: 20,
     },
     imagePreviewContainer: {
-        marginBottom: 20,
-        alignItems: 'center',
-        position: 'relative', // Necesario para posicionar el botón de eliminar
+        width: 100,
+        height: 100,
+        marginRight: 10,
+        position: 'relative',
     },
     imagePreview: {
         width: '100%',
-        height: 200, // Ajusta según necesites
+        height: '100%',
         borderRadius: 8,
-        resizeMode: 'cover', // Para que la imagen cubra el área sin distorsionarse
+        backgroundColor: '#f0f0f0',
     },
     removeImageButton: {
         position: 'absolute',
-        top: 8,
-        right: 8,
-        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+        top: -5,
+        right: -5,
+        backgroundColor: 'rgba(0,0,0,0.6)',
         borderRadius: 12,
-        padding: 2,
+    },
+    addImageButton: {
+        width: 100,
+        height: 100,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#f0f0f0',
+        borderRadius: 8,
+        borderWidth: 2,
+        borderColor: '#ddd',
+        borderStyle: 'dashed',
+    },
+    addImageText: {
+        fontSize: 12,
+        color: '#9D046D',
+        marginTop: 4,
     },
     publishButtonContainer: {
         marginTop: 10,
         marginBottom: 30,
-        borderColor: '#9D046D',
-        borderWidth:'1',
-        borderRadius: 8,
-        backgroundColor:'rgba(157, 4, 109,0.2)'
-         // Espacio al final
+    },
+    characterCount: {
+        fontSize: 12,
+        color: '#666',
+        textAlign: 'right',
+        marginTop: -15, // Ajuste para que quede pegado al input
+        marginBottom: 20,
     },
 });

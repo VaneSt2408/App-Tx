@@ -81,14 +81,19 @@ const AppSettingsScreen = () => {
   };
 
   const performClearCache = async () => {
+    console.log("--- [Limpiar Caché] Iniciando proceso de limpieza. ---");
     try {
       // Método más robusto: construir una ruta de caché segura
       const cacheDirUri = cacheDirectory || `${documentDirectory}cache/`;
+      console.log(`[Limpiar Caché] Directorio de caché a limpiar: ${cacheDirUri}`);
 
       // 1. Asegurarnos de que el directorio exista
       const dirInfo = await getInfoAsync(cacheDirUri);
+      console.log("[Limpiar Caché] Información del directorio:", dirInfo);
+
       if (!dirInfo.exists) {
         // Si no existe, lo creamos. No hay nada que borrar.
+        console.log("[Limpiar Caché] El directorio no existe. Creándolo y finalizando.");
         await makeDirectoryAsync(cacheDirUri, { intermediates: true });
         Alert.alert("Éxito", "El caché ya estaba limpio.");
         return;
@@ -96,22 +101,33 @@ const AppSettingsScreen = () => {
 
       // 2. Leer los archivos dentro del directorio
       const files = await readDirectoryAsync(cacheDirUri);
+      console.log(`[Limpiar Caché] Se encontraron ${files.length} archivos en el directorio.`);
 
-      if (files.length === 0) {
+      // NUEVO: Filtrar la lista de archivos para excluir las fuentes (.ttf)
+      const filesToDelete = files.filter(file => !file.endsWith('.ttf'));
+      console.log(`[Limpiar Caché] Excluyendo fuentes. Archivos a borrar: ${filesToDelete.length}`);
+
+      if (filesToDelete.length === 0) {
+        console.log("[Limpiar Caché] No hay archivos (que no sean fuentes) para borrar. Proceso finalizado.");
         Alert.alert("Éxito", "El caché ya estaba limpio.");
         return;
       }
 
-      // 3. Borrar cada archivo
+      // 3. Borrar cada archivo de la lista filtrada
+      console.log("[Limpiar Caché] Procediendo a borrar los archivos filtrados...");
       await Promise.all(
-        files.map((file) =>
-          deleteAsync(`${cacheDirUri}${file}`, { idempotent: true })
-        )
+        filesToDelete.map((file) => {
+          const filePath = `${cacheDirUri}${file}`;
+          console.log(`[Limpiar Caché] Borrando archivo filtrado: ${filePath}`);
+          return deleteAsync(filePath, { idempotent: true });
+        })
       );
 
+      console.log("--- [Limpiar Caché] Proceso de limpieza completado exitosamente. ---");
       Alert.alert("Éxito", "El caché ha sido limpiado correctamente.");
       calculateCacheSize(); // Recalcular el tamaño después de limpiar
     } catch (error) {
+      console.error("--- [Limpiar Caché] ¡ERROR! Ocurrió un error durante la limpieza. ---", error);
       Alert.alert(
         "Error",
         `Ocurrió un error al limpiar el caché: ${error.message}`

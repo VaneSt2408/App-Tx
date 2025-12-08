@@ -66,7 +66,10 @@ export class FeedService {
             ubicacion,
             categoria,
             avatar_url
-          )
+        ),
+        publicacion_imagenes (
+          imagen_url
+        )
         `, { count: 'exact' })
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
@@ -120,6 +123,7 @@ export class FeedService {
         id: pub.id,
         texto: pub.texto,
         imagen_url: pub.imagen_url,
+        imagenes: pub.publicacion_imagenes || [], // <-- AÑADIDO: Array con la galería de imágenes
         created_at: pub.created_at,
         artesano: {
           id: pub.artesano_user_id,

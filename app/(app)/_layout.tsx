@@ -58,35 +58,37 @@ export default function AppLayout() {
   return (
     <FilterProvider>
       <Stack>
+        {/* Rutas principales y de navegación */}
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="NotFoundPage" options={{ title: "Error de permisos" }} />
+
+        {/* Rutas de Admin */}
         <Stack.Screen name="PageAdmin" options={{ title: "Modo Admin" }} />
         <Stack.Screen name="MagicLink" options={{ title: "Envio de link" }} />
-        <Stack.Screen name="RegisterArtesano" options={{ headerShown: false }} />
-        <Stack.Screen name="ArtPage" options={{ headerShown: false }} />
-        <Stack.Screen name="ClientPage" options={{ headerShown: false }} />
-        <Stack.Screen name="ChangePassword" options={{ title: "Confirmar contraseña" }} />
-        <Stack.Screen name="NotFoundPage" options={{ title: "Error de permisos" }} />
-        <Stack.Screen name="clientProfile" options={{ title: "" }} />
-        <Stack.Screen name="ArtesanoProfile" options={{ title: "Perfil del Artesano", headerShown: false }} />
         <Stack.Screen name="ArtesanoList" options={{ title: "Lista de artesanos" }} />
-        <Stack.Screen name="ArtesanoPublications" options={{ title: "Mis Publicaciones" }} />
-        <Stack.Screen name="ArtesanoProducts" options={{ title: "Mis Productos" }} />
-        <Stack.Screen name="CreatePostPage" options={{ title: "Crea una publicacion" }} />
-        <Stack.Screen name="FeedPage" options={{ title: "Publicaciones" }} />
-        <Stack.Screen name="MarketplacePage" options={{ title: "Marketplace" }} />
-        <Stack.Screen name="ProductDetailPage" options={{ title: "Detalle del Producto" }} />
         <Stack.Screen name="estadisticas" options={{ title: "Estadisticas" }} />
         <Stack.Screen name="Eventos" options={{ title: "Eventos" }} />
         <Stack.Screen name="EditEventPage" options={{ title: "Editar evento" }} />
         <Stack.Screen name="CreateEventPage" options={{ title: "Crear evento" }} />
-        <Stack.Screen name="ArtesanoSettings" options={{ title: "Ajustes de perfil del artesano" }} />
-        <Stack.Screen name="ArtesanoProfileVistaVisitante" options={{ title: "Ver perfil como visitante", headerBackVisible: false }} />
-        <Stack.Screen name="MarketplaceFilters" options={{ title: "Filtros de Marketplace", headerShown: false }} />
-        <Stack.Screen name="perfilcliente" options={{ title: "Perfil del cliente", headerBackVisible: false }} />
-        <Stack.Screen name="gestionCuentaCliente" options={{ headerShown: false, headerBackVisible: false }} />
-        <Stack.Screen name="ayudaSoporte" options={{ headerShown: false }} />
-        <Stack.Screen name="TerminoCondiciones" options={{ headerShown: false }} />
-        <Stack.Screen name="AppSettings" options={{ headerShown: false , headerBackVisible: false }} />
+
+        {/* Rutas de Artesano */}
+        <Stack.Screen name="RegisterArtesano" options={{ headerShown: false }} />
+        <Stack.Screen name="completeArtesanoProfile" options={{ headerShown: false }} />
+        <Stack.Screen name="ArtPage" options={{ headerShown: false }} />
+        <Stack.Screen name="ArtesanoProducts" options={{ title: "Mis Productos" }} />
+        <Stack.Screen name="ArtesanoPublications" options={{ title: "Mis Publicaciones" }} />
+        <Stack.Screen name="CreatePostPage" options={{ title: "Crea una publicacion" }} />
+        <Stack.Screen name="gestionCuentaArtesano" options={{ title: "Gestión de Cuenta", headerBackVisible: false }} />
+        <Stack.Screen name="AjustesPerfilArtesano" options={{ title: "Ajustes de Perfil", headerBackVisible: false }} />
+
+        {/* Rutas de Cliente */}
+        <Stack.Screen name="ClientPage" options={{ headerShown: false }} />
+        <Stack.Screen name="gestionCuentaCliente" options={{ title: "Gestión de Cuenta", headerShown: false, headerBackVisible: false }} />
+
+        {/* Rutas Comunes y de Ajustes */}
+        <Stack.Screen name="AppSettings" options={{ title: "Configuración", headerShown: false, headerBackVisible: false }} />
+        <Stack.Screen name="ayudaSoporte" options={{ title: "Ayuda y Soporte", headerShown: false }} />
+        <Stack.Screen name="TerminoCondiciones" options={{ title: "Términos y Condiciones", headerShown: false }} />
       </Stack>
     </FilterProvider>
   );

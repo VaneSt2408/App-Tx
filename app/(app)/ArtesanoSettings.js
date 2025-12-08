@@ -118,7 +118,7 @@ export default function ArtesanoSettings() {
                         <TouchableOpacity 
                             style={styles.infoRow} 
                             onPress={() => handleOpenMaps(artesano.link_ubicacion)}>
-                            <MaterialCommunityIcons name="map-marker-link" size={16} color="#34A853" />
+                            <MaterialCommunityIcons name="map-marker-outline" size={16} color="#FD2D1C" />
                             <Text style={[styles.infoText, styles.linkText, {fontFamily: 'Alan Sans'}]}>{artesano.ubicacion}</Text>
                         </TouchableOpacity>
                     )}
@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     linkText: {
-        color: '#34A853', // Color distintivo para el enlace
+        color: '#000000', // Color distintivo para el enlace
         textDecorationLine: 'underline',
         marginLeft: 8,
     },

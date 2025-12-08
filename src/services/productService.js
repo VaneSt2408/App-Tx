@@ -5,6 +5,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { decode } from 'base64-arraybuffer'; // Importar decode aquí
 import * as ImageManipulator from 'expo-image-manipulator'; // Importamos el manipulador de imágenes
+// import { Image } from 'react-native-compressor'; // 1. Dejamos comentado el nuevo compresor
 
 // --- Función para seleccionar y comprimir imagen (siguiendo la lógica de completeProfile) ---
 export const selectAndCompressImage = async () => {
@@ -74,6 +75,7 @@ export const selectMultipleAndCompressImages = async (selectionLimit = 5) => {
       console.log(`[productService] Imagen (Después de recortar): ${originalSizeMB} MB`);
     }
 
+    // --- LÓGICA DE EXPO-IMAGE-MANIPULATOR (RESTAURADA) ---
     // 2. Comprimimos la imagen recortada
     const manipulatedImage = await ImageManipulator.manipulateAsync(
       asset.uri,
@@ -90,6 +92,16 @@ export const selectMultipleAndCompressImages = async (selectionLimit = 5) => {
     const compressedSizeMB = (compressedSizeInBytes / (1024 * 1024)).toFixed(2);
     console.log(`[productService] Imagen (Comprimida): ${compressedSizeMB} MB`);
 
+    // --- LÓGICA DE REACT-NATIVE-COMPRESSOR (COMENTADA PARA FUTURO) ---
+    // const compressedUri = await Image.compress(asset.uri, { quality: 0.7 });
+    // const compressedBase64 = await FileSystem.readAsStringAsync(compressedUri, { encoding: FileSystem.EncodingType.Base64 });
+    // const compressedAsset = {
+    //   uri: compressedUri,
+    //   base64: compressedBase64,
+    //   mimeType: 'image/jpeg',
+    // };
+    // return [compressedAsset];
+    
     return [manipulatedImage]; // Devolvemos un array para mantener la compatibilidad
   } catch (error) {
     console.error('Error al seleccionar múltiples imágenes:', error);

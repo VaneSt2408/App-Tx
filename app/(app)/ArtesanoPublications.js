@@ -517,10 +517,11 @@ export default function ArtesanoPublications() {
                   multiline
                   value={editData.texto}
                   onChangeText={(text) => setEditData({ texto: text })}
-                  maxLength={500}
+                  maxLength={2000}
                 />
                 <Text style={styles.characterCount}>
                   {editData.texto.length}/500 caracteres
+                  {editData.texto.length}/2000 caracteres
                 </Text>
               </View>
 

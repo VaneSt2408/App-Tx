@@ -365,7 +365,7 @@ const handleLike = async (productID) => {
                   color={saved ? "#9D046D" : "#666"}
                 />
                 <Text style={[styles.actionButtonText, saved && styles.savedButtonText]}>
-                  {saved ? "Guardado" : "Guardar"}
+                  {saved ? " " : " "}
                 </Text>
               </TouchableOpacity>
             )}
