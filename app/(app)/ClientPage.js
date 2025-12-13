@@ -1,10 +1,11 @@
-// En: app/(app)/ClientPage.js -> Archivo de la página del cliente (Frontend)
-// Este archivo es el encargado de mostrar la página del cliente en la aplicación.
-// Muestra la página del cliente registrada en la base de datos y permite navegar a la página de inicio, marketplace y perfil.
-
-// Importaciones
+// En: app/(app)/ClientPage.js
 import React from 'react';
-import { StyleSheet, SafeAreaView, Text as DefaultText } from 'react-native';
+import { 
+    StyleSheet, 
+    SafeAreaView, 
+    useWindowDimensions, 
+    Platform 
+} from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import FeedPage from './FeedPage';
@@ -13,91 +14,100 @@ import ArtesanoList from './ArtesanoList';
 import ClientSettings from './ClientSettings';
 import Estadisticas from './estadisticas';
 
-const Tab = createBottomTabNavigator(); // Crear el tab navigator
+const Tab = createBottomTabNavigator();
 
-const Text = (props) => (
-    <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
-  );
+// Ancho de referencia (iPhone 8/X)
+const REFERENCE_WIDTH = 375;
+const scale = (size, screenWidth) => (screenWidth / REFERENCE_WIDTH) * size;
 
-// Componente principal
 function ClientPage() {
-    // Renderizado
+    const { width: screenWidth } = useWindowDimensions();
+    const scaledValue = (size) => Math.round(scale(size, screenWidth));
+
+    // Valores Escalados Reajustados (más padding para la etiqueta)
+    const tabHeight = scaledValue(50); // Aumentamos ligeramente la base a 50
+    const tabPaddingVertical = scaledValue(5); // Padding arriba/abajo para el contenedor
+    const iconMarginBottom = scaledValue(2); // Espacio entre icono y texto
+    const labelSize = scaledValue(10); // Reducimos ligeramente la fuente a 10 (mínimo seguro)
+
     return (
         <SafeAreaView style={styles.container}>
-        <Tab.Navigator
-            screenOptions={({ route }) => ({
-                tabBarIcon: ({ focused, color, size }) => {
-                    let iconName;
+            <Tab.Navigator
+                screenOptions={({ route }) => ({
+                    // 1. CORRECCIÓN CLAVE: Forzar la visibilidad de la etiqueta
+                    tabBarShowLabel: true, 
+                    
+                    tabBarIcon: ({ focused, color, size }) => {
+                        let iconName;
+                        if (route.name === 'Feed') {
+                            iconName = focused ? 'home' : 'home-outline';
+                        } else if (route.name === 'Marketplace') {
+                            iconName = focused ? 'store' : 'store-outline';
+                        } else if (route.name === 'Artesanos') {
+                            iconName = focused ? 'account-group' : 'account-group-outline';
+                        } else if (route.name === 'Estadisticas') {
+                            iconName = focused ? 'chart-bar' : 'chart-bar-stacked';
+                        } else if (route.name === 'Profile') {
+                            iconName = focused ? 'account-circle' : 'account-circle-outline';
+                        }
 
-                    if (route.name === 'Feed') {
-                        iconName = focused ? 'home' : 'home-outline';
-                    } else if (route.name === 'Marketplace') {
-                        iconName = focused ? 'store' : 'store-outline';
-                    } else if (route.name === 'Artesanos') {
-                        iconName = focused ? 'account-group' : 'account-group-outline';
-                    } else if (route.name === 'Estadisticas') {
-                        iconName = focused ? 'chart-bar' : 'chart-bar-stacked';
-                    } else if (route.name === 'Profile') {
-                        iconName = focused ? 'account-circle' : 'account-circle-outline';
-                    }
+                        // El tamaño del icono se deja con la variable 'size' de React Navigation
+                        return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
+                    },
 
-                    return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
-                },
-
-                tabBarActiveTintColor: '#9D046D',
-                tabBarInactiveTintColor: '#666',
-                tabBarStyle: {
-
-                    backgroundColor: '#fff',
-                    borderTopWidth: 1,
-                    borderTopColor: '#e1e8ed',
-                    height: 40,
-                    paddingBottom: 8,
-                    paddingTop: 8,
-                },
-                tabBarLabelStyle: {
-                    fontSize: 12,
-                    fontWeight: '500',
-                },
-                headerShown: false,
-            })}
-        >
-            <Tab.Screen 
-                name="Feed" 
-                component={FeedPage}
-                options={{
-                    tabBarLabel: 'Inicio',
-                }}
-            />
-            <Tab.Screen 
-                name="Marketplace" 
-                component={MarketplacePage}
-                options={{
-                    tabBarLabel: 'Marketplace',
-                }}
-            />
-            <Tab.Screen 
-                name="Artesanos" 
-                component={ArtesanoList}
-                options={{
-                    tabBarLabel: 'Artesanos',
-                }}
-            />
-            <Tab.Screen 
-                name="Estadisticas" 
-                component={Estadisticas}
-                options={{
-                    tabBarLabel: 'Estadísticas',
-                }}
-            />
-            <Tab.Screen 
-                name="Profile" 
-                component={ClientSettings}
-                options={{
-                    tabBarLabel: 'Perfil',
-                }}
-            />
-        </Tab.Navigator>
+                    tabBarActiveTintColor: '#9D046D',
+                    tabBarInactiveTintColor: '#666',
+                    tabBarStyle: {
+                        backgroundColor: '#fff',
+                        borderTopWidth: 1,
+                        borderTopColor: '#e1e8ed',
+                        
+                        // --- VALORES ESCALADOS REAJUSTADOS ---
+                        height: tabHeight, // Altura escalada
+                        paddingVertical: tabPaddingVertical, // Usamos paddingVertical
+                        // ------------------------------------
+                    },
+                    tabBarLabelStyle: {
+                        // --- VALOR ESCALADO ---
+                        fontSize: labelSize, // Fuente escalada
+                        // ----------------------
+                        fontWeight: '500',
+                        // Aseguramos que el texto esté centrado
+                        textAlign: 'center',
+                    },
+                    // Aseguramos que el icono esté cerca del texto
+                    tabBarIconStyle: {
+                        marginBottom: iconMarginBottom,
+                    },
+                    headerShown: false,
+                })}
+            >
+                <Tab.Screen 
+                    name="Feed" 
+                    component={FeedPage}
+                    options={{ tabBarLabel: 'Inicio' }}
+                />
+                <Tab.Screen 
+                    name="Marketplace" 
+                    component={MarketplacePage}
+                    options={{ tabBarLabel: 'Marketplace' }}
+                />
+                <Tab.Screen 
+                    name="Artesanos" 
+                    component={ArtesanoList}
+                    options={{ tabBarLabel: 'Artesanos' }}
+                />
+                <Tab.Screen 
+                    name="Estadisticas" 
+                    component={Estadisticas}
+                    options={{ tabBarLabel: 'Estadísticas' }}
+                />
+                <Tab.Screen 
+                    name="Profile" 
+                    component={ClientSettings}
+                    options={{ tabBarLabel: 'Perfil' }}
+                />
+            </Tab.Navigator>
         </SafeAreaView>
     );
 }
@@ -105,8 +115,8 @@ function ClientPage() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff', // Se ajusta al color de la barra de pestañas
+        backgroundColor: '#fff', 
     },
 });
 
-export default ClientPage; 
+export default ClientPage;

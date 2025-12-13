@@ -1,16 +1,15 @@
 // app/(app)/Eventos.js
-import React, { useState, useEffect, useCallback} from 'react';
+import React, { useState, useCallback} from 'react';
 import { View, Text as DefaultText, FlatList, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import EventCard from '../../components/FeaturedCard'; // Reutilizamos el mismo componente de la FeedPage
 import EventsModal from '../../components/EventsModal'; // 1. Importar el modal
-import useCustomFonts from '../../hooks/useFonts'; 
+import { getEvents, deleteEvent } from '../../src/services/eventsService';
 
 // Aseguramos que las fuentes personalizadas estén cargadas
 const Text = (props) => (
     <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
   );
-import { getEvents, deleteEvent } from '../../src/services/eventsService';
 
 // Página de gestión de eventos
 const EventosPage = () => {

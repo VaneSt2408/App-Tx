@@ -4,7 +4,7 @@
 // También permite navegar al perfil del artesano y ver su información completa.
 
 // Importaciones
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {View,Text as DefaultText,FlatList,Image,TouchableOpacity,StyleSheet,ActivityIndicator,RefreshControl,Alert,Dimensions,Modal,ScrollView,PanResponder,Animated,TextInput, SafeAreaView} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -12,7 +12,6 @@ import { useAuth } from '../../src/context/AuthContext';
 import { artesanoService } from '../../src/services/artesanoService';
 import { updateProductWithImages, deleteProduct, selectMultipleAndCompressImages } from '../../src/services/productService';
 import { supabase } from '../../src/supabase/client';
-import * as ImagePicker from 'expo-image-picker';
 import UploadProductModal from '../../components/UploadProductModal';
 
 
@@ -75,15 +74,8 @@ export default function ArtesanoProducts() {
 
   const isOwnProfile = session?.user?.id === userId; // Verificar si el usuario es el propio
 
-  // Efecto para cargar los productos
-  useEffect(() => {
-    if (userId) {
-      loadProductos();
-    }
-  }, [userId]);
-
   // Función para cargar los productos
-  const loadProductos = async () => {
+  const loadProductos = useCallback(async () => {
     try {
       setLoading(true);
       console.log('📦 [PRODUCTOS] Cargando productos del artesano:', userId);
@@ -104,7 +96,14 @@ export default function ArtesanoProducts() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [userId]);
+
+  // Efecto para cargar los productos
+  useEffect(() => {
+    if (userId) {
+      loadProductos();
+    }
+  }, [userId, loadProductos]);
 
 
   // Función para seleccionar un producto
@@ -371,6 +370,13 @@ export default function ArtesanoProducts() {
         ListEmptyComponent={renderEmpty}
         contentContainerStyle={productos.length === 0 ? styles.emptyList : styles.list}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={loadProductos}
+            colors={['#9D046D']}
+          />
+        }
       />
       {/* Botón Flotante (FAB) para agregar producto */}
       {isOwnProfile && (
@@ -1248,23 +1254,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     marginBottom: 10,
-  },
-  imagePreview: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-  },
-  imagePlaceholder: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#f0f0f0',
-    borderWidth: 2,
-    borderColor: '#ddd',
-    borderStyle: 'dashed',
-    justifyContent: 'center', // Centra verticalmente
-    alignItems: 'center',     // Centra horizontalmente
   },
   imagePlaceholderText: {
     marginTop: 8,

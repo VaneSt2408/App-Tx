@@ -3,7 +3,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text as DefaultText, StyleSheet, ScrollView, Image, TouchableOpacity, SafeAreaView, Dimensions, Alert, RefreshControl, Linking } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import useCustomFonts from '../../hooks/useFonts';
 import { useAuth } from '../../src/context/AuthContext';
 import { artesanoService } from '../../src/services/artesanoService';
 
@@ -23,13 +22,7 @@ export default function ArtesanoSettings() {
     const [publicaciones, setPublicaciones] = useState([]); // Estado para las publicaciones del artesano
     const [productos, setProductos] = useState([]); // Estado para los productos del artesano
 
-    useEffect(() => {
-        if (session?.user?.id) {
-            loadArtesanoProfile(true); // Carga inicial
-        }
-    }, [session]);
-
-    const loadArtesanoProfile = async (isInitialLoad = false) => {
+    const loadArtesanoProfile = useCallback(async (isInitialLoad = false) => {
         try {
             if (isInitialLoad) setLoading(true);
             const data = await artesanoService.getArtesanoCompleto(session.user.id);
@@ -41,7 +34,13 @@ export default function ArtesanoSettings() {
         } finally {
             if (isInitialLoad) setLoading(false);
         }
-    };
+    }, [session?.user?.id]);
+
+    useEffect(() => {
+        if (session?.user?.id) {
+            loadArtesanoProfile(true); // Carga inicial
+        }
+    }, [session, loadArtesanoProfile]);
 
     // 2. Crear la función onRefresh
     const onRefresh = useCallback(async () => {
@@ -51,7 +50,7 @@ export default function ArtesanoSettings() {
         } finally {
             setRefreshing(false);
         }
-    }, []);
+    }, [loadArtesanoProfile]);
 
     // *** Se mantiene la función para abrir el enlace de Google Maps ***
     const handleOpenMaps = async (url) => {

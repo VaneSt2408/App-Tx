@@ -58,6 +58,8 @@ const faqData = {
 };
 
 const FaqItem = ({ question, answer, isExpanded, onPress }) => {
+  const styles = faqStyles;
+
   const answerContent = React.useMemo(() => {
     // Divide la respuesta por los marcadores de negrita
     const parts = answer.split(/(<Text style={styles.bold}>.*?<\/Text>)/g);
@@ -69,10 +71,8 @@ const FaqItem = ({ question, answer, isExpanded, onPress }) => {
       }
       return part;
     });
-  }, [answer]);
+  }, [answer, styles.bold]);
 
-  const styles = faqStyles;
-  
   return (
     <View style={styles.faqContainer}>
       <TouchableOpacity style={styles.faqItem} onPress={onPress} activeOpacity={0.8}>
@@ -123,7 +123,7 @@ const AyudaSoporteScreen = () => {
       } else {
         await Linking.openURL(mailtoUrl); // Si no puede, usa el método estándar
       }
-    } catch (error) {
+    } catch (_) {
       // Si todo falla, abre el método estándar
       await Linking.openURL(mailtoUrl);
     }

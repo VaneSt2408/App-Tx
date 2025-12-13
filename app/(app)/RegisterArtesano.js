@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { 
-  View, TextInput, Alert, StyleSheet, TouchableOpacity, Text, 
+  View, TextInput, Alert, StyleSheet, TouchableOpacity, Text, Modal, FlatList,
   ScrollView, ActivityIndicator, SafeAreaView, KeyboardAvoidingView, Platform
 } from 'react-native'; // Importa varios componentes de UI de React Native.
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Importa una librería de íconos.
@@ -14,7 +14,6 @@ import { supabase } from '../../src/supabase/client'; // Importa el cliente de S
 import { completeArtesanoRegistration } from '../../src/services/userService'; // Importa la función de servicio para el registro.
 import { LinearGradient } from 'expo-linear-gradient'; // Para el fondo degradado
 import { MotiView, MotiText } from 'moti'; // Para animaciones
-import { Modal, FlatList } from 'react-native';
 
 const CATEGORIAS_EJEMPLO = [
   'Textil', 'Alfarería', 'Joyería', 
@@ -43,7 +42,6 @@ export default function RegisterArtesano() { // Define y exporta el componente d
 
   // --- Estados para la UI ---
   const [focusedInput, setFocusedInput] = useState(null);
-  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isCategoryModalVisible, setCategoryModalVisible] = useState(false);
   const [customCategory, setCustomCategory] = useState('');
 
@@ -135,8 +133,6 @@ export default function RegisterArtesano() { // Define y exporta el componente d
       setCustomCategory('');
     }
   };
-
-  const finalCategory = categoria === 'Otro' ? customCategory : categoria;
 
   // Renderizado condicional: si la carga inicial aún no ha terminado.
   if (initialLoading) {

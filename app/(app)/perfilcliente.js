@@ -29,33 +29,6 @@ import * as ImagePicker from 'expo-image-picker';
 /**
  * Un solo item de la lista de acciones (Edit Profile, Settings, etc.)
  */
-const ProfileMenuItem = ({ iconName, text, href, isLogout }) => {
-  const textColor = isLogout ? 'text-red-500' : 'text-gray-800';
-  const iconColor = isLogout ? '#ef4444' : '#db2777'; // Rojo para logout, Rosa para otros
-  const iconBg = isLogout ? 'bg-red-100' : 'bg-pink-100';
-
-  return (
-    <TouchableOpacity className="flex-row items-center bg-white p-3 rounded-full shadow-sm">
-      <View className={`p-2 rounded-full ${iconBg}`}>
-        <MaterialCommunityIcons name={iconName} size={20} color={iconColor} />
-      </View>
-      {/* 3. Aplicar la fuente personalizada y el peso */}
-      <Text
-        className={`flex-1 ml-4 text-base ${textColor} font-['AlanSans-VariableFont_wght'] font-medium`}>
-        {text}
-      </Text>
-      <MaterialCommunityIcons
-        name="chevron-right"
-        size={20}
-        className="text-gray-400"
-      />
-    </TouchableOpacity>
-  );
-};
-
-/**
- * Un solo avatar de artesano para la lista horizontal
- */
 const ArtisanAvatar = ({ imageUri, name, userId }) => {
   const router = useRouter();
   const handlePress = () => {
@@ -165,7 +138,7 @@ export default function PerfilClienteScreen() {
 
   useEffect(() => {
     fetchProfile();
-  }, []);
+  }, [fetchProfile]);
 
   const fetchSavedProducts = async (clienteId) => {
     if (!clienteId) return;
@@ -197,7 +170,7 @@ export default function PerfilClienteScreen() {
     }
   };
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
@@ -226,17 +199,17 @@ export default function PerfilClienteScreen() {
       // Y finalmente, los eventos guardados
       fetchSavedEvents(user.id);
 
-    } catch (error) {
+    } catch (_) {
       Alert.alert('Error', 'Ocurrió un error inesperado');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     fetchProfile().finally(() => setRefreshing(false));
-  }, []);
+  }, [fetchProfile]);
 
   // --- Lógica de Edición ---
   const handleOpenEditModal = () => {

@@ -3,7 +3,7 @@
 
 // Importaciones
 import React, { useState } from 'react';
-import { View, TextInput, Button, Image, StyleSheet, Alert, ActivityIndicator, ScrollView, Text as DefaultText, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, TextInput, Image, StyleSheet, Alert, ActivityIndicator, ScrollView, Text as DefaultText, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { completeArtesanoProfile } from '../../src/services/userService';

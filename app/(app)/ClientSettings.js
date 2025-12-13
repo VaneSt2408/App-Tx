@@ -1,7 +1,7 @@
 // app/(app)/ClientProfile.js
 // Perfil del cliente con edición, cambio de contraseña y eliminación de perfil   
 import React, { useState, useEffect } from 'react';
-import { View, Text as DefaultText, ScrollView, ActivityIndicator, Alert, TouchableOpacity, Image } from 'react-native';
+import { View, Text as DefaultText, ActivityIndicator, Alert, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import useCustomFonts from '../../hooks/useFonts';
@@ -42,7 +42,7 @@ export default function ClientProfile() {
         return;
       }
       setProfile(data);
-    } catch (error) {
+    } catch (_) {
       Alert.alert('Error', 'Ocurrió un error inesperado');
     } finally {
       setLoading(false);
@@ -133,6 +133,7 @@ export default function ClientProfile() {
         <View style={{ width: 40 }} />
       </View>
 
+      <ScrollView showsVerticalScrollIndicator={false}>
       {/* Sección de Perfil */}
       <View className="bg-white p-4 mb-4">
         <TouchableOpacity className="flex-row items-center" onPress={navigateToProfile}>
@@ -235,6 +236,7 @@ export default function ClientProfile() {
           <Text style={{fontFamily: 'Alan Sans', fontSize:20,}} className="ml-2 font-bold text-[#9D046D]">Cerrar Sesión</Text>
         </TouchableOpacity>
       </View>
+      </ScrollView>
     </View>
   );
 }

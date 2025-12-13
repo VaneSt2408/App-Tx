@@ -1,7 +1,7 @@
 // app/(app)/AjustesPerfilArtesano.js
 // Pantalla de ajustes para el perfil del Artesano, replicando el estilo de ClientSettings.
 import React, { useState, useEffect } from 'react';
-import { View, Text as DefaultText, ScrollView, ActivityIndicator, Alert, TouchableOpacity, Image } from 'react-native';
+import { View, Text as DefaultText, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import useCustomFonts from '../../hooks/useFonts';
@@ -41,7 +41,7 @@ export default function AjustesPerfilArtesano() {
         return;
       }
       setProfile(artesano);
-    } catch (error) {
+    } catch (_) {
       Alert.alert('Error', 'Ocurrió un error inesperado');
     } finally {
       setLoading(false);

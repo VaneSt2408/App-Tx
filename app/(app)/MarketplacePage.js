@@ -5,8 +5,7 @@ import { View, FlatList, Image, TouchableOpacity, Text as DefaultText, TextInput
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
-import useCustomFonts from '../../hooks/useFonts';
-import MarketplaceService from '../../src/services/MarketplaceService';
+import { MarketplaceService } from '../../src/services/MarketplaceService';
 import { useFilter } from '../../src/context/FilterContext';
 
 const Text = (props) => (
@@ -96,7 +95,7 @@ const MarketplacePage = () => {
   useEffect(() => {
     // Se recarga cuando cambian los filtros del contexto, el filtro de estado o la búsqueda de texto.
     loadProductos(0);
-  }, [filters, filter, activeSearchQuery]); // Ahora depende de todos los filtros
+  }, [filters, filter, activeSearchQuery, loadProductos]); // Ahora depende de todos los filtros
 
   //NO MODIFICAR:
   // La búsqueda y el cambio de filtro de estado ahora llaman a `loadProductos` explícitamente.
@@ -166,8 +165,6 @@ const MarketplacePage = () => {
 
   //NO MODIFICAR: Renderizado de cada producto
   const renderProduct = ({ item }) => {
-    const isOwnProduct = session?.user?.id === item.artesano?.id;
-
     return (
       <TouchableOpacity
         className={`flex-1 m-2 bg-white shadow-lg rounded-md`}

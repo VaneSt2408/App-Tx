@@ -1,26 +1,58 @@
-// En: app/(app)/PageAdmin.js -> Archivo de la página de administración (Frontend)
-// Este archivo es el encargado de mostrar la página de administración en la aplicación.
-// Muestra la página de administración registrada en la base de datos y permite cerrar sesión, navegar a la página de invitación de enlace mágico, lista de artesanos, estadísticas, modificación/eliminación y configuración general.
-
+// En: app/(app)/PageAdmin.js
 import React, { useEffect, useState } from 'react';
-import { View, Text as DefaultText, StyleSheet, ActivityIndicator, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
+import { 
+    View, 
+    Text as DefaultText, 
+    StyleSheet, 
+    ActivityIndicator, 
+    TouchableOpacity, 
+    SafeAreaView, 
+    StatusBar, 
+    Platform,
+    useWindowDimensions // <-- Hook para dimensiones dinámicas
+} from 'react-native';
 import { useRouter } from 'expo-router';
-import { signOut } from '../../src/services/authService'; // Asumo que la ruta es correcta
-import { supabase } from '../../src/supabase/client'; // Asumo que la ruta es correcta
-import { Ionicons } from '@expo/vector-icons'; // Importamos Ionicons para los iconos
+import { signOut } from '../../src/services/authService';
+import { supabase } from '../../src/supabase/client';
+import { Ionicons } from '@expo/vector-icons';
 import useCustomFonts from '../../hooks/useFonts';
 
-    const Text = (props) => (
+// Ancho de referencia (iPhone 8/X)
+const REFERENCE_WIDTH = 375; 
+
+// Función para escalar valores basada en el ancho de la pantalla
+const scale = (size, screenWidth) => (screenWidth / REFERENCE_WIDTH) * size;
+
+const Text = (props) => (
     <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
-    );
+);
 
 function PageAdmin() {
+    const { width: screenWidth } = useWindowDimensions(); // <-- Obtenemos el ancho
     const router = useRouter();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     
+    // Función para escalar el tamaño de fuente y asegurar que sea entero
+    const scaledText = (size) => Math.round(scale(size, screenWidth));
+    
+    // ***********************************************
+    // AÑADIDO: CONSOLE LOGS PARA VERIFICAR EL ESCALADO
+    // ***********************************************
+    
+    console.log(`--- Dimensiones y Escalado ---`);
+    console.log(`Ancho detectado (DIPs): ${screenWidth}`);
+    
+    // Ejemplos clave de cómo se escalan los valores
+    const scaledHeaderTitle = scaledText(34);
+    const scaledButtonPadding = scaledText(15);
+    
+    console.log(`Tamaño de Título (base 34): ${scaledHeaderTitle}`);
+    console.log(`Padding de Botón (base 15): ${scaledButtonPadding}`);
+    console.log(`Factor de Escalado (Ancho/${REFERENCE_WIDTH}): ${screenWidth / REFERENCE_WIDTH}`);
+    console.log(`-----------------------------------`);
 
-    // useEffect no se toca, la lógica se mantiene
+    // Lógica de usuario y logout (sin cambios)
     useEffect(() => {
         const fetchUser = async () => {
             const { data: { user } } = await supabase.auth.getUser();
@@ -30,206 +62,157 @@ function PageAdmin() {
         fetchUser();
     }, []);
 
-    // handleLogout no se toca, la lógica se mantiene
     const handleLogout = async () => {
         await signOut();
-        // No se navega aquí. App.js se encarga de todo.
     };
 
     if (loading || !user) {
         return (
-            // Usamos el color de fondo original #f5ff5
             <View style={[styles.container, styles.loadingContainer]}>
                 <ActivityIndicator size="large" color="#9D046D" />
             </View>
         );
     }
 
-    // El JSX se actualiza para coincidir con la imagen pero con los colores originales
+    // Usamos un StyleSheet dinámico para aplicar el escalado de dimensiones
+    const dynamicStyles = StyleSheet.create({
+        // Adaptamos el padding horizontal del header
+        header: {
+            paddingHorizontal: scaledText(20), // Escalado
+            paddingVertical: scaledText(15), // Escalado
+            marginTop: scaledText(10),
+        },
+        headerTitle: {
+            fontSize: scaledText(34), // Escalamos el tamaño de fuente
+        },
+        headerSubtitle: {
+            fontSize: scaledText(17), // Escalamos el tamaño de fuente
+        },
+        menuContainer: {
+            paddingHorizontal: scaledText(15), // Escalamos el padding
+            marginTop: scaledText(20),
+        },
+        menuButton: {
+            paddingVertical: scaledText(15),
+            paddingHorizontal: scaledText(15),
+            marginBottom: scaledText(15),
+        },
+        menuText: {
+            fontSize: scaledText(17),
+        },
+        iconContainer: {
+            width: scaledText(30), 
+            height: scaledText(30), 
+        },
+        logoutButton: {
+            marginHorizontal: scaledText(15),
+            paddingVertical: scaledText(18),
+            marginBottom: scaledText(20),
+        },
+        logoutButtonText: {
+            fontSize: scaledText(17),
+            marginLeft: scaledText(10),
+        },
+    });
+
     return (
         <SafeAreaView style={styles.container}>
-            {/* Cambiamos la barra de estado a oscura para el fondo claro */}
-            <StatusBar barStyle="dark-content" />
+            <StatusBar 
+            barStyle={Platform.OS === 'ios' ? 'dark-content' : 'light-content'} // Fondo para IOS
+            backgroundColor={Platform.OS === 'android' ? '#000000' : 'transparent'} // Fondo solo para Android
+        />
             
-            {/* Header como en la imagen, pero con texto oscuro */}
-            <View style={styles.header}>
+            {/* Usamos el estilo dinámico para el Header */}
+            <View style={[styles.header, dynamicStyles.header]}>
                 <View>
-                    <Text style={styles.headerTitle}>Panel</Text>
-                    <Text style={styles.headerSubtitle}>Administrador</Text>
+                    <Text style={[styles.headerTitle, dynamicStyles.headerTitle]}>Panel</Text>
+                    <Text style={[styles.headerSubtitle, dynamicStyles.headerSubtitle]}>Administrador</Text>
                 </View>
-                {/* Icono oscuro para fondo claro */}
-                <Ionicons name="shield-outline" size={28} color="#000" />
+                <Ionicons name="shield-outline" size={scaledText(28)} color="#000" />
             </View>
 
             {/* Contenedor de botones del menú */}
-            <View style={styles.menuContainer}>
-                {/* Botón 1 con color original: #690DB5 e ícono con fondo */}
+            <View style={[styles.menuContainer, dynamicStyles.menuContainer]}>
+                
+                {/* Botón 1 */}
                 <TouchableOpacity 
-                    style={[styles.menuButton, styles.menuButtonPurple]} 
+                    style={[styles.menuButton, styles.menuButtonPurple, dynamicStyles.menuButton]} 
                     onPress={() => router.push('./MagicLink')}
                 >
-                    {/* Contenedor de icono con color */}
-                    <View style={[styles.iconContainer, styles.iconBgBlue, styles.menuIcon]}>
-                        <Ionicons name="person-add-outline" size={18} color="#FFFFFF" />
+                    <View style={[styles.iconContainer, styles.iconBgBlue, styles.menuIcon, dynamicStyles.iconContainer]}>
+                        <Ionicons name="person-add-outline" size={scaledText(18)} color="#FFFFFF" />
                     </View>
-                    <Text style={styles.menuText}>Registrar Nuevo Artesano</Text>
-                    <Ionicons name="chevron-forward-outline" size={22} color="#FFFFFF" />
+                    <Text style={[styles.menuText, dynamicStyles.menuText]}>Registrar Nuevo Artesano</Text>
+                    <Ionicons name="chevron-forward-outline" size={scaledText(22)} color="#FFFFFF" />
                 </TouchableOpacity>
 
-                {/* Botón 2 con color original: #9D046D e ícono con fondo */}
+                {/* Botón 2 */}
                 <TouchableOpacity 
-                    style={[styles.menuButton, styles.menuButtonMagenta]} 
+                    style={[styles.menuButton, styles.menuButtonMagenta, dynamicStyles.menuButton]} 
                     onPress={() => router.push('./ArtesanoList')}
                 >
-                    {/* Contenedor de icono con color */}
-                    <View style={[styles.iconContainer, styles.iconBgGreen, styles.menuIcon]}>
-                        <Ionicons name="list-outline" size={18} color="#FFFFFF" />
+                    <View style={[styles.iconContainer, styles.iconBgGreen, styles.menuIcon, dynamicStyles.iconContainer]}>
+                        <Ionicons name="list-outline" size={scaledText(18)} color="#FFFFFF" />
                     </View>
-                    <Text style={styles.menuText}>Lista de Artesanos</Text>
-                    <Ionicons name="chevron-forward-outline" size={22} color="#FFFFFF" />
+                    <Text style={[styles.menuText, dynamicStyles.menuText]}>Lista de Artesanos</Text>
+                    <Ionicons name="chevron-forward-outline" size={scaledText(22)} color="#FFFFFF" />
                 </TouchableOpacity>
 
-                {/* Botón 3 con color original: #9D046D e ícono con fondo */}
+                {/* Botón 3 */}
                 <TouchableOpacity 
-                    style={[styles.menuButton, styles.menuButtonMagenta]} 
+                    style={[styles.menuButton, styles.menuButtonMagenta, dynamicStyles.menuButton]} 
                     onPress={() => router.push('./estadisticas')}
                 >
-                    {/* Contenedor de icono con color */}
-                    <View style={[styles.iconContainer, styles.iconBgPurple, styles.menuIcon]}>
-                        <Ionicons name="bar-chart-outline" size={18} color="#FFFFFF" />
+                    <View style={[styles.iconContainer, styles.iconBgPurple, styles.menuIcon, dynamicStyles.iconContainer]}>
+                        <Ionicons name="bar-chart-outline" size={scaledText(18)} color="#FFFFFF" />
                     </View>
-                    <Text style={styles.menuText}>Estadísticas</Text>
-                    <Ionicons name="chevron-forward-outline" size={22} color="#FFFFFF" />
+                    <Text style={[styles.menuText, dynamicStyles.menuText]}>Estadísticas</Text>
+                    <Ionicons name="chevron-forward-outline" size={scaledText(22)} color="#FFFFFF" />
                 </TouchableOpacity>
 
-                {/* Botón 4 con color original: #9D046D e ícono con fondo */}
+                {/* Botón 4 */}
                 <TouchableOpacity 
-                    style={[styles.menuButton, styles.menuButtonMagenta]} 
+                    style={[styles.menuButton, styles.menuButtonMagenta, dynamicStyles.menuButton]} 
                     onPress={() => router.push('./Eventos')}
                 >
-                    {/* Contenedor de icono con color */}
-                    <View style={[styles.iconContainer, styles.iconBgOrange, styles.menuIcon]}>
-                        <Ionicons name="calendar-outline" size={18} color="#FFFFFF" />
+                    <View style={[styles.iconContainer, styles.iconBgOrange, styles.menuIcon, dynamicStyles.iconContainer]}>
+                        <Ionicons name="calendar-outline" size={scaledText(18)} color="#FFFFFF" />
                     </View>
-                    <Text style={styles.menuText}>Eventos</Text>
-                    <Ionicons name="chevron-forward-outline" size={22} color="#FFFFFF" />
+                    <Text style={[styles.menuText, dynamicStyles.menuText]}>Eventos</Text>
+                    <Ionicons name="chevron-forward-outline" size={scaledText(22)} color="#FFFFFF" />
                 </TouchableOpacity>
+
             </View>
 
-            {/* Botón de Cerrar Sesión al final, con el color rojo original #db4437 */}
-            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                <Ionicons name="log-out-outline" size={22} color="#FFFFFF" />
-                <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
+            {/* Botón de Cerrar Sesión */}
+            <TouchableOpacity style={[styles.logoutButton, dynamicStyles.logoutButton]} onPress={handleLogout}>
+                <Ionicons name="log-out-outline" size={scaledText(22)} color="#FFFFFF" />
+                <Text style={[styles.logoutButtonText, dynamicStyles.logoutButtonText]}>Cerrar Sesión</Text>
             </TouchableOpacity>
         </SafeAreaView>
     );
 }
 
-// Stylesheet actualizado con los colores originales
+// Stylesheet estático (sin cambios)
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff', // Color de fondo original
-    },
-    loadingContainer: {
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-        paddingVertical: 15,
-        marginTop: 10,
-    },
-    headerTitle: {
-        fontSize: 34,
-        fontWeight: 'bold',
-        color: '#333333', // Texto oscuro para fondo claro
-    },
-    headerSubtitle: {
-        fontSize: 17,
-        color: '#555555', // Texto oscuro para fondo claro
-    },
-    menuContainer: {
-        flex: 1, 
-        paddingHorizontal: 15,
-        marginTop: 20,
-    },
-    // Estilo base para los botones
-    menuButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 15, // Reducido un poco para que se vea mejor con el icono
-        paddingHorizontal: 15,
-        borderRadius: 6, // CAMBIO: De 12 a 6 (rounded-sm)
-        marginBottom: 15, 
-    },
-    // Color específico para el primer botón
-    menuButtonPurple: {
-        // CAMBIO: Se usa rgba para la transparencia (R=157, G=4, B=109, A=0.7)
-        backgroundColor: 'rgba(157, 4, 109, 0.7)', 
-        // Se quitó opacity: 0.7
-    },
-    // Color específico para los otros botones
-    menuButtonMagenta: {
-        // CAMBIO: Se usa rgba para la transparencia (R=157, G=4, B=109, A=0.7)
-        backgroundColor: 'rgba(157, 4, 109, 0.7)',
-        // Se quitó opacity: 0.7
-    },
-    
-    // --- NUEVOS ESTILOS PARA LOS ICONOS ---
-    menuIcon: {
-        marginRight: 15, // Mantenemos el margen
-    },
-    iconContainer: {
-        width: 30, // Tamaño del círculo
-        height: 30, // Tamaño del círculo
-        borderRadius: 6, // CAMBIO: De 15 a 6 (menos round)
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    // Colores iconos
-    iconBgBlue: {
-        backgroundColor: '#3B82F6', // Azul
-    },
-    iconBgGreen: {
-        backgroundColor: '#22C55E', // Verde
-    },
-    iconBgPurple: {
-        backgroundColor: '#A855F7', // Morado
-    },
-    iconBgOrange: {
-        backgroundColor: '#F97316', // Naranja
-    },
-    // --- FIN DE NUEVOS ESTILOS ---
-
-    // Texto blanco para que contraste con los botones de color
-    menuText: {
-        flex: 1, 
-        color: '#FFFFFF',
-        fontSize: 17,
-        fontWeight: '500',
-    },
-    logoutButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        // CAMBIO: Se usa rgba para la transparencia (R=219, G=68, B=55, A=0.9)
-        backgroundColor: 'rgba(219, 68, 55)', 
-        marginHorizontal: 15,
-        paddingVertical: 18,
-        borderRadius: 9, //CAMBIO: De 12 a 6 (rounded-sm)
-        marginBottom: 20, 
-        // Se quitó opacity: 0.9
-    },
-    logoutButtonText: {
-        color: '#FFFFFF', // Texto blanco
-        fontSize: 17,
-        fontWeight: '600',
-        marginLeft: 10,
-    },
+    container: { flex: 1, backgroundColor: '#fff' },
+    loadingContainer: { justifyContent: 'center', alignItems: 'center' },
+    header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', },
+    headerTitle: { fontWeight: 'bold', color: '#333333', },
+    headerSubtitle: { color: '#555555', },
+    menuContainer: { flex: 1, },
+    menuButton: { flexDirection: 'row', alignItems: 'center', borderRadius: 6, },
+    menuButtonPurple: { backgroundColor: 'rgba(157, 4, 109, 0.7)', },
+    menuButtonMagenta: { backgroundColor: 'rgba(157, 4, 109, 0.7)', },
+    menuIcon: { marginRight: 15, },
+    iconContainer: { borderRadius: 6, justifyContent: 'center', alignItems: 'center', },
+    iconBgBlue: { backgroundColor: '#3B82F6' },
+    iconBgGreen: { backgroundColor: '#22C55E' },
+    iconBgPurple: { backgroundColor: '#A855F7' },
+    iconBgOrange: { backgroundColor: '#F97316' },
+    menuText: { flex: 1, color: '#FFFFFF', fontWeight: '500', },
+    logoutButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(219, 68, 55)', borderRadius: 9, },
+    logoutButtonText: { color: '#FFFFFF', fontWeight: '600', },
 });
 
 export default PageAdmin;

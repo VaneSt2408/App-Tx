@@ -4,8 +4,8 @@
 
 
 // Importaciones
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, SafeAreaView} from 'react-native';
+import React from 'react';
+import { StyleSheet, SafeAreaView} from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -97,7 +97,7 @@ function ArtPage() {
     );
 }
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create({ // eslint-disable-line no-unused-vars
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',

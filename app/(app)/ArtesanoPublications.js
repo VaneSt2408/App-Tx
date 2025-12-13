@@ -3,15 +3,13 @@
 // Muestra las publicaciones del artesano registradas en la base de datos y permite buscarlas por texto, fecha o categoría.
 // También permite navegar al perfil del artesano y ver su información completa.
 
-
 // Importaciones
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {View,Text as DefaultText,FlatList,Image,TouchableOpacity,StyleSheet,ActivityIndicator,RefreshControl,Alert,Dimensions,Modal,ScrollView,TextInput,PanResponder,Animated } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import { getPublicacionesByArtesano, deletePublication, updatePublication } from '../../src/services/PublicacionService';
-import useCustomFonts from '../../hooks/useFonts';
 
 
 const Text = (props) => (
@@ -42,15 +40,8 @@ export default function ArtesanoPublications() {
   const userId = session?.user?.id;
   const isOwnProfile = true; // Esta pantalla siempre es del perfil propio
 
-  // Efecto para cargar las publicaciones
-  useEffect(() => {
-    if (userId) {
-      loadPublicaciones();
-    }
-  }, [userId]); // Dependerá del userId de la sesión
-
   // Función para cargar las publicaciones
-  const loadPublicaciones = async (page = 0) => {
+  const loadPublicaciones = useCallback(async (page = 0) => {
     try {
       if (page === 0) {
         setLoading(true);
@@ -68,13 +59,20 @@ export default function ArtesanoPublications() {
       } else {
         Alert.alert('Error', 'No se pudieron cargar las publicaciones');
       }
-    } catch (error) {
+    } catch (_) {
       Alert.alert('Error', 'Ocurrió un error inesperado');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [userId]);
+
+  // Efecto para cargar las publicaciones
+  useEffect(() => {
+    if (userId) {
+      loadPublicaciones();
+    }
+  }, [userId, loadPublicaciones]);
 
   // Función para refrescar las publicaciones
   const onRefresh = () => {
@@ -178,7 +176,7 @@ export default function ArtesanoPublications() {
               } else {
                 Alert.alert('Error', result.error || 'No se pudo eliminar la publicación');
               }
-            } catch (error) {
+            } catch (_) {
               Alert.alert('Error', 'Ocurrió un error al eliminar la publicación');
             }
           }

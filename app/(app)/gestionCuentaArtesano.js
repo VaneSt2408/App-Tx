@@ -74,7 +74,7 @@ export default function GestionCuentaArtesano() {
     };
     loadAttempts();
     checkUserProvider();
-  }, []);
+  }, [userId]);
 
   // --- useEffect para el temporizador de bloqueo ---
   useEffect(() => {
@@ -94,7 +94,7 @@ export default function GestionCuentaArtesano() {
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [deletePasswordBlocked, deleteBlockTimeRemaining]);
+  }, [deletePasswordBlocked, deleteBlockTimeRemaining, userId]);
 
   const handleOpenDeleteModal = () => {
     if (deletePasswordBlocked) {
@@ -200,7 +200,7 @@ export default function GestionCuentaArtesano() {
         if (userId) await AsyncStorage.removeItem(`deleteFailedAttempts_${userId}`);
         Alert.alert('Éxito', 'Contraseña verificada. Ahora puedes eliminar tu perfil.');
       }
-    } catch (e) {
+    } catch (_) {
       Alert.alert('Error', 'Ocurrió un error al verificar la contraseña.');
     } finally {
       setDeletePasswordLoading(false);
