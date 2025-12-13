@@ -1,11 +1,16 @@
 // En: app/(app)/ArtPage.js -> Archivo de la página del artesano (Frontend)
 // Este archivo es el encargado de mostrar la página del artesano en la aplicación.
-// Muestra la página del artesano registrada en la base de datos y permite navegar a la página de inicio, marketplace y ajustes.
-
 
 // Importaciones
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, SafeAreaView} from 'react-native';
+import React from 'react';
+import { 
+    StyleSheet, 
+    SafeAreaView, 
+    useWindowDimensions, // Para el escalado dinámico
+    Platform,            // Para la lógica de la Barra de Estado
+    StatusBar,           // Para el control de la Barra de Estado
+    Text as DefaultText 
+} from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -14,8 +19,16 @@ import MarketplacePage from './MarketplacePage';
 import ArtesanoSettings from './ArtesanoSettings';
 import Estadisticas from './estadisticas';
 
-const Tab = createBottomTabNavigator(); // Crear el tab navigator
-const ProfileStack = createStackNavigator(); // Creamos un Stack Navigator para el perfil
+const Tab = createBottomTabNavigator();
+const ProfileStack = createStackNavigator();
+
+// --- LÓGICA DE ESCALADO ---
+const REFERENCE_WIDTH = 375;
+const scale = (size, screenWidth) => (screenWidth / REFERENCE_WIDTH) * size;
+
+const Text = (props) => (
+    <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
+);
 
 // Este es el nuevo navegador para la pestaña de Perfil
 function ProfileStackNavigator() {
@@ -28,75 +41,104 @@ function ProfileStackNavigator() {
 
 // Componente principal
 function ArtPage() {
+    const { width: screenWidth } = useWindowDimensions();
+    const scaledValue = (size) => Math.round(scale(size, screenWidth));
+
+    // Valores Escalados para la Tab Bar (Base de 50 de altura)
+    const tabHeight = scaledValue(50); 
+    const tabPaddingVertical = scaledValue(5); 
+    const labelSize = scaledValue(10); 
+    const iconMarginBottom = scaledValue(2); 
+
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-        <Tab.Navigator
-            screenOptions={({ route }) => ({
-                tabBarIcon: ({ focused, color, size }) => {
-                    let iconName;
+            
+            {/* CORRECCIÓN DE BARRA DE ESTADO UNIVERSAL (Para Android/iOS) */}
+            <StatusBar 
+                barStyle={Platform.OS === 'ios' ? 'dark-content' : 'light-content'} 
+                backgroundColor={Platform.OS === 'android' ? '#000000' : 'transparent'} 
+            />
+            
+            <Tab.Navigator
+                screenOptions={({ route }) => ({
+                    // CLAVE: Asegura que la etiqueta (el nombre) siempre se muestre
+                    tabBarShowLabel: true, 
 
-                    if (route.name === 'Feed') {
-                        iconName = focused ? 'home' : 'home-outline';
-                    } else if (route.name === 'Marketplace') {
-                        iconName = focused ? 'store' : 'store-outline';
-                    } else if (route.name === 'Estadisticas') {
-                        iconName = focused ? 'chart-bar' : 'chart-bar-stacked';
-                    } else if (route.name === 'Perfil') {
-                        iconName = focused ? 'account-circle' : 'account-circle-outline';
-                    }
+                    tabBarIcon: ({ focused, color, size }) => {
+                        let iconName;
 
-                    return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
-                },
-                tabBarActiveTintColor: '#9D046D',
-                tabBarInactiveTintColor: '#666', // Corregido a un color válido
-                tabBarStyle: {
-                    backgroundColor: '#fff',
-                    borderTopWidth: 1,
-                    borderTopColor: '#e1e8ed',
-                    height: 40, // Aumentamos la altura total
-                    paddingBottom: 8, // Más espacio abajo para la barra del iPhone
-                    paddingTop: 8, // Mantenemos el espacio superior
-                },
-                tabBarLabelStyle: {
-                    fontSize: 12,
-                    fontWeight: '500',
-                },
-                headerShown: false,
-            })}
-        >
-            <Tab.Screen 
-                name="Feed" 
-                component={FeedPage}
-                options={{
-                    tabBarLabel: 'Inicio',
-                }}
-            />
-            <Tab.Screen 
-                name="Marketplace" 
-                component={MarketplacePage}
-                options={{
-                    tabBarLabel: 'Mercadito',
-                }}
-            />
-            <Tab.Screen 
-                name="Estadisticas" 
-                component={Estadisticas}
-                options={{
-                    tabBarLabel: 'Estadísticas',
-                }}
-            />
-            <Tab.Screen 
-                name="Perfil" 
-                component={ProfileStackNavigator} // Usamos el nuevo Stack Navigator aquí
-                options={{
-                    tabBarLabel: 'Perfil',
-                }}
-            />
-        </Tab.Navigator>
+                        if (route.name === 'Feed') {
+                            iconName = focused ? 'home' : 'home-outline';
+                        } else if (route.name === 'Marketplace') {
+                            iconName = focused ? 'store' : 'store-outline';
+                        } else if (route.name === 'Estadisticas') {
+                            iconName = focused ? 'chart-bar' : 'chart-bar-stacked';
+                        } else if (route.name === 'Perfil') {
+                            iconName = focused ? 'account-circle' : 'account-circle-outline';
+                        }
+                        
+                        return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
+                    },
+                    
+                    tabBarActiveTintColor: '#9D046D',
+                    tabBarInactiveTintColor: '#666',
+                    tabBarStyle: {
+                        backgroundColor: '#fff',
+                        borderTopWidth: 1,
+                        borderTopColor: '#e1e8ed',
+                        
+                        // --- VALORES ESCALADOS PARA EL CONTENEDOR ---
+                        height: tabHeight,
+                        paddingVertical: tabPaddingVertical, 
+                        // --------------------------------------------
+                    },
+                    tabBarLabelStyle: {
+                        // --- VALOR ESCALADO PARA LA FUENTE ---
+                        fontSize: labelSize,
+                        // -------------------------------------
+                        fontWeight: '500',
+                        textAlign: 'center',
+                    },
+                    tabBarIconStyle: {
+                        marginBottom: iconMarginBottom, // Espacio entre icono y texto escalado
+                    },
+                    headerShown: false,
+                })}
+            >
+                <Tab.Screen 
+                    name="Feed" 
+                    component={FeedPage}
+                    options={{
+                        tabBarLabel: 'Inicio',
+                    }}
+                />
+                <Tab.Screen 
+                    name="Marketplace" 
+                    component={MarketplacePage}
+                    options={{
+                        tabBarLabel: 'Mercadito',
+                    }}
+                />
+                <Tab.Screen 
+                    name="Estadisticas" 
+                    component={Estadisticas}
+                    options={{
+                        tabBarLabel: 'Estadísticas',
+                    }}
+                />
+                <Tab.Screen 
+                    name="Perfil" 
+                    component={ProfileStackNavigator}
+                    options={{
+                        tabBarLabel: 'Perfil',
+                    }}
+                />
+            </Tab.Navigator>
         </SafeAreaView>
     );
 }
 
+// Stylesheet estático (sin cambios)
 const styles = StyleSheet.create({
     loadingContainer: {
         flex: 1,
