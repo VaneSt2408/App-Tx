@@ -4,19 +4,16 @@
 
 // Importaciones
 import React, { useState, useEffect } from 'react';
-import { View, Text as DefaultText, Image, TouchableOpacity, StyleSheet, Dimensions, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text as DefaultText, Image, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator, useWindowDimensions } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import useCustomFonts from '../hooks/useFonts';
-
-const { width } = Dimensions.get('window');
-const cardWidth = width; // La tarjeta ocupará todo el ancho
 
 /**
  * Componente de tarjeta de publicación (estilo Facebook)
  */
 const Text = (props) => (
-    <DefaultText {...props} style={[{ fontFamily: 'AlanSans' }, props.style]} />
+    <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
   );
 
   
@@ -26,6 +23,7 @@ const PostCard = ({ post, onLike }) => {
   const [likesCount, setLikesCount] = useState(post.likes_count);
   const [likeLoading, setLikeLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0); // Estado para el carrusel
+  const { width } = useWindowDimensions(); // Obtener ancho dinámico
 
   // Sincronizar estado cuando cambia el post (útil al recargar)
   useEffect(() => {
@@ -137,11 +135,11 @@ const PostCard = ({ post, onLike }) => {
 
       {/* Galería de Imágenes */}
       {imageGallery.length > 0 ? (
-        <View style={styles.imageContainer}>
+        <View style={[styles.imageContainer, { height: width }]}>
           <FlatList
             data={imageGallery}
             renderItem={({ item }) => (
-              <Image source={{ uri: item.imagen_url }} style={styles.image} />
+              <Image source={{ uri: item.imagen_url }} style={[styles.image, { width: width, height: width }]} />
             )}
             keyExtractor={(item) => item.id.toString()}
             horizontal
@@ -254,12 +252,9 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     width: '100%',
-    height: cardWidth, // Imagen cuadrada
     backgroundColor: '#f0f0f0',
   },
   image: {
-    width: cardWidth,
-    height: cardWidth,
   },
   pagination: {
     position: 'absolute',

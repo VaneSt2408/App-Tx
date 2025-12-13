@@ -1,6 +1,6 @@
 // app/(app)/FeedPage.js
 import React, { useState, useEffect, useCallback } from 'react';
-import { View,Alert, FlatList, RefreshControl, ActivityIndicator, Text as DefaultText, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View,Alert, FlatList, RefreshControl, ActivityIndicator, Text as DefaultText, TouchableOpacity, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
 import FeedService from '../../src/services/FeedService';
 import PostCard from '../../components/PostCard';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -22,6 +22,7 @@ const FeedPage = () => {
   const [hasMore, setHasMore] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState(null); // 2. Estado para el evento seleccionado
   const [modalVisible, setModalVisible] = useState(false); // 3. Estado para la visibilidad del modal
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
 
   useEffect(() => {
     loadFeed();
@@ -110,7 +111,7 @@ const FeedPage = () => {
   const renderEmpty = () => {
     if (loading) return null;
     return (
-      <View className="flex-1 justify-center items-center px-10">
+      <View className="flex-1 justify-center items-center px-10" style={{ minHeight: windowHeight * 0.5 }}>
         <MaterialCommunityIcons name="post-outline" size={64} color="#ccc" />
         <Text style={{fontFamily: 'Alan Sans'}} className="mt-4 text-lg font-semibold text-gray-600 text-center">
           No hay publicaciones aún
@@ -151,6 +152,7 @@ const FeedPage = () => {
         {/* 4. Pasar la prop onEventPress para abrir el modal */}
         <EventCarousel 
           events={events} 
+          windowWidth={windowWidth}
           onEventPress={(event) => {
             setSelectedEvent(event);
             setModalVisible(true);
@@ -200,7 +202,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     right: 20,
-    bottom: 20, // Se ajustará sobre el tab bar
+    bottom: 20, // Restaurado a su posición original
     backgroundColor: '#9D046D',
     borderRadius: 28,
     elevation: 8,

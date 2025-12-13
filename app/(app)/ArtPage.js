@@ -53,8 +53,8 @@ function ArtPage() {
                     backgroundColor: '#fff',
                     borderTopWidth: 1,
                     borderTopColor: '#e1e8ed',
-                    height: 40, // Aumentamos la altura total
-                    paddingBottom: 8, // Más espacio abajo para la barra del iPhone
+                    height: 40,
+                    paddingBottom: 8,
                     paddingTop: 8, // Mantenemos el espacio superior
                 },
                 tabBarLabelStyle: {
