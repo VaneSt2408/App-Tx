@@ -28,7 +28,7 @@ const Avatar = ({ url, onUpload, loading }: { url: string | null; onUpload: () =
 
 // Componente principal
 export default function CompleteArtesanoProfilePage() {
-  const { session, refreshProfile } = useAuth(); // Obtener el contexto de autenticación
+  const { refreshProfile } = useAuth(); // Obtener el contexto de autenticación
   const router = useRouter(); // Obtener el router
   const [formData, setFormData] = useState({ // Establecer el estado del formulario
     descripcion: '', // Establecer el estado de la descripción
@@ -64,7 +64,7 @@ export default function CompleteArtesanoProfilePage() {
       if (!result.canceled && result.assets[0]) {
         setSelectedImage(result.assets[0]);
       }
-    } catch (error) {
+    } catch (_) { // Usar _ o catch {} si no usas la variable error
       Alert.alert('Error', 'No se pudo seleccionar la imagen');
     }
   };
@@ -96,7 +96,7 @@ export default function CompleteArtesanoProfilePage() {
           }
         ]);
       }
-    } catch (error) {
+    } catch {
     } finally {
       setLoading(false);
     }

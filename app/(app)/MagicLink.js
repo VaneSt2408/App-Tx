@@ -4,7 +4,7 @@
 
 // Importaciones
 import React, { useState } from 'react'; // Importa React y el hook 'useState' para manejar el estado del componente.
-import { View, TextInput, Text as DefaultText, TouchableOpacity, Alert, StyleSheet, Text, ActivityIndicator, SafeAreaView } from 'react-native'; // Importa componentes visuales básicos de React Native.
+import { View, TextInput, Text as DefaultText, TouchableOpacity, Alert, StyleSheet, ActivityIndicator, SafeAreaView } from 'react-native'; // Importa componentes visuales básicos de React Native.
 import { sendArtesanoInvite } from '../../src/services/userService'; // Importa la función específica para enviar invitaciones desde un archivo de servicios.
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Importamos íconos
 

@@ -4,15 +4,13 @@
 
 // Importaciones (Añadir FlatList y Dimensions)
 import React, { useState, useEffect, useCallback } from 'react';
-import {View,Text as DefaultText,Image,ScrollView,TouchableOpacity,StyleSheet,ActivityIndicator,Alert, RefreshControl, Modal, Linking, Share, Platform} from 'react-native';
+import {View,Text as DefaultText,Image,ScrollView,TouchableOpacity,StyleSheet,ActivityIndicator,Alert, RefreshControl, Modal, Linking, Share, Dimensions} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router'; 
-import MarketplaceService from '../../src/services/MarketplaceService';
+import { MarketplaceService } from '../../src/services/MarketplaceService';
 import { toggleLikeProduct  } from '../../src/services/productService';
 import { useAuth } from '../../src/context/AuthContext';
 import { FlatList as GestureFlatList } from 'react-native-gesture-handler';
-import { Dimensions } from 'react-native';
-import useCustomFonts from '../../hooks/useFonts';
 
 // Componente principal
 export default function ProductDetailPage() {
@@ -36,13 +34,8 @@ export default function ProductDetailPage() {
       <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
     );
 
-  // Cargar el detalle del producto
-  useEffect(() => {
-    loadProductDetail();
-  }, [productId]);
-
   // Función para cargar el detalle del producto
-  const loadProductDetail = async () => {
+  const loadProductDetail = useCallback(async () => {
     try {
       setLoading(true);
       console.log(`--- [ProductDetailPage] Iniciando carga para productId: ${productId}`); // CONSOLE LOG
@@ -72,7 +65,7 @@ export default function ProductDetailPage() {
         Alert.alert('Error', 'No se pudo cargar el producto');
         router.back();
       }
-    } catch (error) {
+    } catch (_) {
       Alert.alert('Error', 'Ocurrió un error inesperado');
       router.back();
     } finally {
@@ -80,7 +73,12 @@ export default function ProductDetailPage() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [productId, router]);
+
+  // Cargar el detalle del producto
+  useEffect(() => {
+    loadProductDetail();
+  }, [loadProductDetail]);
 
   // Callback para actualizar el índice activo del carrusel
   const onViewableItemsChanged = useCallback(({ viewableItems }) => {
@@ -92,7 +90,7 @@ export default function ProductDetailPage() {
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     loadProductDetail();
-  }, [productId]);
+  }, [loadProductDetail]);
 
 
     // Formatear precio
@@ -121,7 +119,7 @@ export default function ProductDetailPage() {
         setSaved(current => !current);
         Alert.alert('Error', result.error || 'No se pudo guardar el producto.');
       }
-    } catch (error) {
+    } catch (_) {
       setSaved(current => !current); // Revertir si hay una excepción
       Alert.alert('Error', 'Ocurrió un error inesperado al guardar.');
     }
@@ -162,10 +160,6 @@ export default function ProductDetailPage() {
     // Funciones para abrir apps externas
     const openPhone = (telefono) => {
         Linking.openURL(`tel:${telefono}`);
-    };
-
-    const openEmail = (email) => {
-        Linking.openURL(`mailto:${email}`);
     };
 
   // Función para compartir el producto (versión de producción)

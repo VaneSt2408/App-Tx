@@ -13,6 +13,7 @@
       "supportsTablet": true
     },
     "android": {
+      "networkSecurityConfig": "./network_security_config.xml",
       "intentFilters": [
         { "action": "VIEW", "data": [{ "scheme": "https", "host": "*.txapp.example.com" }], "category": ["BROWSABLE", "DEFAULT"] }
       ],

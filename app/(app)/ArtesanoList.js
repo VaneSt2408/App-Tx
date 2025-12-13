@@ -11,7 +11,6 @@ import { View, Text as DefaultText, StyleSheet, FlatList, Image, ActivityIndicat
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { artesanoService } from '../../src/services/artesanoService';
 import { useRouter } from 'expo-router';
-import useCustomFonts from '../../hooks/useFonts';
 
 
 export default function ArtesanoList() {
@@ -19,7 +18,6 @@ export default function ArtesanoList() {
   const [artesanos, setArtesanos] = useState([]);
   const [filteredArtesanos, setFilteredArtesanos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const Text = (props) => (
@@ -31,9 +29,7 @@ export default function ArtesanoList() {
       setLoading(true);
       const data = await artesanoService.getArtesanos();
       setArtesanos(data || []);
-      setError(null);
-    } catch (err) {
-      setError('Error al cargar la lista de artesanos');
+    } catch (_) {
       Alert.alert('Error', 'No se pudo cargar la lista de artesanos');
     } finally {
       setLoading(false);

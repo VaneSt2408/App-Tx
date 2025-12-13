@@ -46,7 +46,7 @@ export default function AppLayout() {
       // Este es el 'default' de tu switch.
       router.replace('/(app)/NotFoundPage' as Href);
     }
-  }, [role, authLoading, session]); // El efecto se ejecuta cuando el rol esté listo.
+  }, [role, authLoading, session, router]); // El efecto se ejecuta cuando el rol esté listo.
 
   // 4. Mientras se obtiene el rol, mostramos una carga (igual que tu 'if (!role)' en App.js).
   if (authLoading || !role) {

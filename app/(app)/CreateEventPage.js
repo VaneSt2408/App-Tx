@@ -2,16 +2,12 @@
 import React, { useState } from 'react';
 import { View, Text as DefaultText, TextInput, TouchableOpacity, Alert, ScrollView, KeyboardAvoidingView, Platform, Image} from 'react-native';
 import { useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import useCustomFonts from '../../hooks/useFonts';
 import * as ImagePicker from 'expo-image-picker';
 import { createEventForCurrentUser } from '../../src/services/eventsService';
 
 const Text = (props) => (
     <DefaultText {...props} style={[{ fontFamily: 'AlanSans' }, props.style]} />
   );
-
-const EVENTOS_KEY = '@eventos_admin';
 
 const CreateEventPage = () => {
   const router = useRouter();

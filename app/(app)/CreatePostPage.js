@@ -10,7 +10,6 @@ import {
   createPostForCurrentUser, 
   selectMultipleAndCompressImages // 1. Importamos la función de selección
 } from '../../src/services/PublicacionService';
-import useCustomFonts from '../../hooks/useFonts';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const Text = (props) => (

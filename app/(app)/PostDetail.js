@@ -28,6 +28,18 @@ export default function PostDetail() {
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const loadItemDetails = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await artesanoService.getItemById(itemId, itemType);
+      setItem(data);
+    } catch (_) {
+      Alert.alert('Error', 'No se pudo cargar el detalle.');
+    } finally {
+      setLoading(false);
+    }
+  }, [itemId, itemType]);
+
   useEffect(() => {
     if (itemId && itemType) {
       loadItemDetails();
@@ -35,19 +47,7 @@ export default function PostDetail() {
       Alert.alert('Error', 'No se pudo cargar el detalle del item.');
       router.back();
     }
-  }, [itemId, itemType]);
-
-  const loadItemDetails = async () => {
-    try {
-      setLoading(true);
-      const data = await artesanoService.getItemById(itemId, itemType);
-      setItem(data);
-    } catch (error) {
-      Alert.alert('Error', 'No se pudo cargar el detalle.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [itemId, itemType, loadItemDetails, router]);
 
   const renderHeader = () => (
     <View style={styles.header}>

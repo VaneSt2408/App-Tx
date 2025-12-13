@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text as DefaultText,
@@ -40,7 +40,7 @@ const AppSettingsScreen = () => {
   };
 
   // Función para calcular el tamaño del caché
-  const calculateCacheSize = async () => {
+  const calculateCacheSize = useCallback(async () => {
     try {
       const cacheDirUri = cacheDirectory || `${documentDirectory}cache/`;
       const dirInfo = await getInfoAsync(cacheDirUri);
@@ -61,15 +61,15 @@ const AppSettingsScreen = () => {
       );
 
       setCacheSize(formatBytes(totalSize));
-    } catch (error) {
+    } catch (_) {
       setCacheSize("Error");
     }
-  };
+  }, []);
 
   // Calcular el tamaño del caché al cargar la pantalla
   useEffect(() => {
     calculateCacheSize();
-  }, []);
+  }, [calculateCacheSize]);
 
   const toggleTheme = () => {
     setIsDarkMode((previousState) => !previousState);

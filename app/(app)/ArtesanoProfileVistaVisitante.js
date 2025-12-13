@@ -26,16 +26,15 @@ export default function ArtesanoProfileVistaVisitante() {
     const [isFollowing, setIsFollowing] = useState(false);
     const [followLoading, setFollowLoading] = useState(false);
 
-    useEffect(() => {
-        if (userId) {
-            loadArtesanoProfile(userId, true); // Carga inicial
-        } else {
-            Alert.alert("Error", "No se proporcionó un ID de artesano.");
-            router.back();
-        }
-    }, [userId]);
+    // Función para verificar si el usuario actual sigue al artesano
+    const checkIfFollowing = useCallback(async (artesanoId) => {
+        if (!session?.user?.id || !artesanoId) return;
+        // Usar el servicio para verificar el seguimiento
+        const isCurrentlyFollowing = await seguidosService.checkIfFollowing(session.user.id, artesanoId);
+        setIsFollowing(isCurrentlyFollowing);
+    }, [session?.user?.id]);
 
-    const loadArtesanoProfile = async (id, isInitialLoad = false) => {
+    const loadArtesanoProfile = useCallback(async (id, isInitialLoad = false) => {
         try {
             if (isInitialLoad) setLoading(true);
             const data = await artesanoService.getArtesanoCompleto(id);
@@ -50,20 +49,21 @@ export default function ArtesanoProfileVistaVisitante() {
             if (isInitialLoad) setLoading(false);
             setRefreshing(false);
         }
-    };
+    }, [checkIfFollowing]);
+
+    useEffect(() => {
+        if (userId) {
+            loadArtesanoProfile(userId, true); // Carga inicial
+        } else {
+            Alert.alert("Error", "No se proporcionó un ID de artesano.");
+            router.back();
+        }
+    }, [userId, loadArtesanoProfile, router]);
 
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
         await loadArtesanoProfile(userId);
-    }, [userId]);
-
-    // Función para verificar si el usuario actual sigue al artesano
-    const checkIfFollowing = async (artesanoId) => {
-        if (!session?.user?.id || !artesanoId) return;
-        // Usar el servicio para verificar el seguimiento
-        const isCurrentlyFollowing = await seguidosService.checkIfFollowing(session.user.id, artesanoId);
-        setIsFollowing(isCurrentlyFollowing);
-    };
+    }, [userId, loadArtesanoProfile]);
 
     // Función para seguir o dejar de seguir a un artesano
     const handleFollowToggle = async () => {
@@ -84,7 +84,7 @@ export default function ArtesanoProfileVistaVisitante() {
             } else {
                 throw result.error || new Error('La operación de seguimiento falló.');
             }
-        } catch (error) {
+        } catch (_) {
             Alert.alert('Error', 'No se pudo completar la acción. Inténtalo de nuevo.');
         } finally {
             setFollowLoading(false);

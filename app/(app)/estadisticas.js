@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text as DefaultText, FlatList, StyleSheet, ActivityIndicator, Image, TouchableOpacity, SafeAreaView, RefreshControl } from 'react-native';
 import { estadisticasService } from '../../src/services/estadisticasService';
-import useCustomFonts from '../../hooks/useFonts';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 

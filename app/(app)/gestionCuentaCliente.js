@@ -16,7 +16,6 @@ import useCustomFonts from "../../hooks/useFonts";
 import { supabase } from "../../src/supabase/client";
 import {
   deleteClientProfile,
-  deleteGoogleClientProfile,
 } from "../../src/services/profileInfo";
 import { useAuth } from "../../src/context/AuthContext";
 import ChangePasswordModal from "../../components/ChangePasswordModal";

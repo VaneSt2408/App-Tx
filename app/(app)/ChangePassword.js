@@ -4,7 +4,7 @@
 
 // Importaciones
 import React, { useState } from 'react';
-import { View, TextInput, Alert, StyleSheet, Text, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator } from 'react-native';
+import { View, TextInput, StyleSheet, Text, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator } from 'react-native';
 import { supabase } from '../../src/supabase/client'; // Importa el cliente de Supabase para interactuar con la base de datos y la autenticación.
 import { useAuth } from '../../src/context/AuthContext'; // Importa el contexto de autenticación.
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -63,7 +63,7 @@ export default function ChangePassword() { // Define y exporta el componente fun
       setTimeout(() => {
         router.replace('/(app)/completeArtesanoProfile'); // Redirigir a completar perfil
       }, 2500);
-    } catch (error) {  
+    } catch (_) {  
       setNotification({ type: 'error', message: 'Ocurrió un problema inesperado.' });
     } finally { 
       setLoading(false); 
