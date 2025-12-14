@@ -3,8 +3,9 @@ import React from 'react';
 import { 
     StyleSheet, 
     SafeAreaView, 
-    useWindowDimensions, 
-    Platform 
+    Text as DefaultText, 
+    useWindowDimensions, // <-- Importado para escalado
+    Platform             // <-- Importado para lógica condicional
 } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -20,25 +21,31 @@ const Tab = createBottomTabNavigator();
 const REFERENCE_WIDTH = 375;
 const scale = (size, screenWidth) => (screenWidth / REFERENCE_WIDTH) * size;
 
+const Text = (props) => (
+    <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
+);
+
 function ClientPage() {
     const { width: screenWidth } = useWindowDimensions();
     const scaledValue = (size) => Math.round(scale(size, screenWidth));
 
-    // Valores Escalados Reajustados (más padding para la etiqueta)
-    const tabHeight = scaledValue(50); // Aumentamos ligeramente la base a 50
-    const tabPaddingVertical = scaledValue(5); // Padding arriba/abajo para el contenedor
-    const iconMarginBottom = scaledValue(2); // Espacio entre icono y texto
-    const labelSize = scaledValue(10); // Reducimos ligeramente la fuente a 10 (mínimo seguro)
+    // Valores Escalados Reajustados (Base 50 de altura para asegurar espacio para la etiqueta)
+    const tabHeight = scaledValue(50); 
+    const tabPaddingVertical = scaledValue(5); 
+    const labelSize = scaledValue(10); 
+    const iconMarginBottom = scaledValue(2); 
 
+    // Renderizado
     return (
         <SafeAreaView style={styles.container}>
             <Tab.Navigator
                 screenOptions={({ route }) => ({
-                    // 1. CORRECCIÓN CLAVE: Forzar la visibilidad de la etiqueta
+                    // CORRECCIÓN CLAVE: Asegurar que las etiquetas (nombres) siempre se muestren
                     tabBarShowLabel: true, 
-                    
+
                     tabBarIcon: ({ focused, color, size }) => {
                         let iconName;
+
                         if (route.name === 'Feed') {
                             iconName = focused ? 'home' : 'home-outline';
                         } else if (route.name === 'Marketplace') {
@@ -51,7 +58,7 @@ function ClientPage() {
                             iconName = focused ? 'account-circle' : 'account-circle-outline';
                         }
 
-                        // El tamaño del icono se deja con la variable 'size' de React Navigation
+                        // El tamaño del icono se deja con la variable 'size' de React Navigation, que escala con la fuente.
                         return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
                     },
 
@@ -62,22 +69,20 @@ function ClientPage() {
                         borderTopWidth: 1,
                         borderTopColor: '#e1e8ed',
                         
-                        // --- VALORES ESCALADOS REAJUSTADOS ---
-                        height: tabHeight, // Altura escalada
+                        // --- VALORES ESCALADOS ---
+                        height: tabHeight,
                         paddingVertical: tabPaddingVertical, // Usamos paddingVertical
-                        // ------------------------------------
+                        // -------------------------
                     },
                     tabBarLabelStyle: {
                         // --- VALOR ESCALADO ---
-                        fontSize: labelSize, // Fuente escalada
+                        fontSize: labelSize,
                         // ----------------------
                         fontWeight: '500',
-                        // Aseguramos que el texto esté centrado
-                        textAlign: 'center',
+                        textAlign: 'center', // Aseguramos que esté centrado
                     },
-                    // Aseguramos que el icono esté cerca del texto
                     tabBarIconStyle: {
-                        marginBottom: iconMarginBottom,
+                        marginBottom: iconMarginBottom, // Aseguramos espacio entre icono y texto
                     },
                     headerShown: false,
                 })}

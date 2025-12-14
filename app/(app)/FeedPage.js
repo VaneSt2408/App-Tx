@@ -1,7 +1,7 @@
 // app/(app)/FeedPage.js
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
-    View, 
+    View,
     Alert, 
     FlatList, 
     RefreshControl, 
@@ -23,14 +23,15 @@ import EventsModal from '../../components/EventsModal';
 import EventCarousel from '../../components/EventCarousel'; 
 import { useAuth } from '../../src/context/AuthContext';
 
-// Ancho de referencia
+// Ancho de referencia (iPhone 8/X)
 const REFERENCE_WIDTH = 375; 
 const scale = (size, screenWidth) => (screenWidth / REFERENCE_WIDTH) * size;
+
 
 const FeedPage = () => {
     const { width: screenWidth } = useWindowDimensions(); // 1. Obtener ancho de pantalla
     const scaledValue = (size) => Math.round(scale(size, screenWidth)); // 2. Función de escalado
-    
+
     const router = useRouter();
     const { role, session } = useAuth();
     const [posts, setPosts] = useState([]);
@@ -38,6 +39,8 @@ const FeedPage = () => {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false); 
     const [loadingMore, setLoadingMore] = useState(false);
+    const [currentPage, setCurrentPage] = useState(0); // Estado para la paginación
+    const [hasMore, setHasMore] = useState(true); // Estado para saber si hay más datos
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
 
@@ -45,7 +48,6 @@ const FeedPage = () => {
         <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
     );
 
-    // Lógica loadFeed, loadEvents, useEffect, onRefresh, handleLike (sin cambios)
     const loadFeed = useCallback(async (page = 0) => {
         try {
             if (page === 0) setLoading(true);
@@ -61,8 +63,13 @@ const FeedPage = () => {
                 if (page === 0) {
                     setPosts(result.data);
                 } else {
-                    setPosts(prev => [...prev, ...result.data]);
+                    // Solo agregamos si hay datos nuevos para evitar duplicados
+                    if (result.data.length > 0) {
+                        setPosts(prev => [...prev, ...result.data]);
+                    }
                 }
+                setHasMore(result.data.length > 0); // Asumiendo que si regresa data, hay potencial para más
+                setCurrentPage(page);
             }
         } catch (error) {
             Alert.alert(
@@ -84,7 +91,7 @@ const FeedPage = () => {
     }, []);
 
     useEffect(() => {
-        loadFeed();
+        loadFeed(0);
         loadEvents();
     }, [loadFeed, loadEvents]);
 
@@ -94,49 +101,61 @@ const FeedPage = () => {
         loadEvents();
     }, [loadFeed, loadEvents]);
 
+    // Lógica loadMore para FlatList
+    const loadMore = useCallback(() => {
+        // Solo cargar más si no estamos ya cargando, si hay más datos disponibles, y si la carga inicial ya terminó
+        if (!loadingMore && hasMore && !loading) {
+            setLoadingMore(true);
+            loadFeed(currentPage + 1);
+        }
+    }, [loadingMore, hasMore, loading, currentPage, loadFeed]);
+
+
     const handleLike = async (postId) => {
         const result = await FeedService.toggleLikeForCurrentUser(postId);
         return result;
     };
-    
+
+
     // 3. Estilos Dinámicos (aplicados al Header, Footer y Empty State)
     const dynamicStyles = StyleSheet.create({
         headerContainer: {
-            paddingVertical: scaledValue(16), // Base 16 (4 de la clase Tailwind px-4 y py-4)
+            // py-4 px-4 border-b border-gray-200 mb-7
+            paddingVertical: scaledValue(16), 
             paddingHorizontal: scaledValue(16), 
-            marginBottom: scaledValue(28), // Base 28 (mb-7 * 4)
+            marginBottom: scaledValue(28), 
         },
         headerTitle: {
-            fontSize: scaledValue(24), // Base 24 (text-3xl)
+            fontSize: scaledValue(24), // text-3xl
         },
         loadingFooter: {
-            paddingVertical: scaledValue(20), // Base 20 (py-5 * 4)
+            paddingVertical: scaledValue(20), // py-5
+        },
+        emptyContainer: {
+            paddingHorizontal: scaledValue(40), // px-10 * 4
         },
         emptyIcon: {
-            marginTop: scaledValue(0), // No tiene margin vertical, pero se deja por si acaso.
+            // size 64
         },
         emptyTextLg: {
-            marginTop: scaledValue(16), // Base 16 (mt-4 * 4)
-            fontSize: scaledValue(18), // Base 18 (text-lg)
+            marginTop: scaledValue(16), // mt-4 * 4
+            fontSize: scaledValue(18), // text-lg
         },
         emptyTextSm: {
-            marginTop: scaledValue(8), // Base 8 (mt-2 * 4)
-            fontSize: scaledValue(14), // Base 14 (text-sm)
+            marginTop: scaledValue(8), // mt-2 * 4
+            fontSize: scaledValue(14), // text-sm
         },
         loadingIndicatorText: {
-            marginTop: scaledValue(12), // Base 12 (mt-3 * 4)
+            marginTop: scaledValue(12), // mt-3 * 4
         }
     });
 
-
-    // Actualizado con estilos dinámicos
     const renderPostsHeader = () => (
-        <View style={[{borderBottomWidth: 1, borderBottomColor: '#e5e7eb'}, dynamicStyles.headerContainer]}>
+        <View style={[{borderBottomWidth: 1, borderBottomColor: '#e5e7eb', backgroundColor: '#fff'}, dynamicStyles.headerContainer]}>
             <Text style={[{fontFamily: 'Alan Sans'}, dynamicStyles.headerTitle]} className=" font-bold text-[#9D046D]">Mis Publicaciones</Text>
         </View>
     );
 
-    // Actualizado con estilos dinámicos
     const renderFooter = () => {
         if (!loadingMore) return null;
         return (
@@ -146,11 +165,10 @@ const FeedPage = () => {
         );
     };
 
-    // Actualizado con estilos dinámicos
     const renderEmpty = () => {
         if (loading) return null;
         return (
-            <View style={styles.emptyContainer}>
+            <View style={[styles.emptyContainer, dynamicStyles.emptyContainer]}>
                 <MaterialCommunityIcons name="post-outline" size={scaledValue(64)} color="#ccc" style={dynamicStyles.emptyIcon} />
                 <Text style={[{fontFamily: 'Alan Sans'}, dynamicStyles.emptyTextLg]} className="font-semibold text-gray-600 text-center">
                     No hay publicaciones aún
@@ -171,9 +189,15 @@ const FeedPage = () => {
         );
     }
 
+    // Estilos del FAB (Botón de Acción Flotante) aplicados directamente
+    const fabSize = scaledValue(56);
+    const fabRadius = scaledValue(28);
+    const fabRightBottom = scaledValue(20);
+    const fabIconSize = scaledValue(28);
+
     return (
         <View style={styles.fullScreenContainer}>
-            {/* 4. Barra de Estado Universal */}
+             {/* BARRA DE ESTADO UNIVERSAL */}
             <StatusBar 
                 barStyle={Platform.OS === 'ios' ? 'dark-content' : 'light-content'} 
                 backgroundColor={Platform.OS === 'android' ? '#000000' : 'transparent'} 
@@ -190,30 +214,31 @@ const FeedPage = () => {
                     />
                 }
             >
-                {/* Sección de Publicaciones */}
                 {renderPostsHeader()}
 
-                {/* Carrusel de Eventos con encabezado */}
                 <EventCarousel 
                     events={events} 
                     onEventPress={(event) => {
                         setSelectedEvent(event);
                         setModalVisible(true);
-                    }} />
+                    }} 
+                />
 
-                {/* Publicaciones */}
+                {/* FlatList configurado para Carga Infinita */}
                 <FlatList
                     data={posts}
                     renderItem={({ item }) => <PostCard post={item} onLike={handleLike} />}
                     keyExtractor={(item) => item.id.toString()}
-                    scrollEnabled={false}
+                    scrollEnabled={false} // Necesario para que el ScrollView padre maneje el desplazamiento
                     contentContainerStyle={{ paddingBottom: scaledValue(10) }}
                     ListFooterComponent={renderFooter}
                     ListEmptyComponent={renderEmpty}
+                    // Propiedades de Carga Infinita:
+                    onEndReached={loadMore} // Llama a loadMore cuando se llega al final
+                    onEndReachedThreshold={0.5} // Carga cuando se está a 50% del final
                 />
             </ScrollView>
 
-            {/* Modal */}
             <EventsModal 
                 visible={modalVisible} 
                 event={selectedEvent} 
@@ -223,20 +248,20 @@ const FeedPage = () => {
                 }} 
             />
 
-            {/* Botón de Acción Flotante (FAB) */}
+            {/* Botón de Acción Flotante (FAB) con estilos escalados */}
             {role === 'artesano' && (
                 <TouchableOpacity
                     style={[styles.fab, {
-                        width: scaledValue(56),
-                        height: scaledValue(56),
-                        borderRadius: scaledValue(28),
-                        right: scaledValue(20),
-                        bottom: scaledValue(20),
+                        width: fabSize,
+                        height: fabSize,
+                        borderRadius: fabRadius,
+                        right: fabRightBottom,
+                        bottom: fabRightBottom,
                     }]}
                     onPress={() => router.push('/ArtesanoPublications')}
                     activeOpacity={0.8}
                 >
-                    <MaterialCommunityIcons name="plus" size={scaledValue(28)} color="#fff" />
+                    <MaterialCommunityIcons name="plus" size={fabIconSize} color="#fff" />
                 </TouchableOpacity>
             )}
         </View>
@@ -258,12 +283,11 @@ const styles = StyleSheet.create({
         flex: 1, 
         justifyContent: 'center', 
         alignItems: 'center', 
-        paddingHorizontal: 40 // px-10 * 4
     },
     centerItems: {
         alignItems: 'center',
     },
-    // Estilos FAB Base (solo colores y sombras)
+    // Estilos FAB Base (solo colores, posición y sombras)
     fab: {
         position: 'absolute',
         alignItems: 'center',
