@@ -25,7 +25,7 @@ const getRedirectUri = (path = null) => {
         // En producción, usar el scheme personalizado de la app
         return makeRedirectUri({
             path: path || '',
-            scheme: 'txapp', // Scheme configurado en app.json
+            scheme: 'DöniApp', // Scheme configurado en app.json
         });
     }
 };
