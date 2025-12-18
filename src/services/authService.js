@@ -3,7 +3,6 @@ import { supabase } from '../supabase/client'; // Importa la instancia del clien
 import * as WebBrowser from 'expo-web-browser'; // Importa la librería de Expo para abrir un navegador web dentro de la app.
 import { Alert } from 'react-native'; // Importa el componente Alert para mostrar diálogos nativos.
 import { makeRedirectUri } from 'expo-auth-session'; // Importa una función de Expo para crear URIs de redirección dinámicas.
-import * as Linking from "expo-linking"; // Importa la librería de Expo para manejar deep links.
 
 // --- Iniciar sesión con correo y contraseña ---
 // Define una función asíncrona para manejar el inicio de sesión tradicional.
@@ -36,7 +35,7 @@ const getRedirectUri = (path = null) => {
         // En producción, usar el scheme personalizado de la app
         return makeRedirectUri({
             path: path || '',
-            scheme: 'DöniApp', // Scheme configurado en app.json
+            scheme: 'doniapp', // ASEGÚRATE QUE ESTO COINCIDA CON TU APP.JSON
         });
     }
 };
