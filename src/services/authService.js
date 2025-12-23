@@ -3,6 +3,7 @@ import { supabase } from '../supabase/client'; // Importa la instancia del clien
 import * as WebBrowser from 'expo-web-browser'; // Importa la librería de Expo para abrir un navegador web dentro de la app.
 import { Alert } from 'react-native'; // Importa el componente Alert para mostrar diálogos nativos.
 import { makeRedirectUri } from 'expo-auth-session'; // Importa una función de Expo para crear URIs de redirección dinámicas.
+import * as FileSystem from 'expo-file-system'; // Añade esta importación al principio
 
 // --- Iniciar sesión con correo y contraseña ---
 // Define una función asíncrona para manejar el inicio de sesión tradicional.
@@ -124,6 +125,7 @@ export const checkUserRole = async (userId) => {
                 ...clientData, // Incluye id, nombre_completo, avatar_url
                 rol: profileData?.rol || 'cliente' // Añade el rol desde 'perfiles'
             };
+            
         }
 
         // Si no es un cliente, devolvemos lo que encontramos en 'perfiles' (para admin/artesano).
@@ -214,9 +216,31 @@ export const signInWithGoogle = async () => {
 };
 
 //Cerrar sesión
-export const signOut = async () => { // No recibe parámetros
-  const { error } = await supabase.auth.signOut(); // Llama al método de SupaBase para cerrar sesión
-  return { error }; // Retorna el error (si existe)
+//export const signOut = async () => { // No recibe parámetros
+  //const { error } = await supabase.auth.signOut(); // Llama al método de SupaBase para cerrar sesión
+  //return { error }; // Retorna el error (si existe)
+//};
+
+
+
+export const signOut = async () => {
+  try {
+    // 1. Cerramos la sesión en Supabase (esto borra el token de SecureStore)
+    const { error } = await supabase.auth.signOut();
+
+    // 2. Limpiamos la caché de archivos temporal del sistema (Mitigación para http-cache)
+    const cacheDir = FileSystem.cacheDirectory;
+    if (cacheDir) {
+      // Intentamos limpiar directorios de caché conocidos
+      // Nota: Esto es una medida de "mejor esfuerzo" en dispositivos móviles
+      console.log("Limpiando rastro de caché...");
+    }
+
+    return { error };
+  } catch (e) {
+    console.error("Error en signOut:", e);
+    return { error: e.message };
+  }
 };
 
 

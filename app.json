@@ -21,7 +21,19 @@
     "android": {
       "networkSecurityConfig": "./network_security_config.xml",
       "intentFilters": [
-        { "action": "VIEW", "data": [{ "scheme": "https", "host": "*.doniapp.example.com" }], "category": ["BROWSABLE", "DEFAULT"] }
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "https",
+              "host": "*.doniapp.example.com"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
       ],
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
@@ -31,7 +43,14 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.doni_app.doniapp"
+      "package": "com.doni_app.doniapp",
+      "allowBackup": false,
+      "permissions": [
+    "INTERNET",
+    "CAMERA",
+    "READ_EXTERNAL_STORAGE",
+    "WRITE_EXTERNAL_STORAGE"
+  ]
     },
     "web": {
       "output": "static",
@@ -53,8 +72,8 @@
         }
       ],
       "expo-web-browser",
-      "expo-font"
-      
+      "expo-font",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,
