@@ -2,7 +2,7 @@
 // Este archivo es el encargado de mostrar el detalle de una publicación o producto específico.
 // Muestra la información detallada del ítem seleccionado, incluyendo imágenes, descripciones y opciones de interacción.
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -13,13 +13,14 @@ import {
   SafeAreaView,
   ActivityIndicator,
   Alert,
-  Dimensions
-} from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { artesanoService } from '../../src/services/artesanoService';
+  Dimensions,
+} from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import BackButton from "../../components/BackButton";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { artesanoService } from "../../src/services/artesanoService";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 export default function PostDetail() {
   const router = useRouter();
@@ -34,7 +35,7 @@ export default function PostDetail() {
       const data = await artesanoService.getItemById(itemId, itemType);
       setItem(data);
     } catch (_) {
-      Alert.alert('Error', 'No se pudo cargar el detalle.');
+      Alert.alert("Error", "No se pudo cargar el detalle.");
     } finally {
       setLoading(false);
     }
@@ -44,25 +45,28 @@ export default function PostDetail() {
     if (itemId && itemType) {
       loadItemDetails();
     } else {
-      Alert.alert('Error', 'No se pudo cargar el detalle del item.');
+      Alert.alert("Error", "No se pudo cargar el detalle del item.");
       router.back();
     }
   }, [itemId, itemType, loadItemDetails, router]);
 
   const renderHeader = () => (
     <View style={styles.header}>
-      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-        <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
-      </TouchableOpacity>
+      <BackButton />
       <View style={styles.headerProfile}>
         {item?.artesanos?.avatar_url ? (
-          <Image source={{ uri: item.artesanos.avatar_url }} style={styles.headerAvatar} />
+          <Image
+            source={{ uri: item.artesanos.avatar_url }}
+            style={styles.headerAvatar}
+          />
         ) : (
           <View style={styles.defaultAvatar}>
             <MaterialCommunityIcons name="account" size={20} color="#666" />
           </View>
         )}
-        <Text style={styles.headerTitle}>{item?.artesanos?.nombre || 'Artesano'}</Text>
+        <Text style={styles.headerTitle}>
+          {item?.artesanos?.nombre || "Artesano"}
+        </Text>
       </View>
       <View style={{ width: 40 }} />
     </View>
@@ -98,18 +102,24 @@ export default function PostDetail() {
         )}
 
         <View style={styles.contentContainer}>
-          {itemType === 'publicaciones' && (
+          {itemType === "publicaciones" && (
             <View style={styles.actionsContainer}>
               <TouchableOpacity style={styles.actionButton}>
-                <MaterialCommunityIcons name="heart-outline" size={28} color="#333" />
+                <MaterialCommunityIcons
+                  name="heart-outline"
+                  size={28}
+                  color="#333"
+                />
               </TouchableOpacity>
-              <Text style={styles.likesText}>{item.likes_count || 0} Me gusta</Text>
+              <Text style={styles.likesText}>
+                {item.likes_count || 0} Me gusta
+              </Text>
             </View>
           )}
 
-          {itemType === 'productos' && (
+          {itemType === "productos" && (
             <View style={styles.productInfoContainer}>
-              <Text style={styles.productPrice}>${item.precio || '0.00'}</Text>
+              <Text style={styles.productPrice}>${item.precio || "0.00"}</Text>
               <TouchableOpacity style={styles.buyButton}>
                 <Text style={styles.buyButtonText}>Contactar para comprar</Text>
               </TouchableOpacity>
@@ -117,12 +127,19 @@ export default function PostDetail() {
           )}
 
           <Text style={styles.description}>
-            <Text style={styles.descriptionUser}>{item.artesanos?.nombre} </Text>
-            {item.descripcion || 'Sin descripción.'}
+            <Text style={styles.descriptionUser}>
+              {item.artesanos?.nombre}{" "}
+            </Text>
+            {item.descripcion || "Sin descripción."}
           </Text>
 
           <Text style={styles.dateText}>
-            Publicado el {new Date(item.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+            Publicado el{" "}
+            {new Date(item.created_at).toLocaleDateString("es-ES", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
           </Text>
         </View>
       </ScrollView>
@@ -131,70 +148,75 @@ export default function PostDetail() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  container: { flex: 1, backgroundColor: "#fff" },
+  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  errorContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 10,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: "#e0e0e0",
   },
   backButton: { padding: 8 },
-  headerProfile: { flexDirection: 'row', alignItems: 'center' },
+  headerProfile: { flexDirection: "row", alignItems: "center" },
   headerAvatar: { width: 32, height: 32, borderRadius: 16, marginRight: 10 },
   defaultAvatar: {
-    width: 32, height: 32, borderRadius: 16, marginRight: 10,
-    backgroundColor: '#f0f0f0', justifyContent: 'center', alignItems: 'center'
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: 10,
+    backgroundColor: "#f0f0f0",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  headerTitle: { fontSize: 16, fontWeight: 'bold' },
+  headerTitle: { fontSize: 16, fontWeight: "bold" },
   postImage: {
     width: width,
     height: width, // Imagen cuadrada
-    backgroundColor: '#f0f0f0',
+    backgroundColor: "#f0f0f0",
   },
   contentContainer: { padding: 16 },
   actionsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 8,
   },
   actionButton: { marginRight: 16 },
-  likesText: { fontSize: 14, fontWeight: 'bold' },
+  likesText: { fontSize: 14, fontWeight: "bold" },
   productInfoContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
     paddingVertical: 10,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: '#eee'
+    borderColor: "#eee",
   },
   productPrice: {
     fontSize: 22,
-    fontWeight: 'bold',
-    color: '#9D046D',
+    fontWeight: "bold",
+    color: "#9D046D",
   },
   buyButton: {
-    backgroundColor: '#9D046D',
+    backgroundColor: "#9D046D",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
   },
   buyButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
     fontSize: 14,
   },
   description: { fontSize: 14, lineHeight: 20 },
-  descriptionUser: { fontWeight: 'bold' },
+  descriptionUser: { fontWeight: "bold" },
   dateText: {
     fontSize: 12,
-    color: '#999',
+    color: "#999",
     marginTop: 12,
   },
 });

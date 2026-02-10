@@ -1,12 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text as DefaultText, FlatList, StyleSheet, ActivityIndicator, Image, TouchableOpacity, SafeAreaView, RefreshControl } from 'react-native';
-import { estadisticasService } from '../../src/services/estadisticasService';
-import { useRouter } from 'expo-router';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text as DefaultText,
+  FlatList,
+  StyleSheet,
+  ActivityIndicator,
+  Image,
+  TouchableOpacity,
+  SafeAreaView,
+  RefreshControl,
+} from "react-native";
+import { estadisticasService } from "../../src/services/estadisticasService";
+import { useRouter } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import BackButton from "../../components/BackButton";
 
 //Componente de texto Alan Sans
 const Text = (props) => (
-  <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
+  <DefaultText {...props} style={[{ fontFamily: "Alan Sans" }, props.style]} />
 );
 
 export default function EstadisticasPage() {
@@ -16,29 +27,31 @@ export default function EstadisticasPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
-  const [view, setView] = useState('likes');
+  const [view, setView] = useState("likes");
   const router = useRouter();
 
   const fetchStats = async () => {
-      try {
-        setLoading(true);
-        const likesData = await estadisticasService.getArtesanosByLikes();
-        const productsData = await estadisticasService.getProductsCountByArtesano();
-        const antiguedadData = await estadisticasService.getArtesanosByAntiguedad();
+    try {
+      setLoading(true);
+      const likesData = await estadisticasService.getArtesanosByLikes();
+      const productsData =
+        await estadisticasService.getProductsCountByArtesano();
+      const antiguedadData =
+        await estadisticasService.getArtesanosByAntiguedad();
 
-        setArtesanosByLikes((likesData || []).slice(0, 3));
-        setArtesanosByProduct((productsData || []).slice(0, 3));
-        setArtesanosByAntiguedad((antiguedadData || []).slice(0, 3));
+      setArtesanosByLikes((likesData || []).slice(0, 3));
+      setArtesanosByProduct((productsData || []).slice(0, 3));
+      setArtesanosByAntiguedad((antiguedadData || []).slice(0, 3));
 
-        setError(null);
-      } catch (e) {
-        console.error(e);
-        setError('Error al cargar las estadísticas');
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
-      }
-    };
+      setError(null);
+    } catch (e) {
+      console.error(e);
+      setError("Error al cargar las estadísticas");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
     fetchStats();
@@ -49,29 +62,36 @@ export default function EstadisticasPage() {
     fetchStats();
   };
   const handlePressArtesano = (userId) => {
-    router.push({ pathname: "/(app)/ArtesanoProfileVistaVisitante", params: { userId } }); //Cambiar a la ruta correcta
+    router.push({
+      pathname: "/(app)/ArtesanoProfileVistaVisitante",
+      params: { userId },
+    }); //Cambiar a la ruta correcta
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return "N/A";
     try {
       const d = new Date(dateString);
-      return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      return d.toLocaleDateString("es-ES", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
     } catch {
-      return 'N/A';
+      return "N/A";
     }
   };
 
   const getStatInfo = (item) => {
     switch (view) {
-      case 'likes':
-        return { icon: 'heart', value: item?.total_likes ?? '0' };
-      case 'products':
-        return { icon: 'cart-outline', value: item?.total_productos ?? '0' };
-      case 'antiguedad':
-        return { icon: 'calendar-clock', value: formatDate(item?.created_at) };
+      case "likes":
+        return { icon: "heart", value: item?.total_likes ?? "0" };
+      case "products":
+        return { icon: "cart-outline", value: item?.total_productos ?? "0" };
+      case "antiguedad":
+        return { icon: "calendar-clock", value: formatDate(item?.created_at) };
       default:
-        return { icon: 'heart', value: item?.total_likes ?? '0' };
+        return { icon: "heart", value: item?.total_likes ?? "0" };
     }
   };
 
@@ -79,7 +99,10 @@ export default function EstadisticasPage() {
     const statInfo = getStatInfo(item);
 
     return (
-      <TouchableOpacity onPress={() => handlePressArtesano(item.user_id)} style={styles.itemContainer}>
+      <TouchableOpacity
+        onPress={() => handlePressArtesano(item.user_id)}
+        style={styles.itemContainer}
+      >
         <View style={styles.rankPill}>
           <Text style={styles.rankText}>#{index + 1}</Text>
         </View>
@@ -92,7 +115,7 @@ export default function EstadisticasPage() {
           </View>
         )}
 
-        <Text style={styles.name}>{String(item?.nombre || 'Sin nombre')}</Text>
+        <Text style={styles.name}>{String(item?.nombre || "Sin nombre")}</Text>
 
         <View style={styles.statContainer}>
           <MaterialCommunityIcons
@@ -101,7 +124,9 @@ export default function EstadisticasPage() {
             color="#9D046D"
             style={styles.statIcon}
           />
-          <Text style={styles.statValue}>{String(statInfo.value ?? 'N/A')}</Text>
+          <Text style={styles.statValue}>
+            {String(statInfo.value ?? "N/A")}
+          </Text>
         </View>
       </TouchableOpacity>
     );
@@ -129,34 +154,64 @@ export default function EstadisticasPage() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-            <View style={[styles.headerContainer, { justifyContent: 'flex-start' }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-        </TouchableOpacity>
-        <Text style={[styles.title,{fontFamily: 'Alan Sans'},{fontWeight: 'bold'},{color: '#9D046D'},{fontSize: 25}]}>Clasificación</Text>
+      <View style={[styles.headerContainer, { justifyContent: "flex-start" }]}>
+        <BackButton />
+        <Text
+          style={[
+            styles.title,
+            { fontFamily: "Alan Sans" },
+            { fontWeight: "bold" },
+            { color: "#9D046D" },
+            { fontSize: 25 },
+          ]}
+        >
+          Clasificación
+        </Text>
       </View>
 
       <View style={styles.toggleContainer}>
         <TouchableOpacity
-          style={[styles.toggleButton, view === 'likes' && styles.activeButton]}
-          onPress={() => setView('likes')}
+          style={[styles.toggleButton, view === "likes" && styles.activeButton]}
+          onPress={() => setView("likes")}
         >
-          <Text style={[styles.toggleButtonText, view === 'likes' && styles.activeButtonText]}>
+          <Text
+            style={[
+              styles.toggleButtonText,
+              view === "likes" && styles.activeButtonText,
+            ]}
+          >
             Por Likes
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.toggleButton, view === 'products' && styles.activeButton]}
-          onPress={() => setView('products')}
+          style={[
+            styles.toggleButton,
+            view === "products" && styles.activeButton,
+          ]}
+          onPress={() => setView("products")}
         >
-          <Text style={[styles.toggleButtonText, view === 'products' && styles.activeButtonText]}>
+          <Text
+            style={[
+              styles.toggleButtonText,
+              view === "products" && styles.activeButtonText,
+            ]}
+          >
             Por Productos
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.toggleButton, view === 'antiguedad' && styles.activeButton]}
-          onPress={() => setView('antiguedad')}
+          style={[
+            styles.toggleButton,
+            view === "antiguedad" && styles.activeButton,
+          ]}
+          onPress={() => setView("antiguedad")}
         >
-          <Text style={[styles.toggleButtonText, view === 'antiguedad' && styles.activeButtonText]}>
+          <Text
+            style={[
+              styles.toggleButtonText,
+              view === "antiguedad" && styles.activeButtonText,
+            ]}
+          >
             Por Antigüedad
           </Text>
         </TouchableOpacity>
@@ -164,20 +219,22 @@ export default function EstadisticasPage() {
 
       <FlatList
         data={
-          view === 'likes'
+          view === "likes"
             ? artesanosByLikes
-            : view === 'products'
-            ? artesanosByProduct
-            : artesanosByAntiguedad
+            : view === "products"
+              ? artesanosByProduct
+              : artesanosByAntiguedad
         }
         renderItem={renderItem}
-        keyExtractor={(item, index) => item?.user_id?.toString() ?? index.toString()}
+        keyExtractor={(item, index) =>
+          item?.user_id?.toString() ?? index.toString()
+        }
         contentContainerStyle={styles.listContainer}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#9D046D']}
+            colors={["#9D046D"]}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -188,22 +245,27 @@ export default function EstadisticasPage() {
 
 // --- ESTILOS --- (no se tocó nada)
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#fff' },
+  safeArea: { flex: 1, backgroundColor: "#fff" },
   headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
   backButton: { padding: 8, marginLeft: -8 },
-  title: { fontSize: 20, fontWeight: 'bold', color: '#333' },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f0f2f5' },
-  errorText: { fontSize: 16, color: 'red' },
+  title: { fontSize: 20, fontWeight: "bold", color: "#333" },
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f0f2f5",
+  },
+  errorText: { fontSize: 16, color: "red" },
   toggleContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     marginVertical: 14,
     paddingHorizontal: 16,
   },
@@ -212,60 +274,70 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 16,
     marginHorizontal: 6,
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 3,
   },
-  activeButton: { backgroundColor: '#9D046D' },
-  toggleButtonText: { color: '#6E6E73', fontWeight: '600', fontSize: 13 },
-  activeButtonText: { color: '#FFFFFF' },
+  activeButton: { backgroundColor: "#9D046D" },
+  toggleButtonText: { color: "#6E6E73", fontWeight: "600", fontSize: 13 },
+  activeButtonText: { color: "#FFFFFF" },
   listContainer: { paddingHorizontal: 16, paddingBottom: 16 },
   itemContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 20,
     padding: 20,
     marginBottom: 16,
-    alignItems: 'center',
-    shadowColor: '#000',
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 5,
     elevation: 4,
-    position: 'relative',
+    position: "relative",
   },
   rankPill: {
-    position: 'absolute',
+    position: "absolute",
     top: 16,
     left: 16,
-    backgroundColor: '#9D046D',
+    backgroundColor: "#9D046D",
     borderRadius: 12,
     paddingVertical: 4,
     paddingHorizontal: 10,
     zIndex: 2,
   },
-  rankText: { color: '#FFFFFF', fontSize: 14, fontWeight: 'bold' },
+  rankText: { color: "#FFFFFF", fontSize: 14, fontWeight: "bold" },
   avatar: {
     width: 100,
     height: 100,
     borderRadius: 50,
     marginBottom: 16,
     borderWidth: 3,
-    borderColor: '#E0E0E0',
+    borderColor: "#E0E0E0",
   },
-  avatarPlaceholder: { backgroundColor: '#f0f0f0', justifyContent: 'center', alignItems: 'center' },
-  name: { fontSize: 20, fontWeight: 'bold', color: '#333', marginBottom: 16, textAlign: 'center' },
+  avatarPlaceholder: {
+    backgroundColor: "#f0f0f0",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  name: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 16,
+    textAlign: "center",
+  },
   statContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F7F7F7',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F7F7F7",
     borderRadius: 16,
     paddingVertical: 10,
     paddingHorizontal: 20,
   },
   statIcon: { marginRight: 8 },
-  statValue: { fontSize: 22, fontWeight: 'bold', color: '#333' },
+  statValue: { fontSize: 22, fontWeight: "bold", color: "#333" },
 });

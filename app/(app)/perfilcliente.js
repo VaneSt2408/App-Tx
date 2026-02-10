@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
 import {
   SafeAreaView,
   ScrollView,
@@ -11,18 +11,23 @@ import {
   RefreshControl,
   Modal,
   TextInput,
-} from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+} from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import BackButton from "../../components/BackButton";
 // 1. Importar tu hook de fuentes (ajusta la ruta si es necesario)
 // Usamos el nombre de exportación default 'useCustomFonts'
-import useCustomFonts from '../../hooks/useFonts'; // Asumiendo que se llama 'useFonts.js'
-import { supabase } from '../../src/supabase/client';
-import { getClientProfile, editClientProfile, uploadAvatar } from '../../src/services/profileInfo';
-import EventsModal from '../../components/EventsModal';
-import { seguidosService } from '../../src/services/seguidosService';
-import { useRouter } from 'expo-router';
-import { useAuth } from '../../src/context/AuthContext';
-import * as ImagePicker from 'expo-image-picker';
+import useCustomFonts from "../../hooks/useFonts"; // Asumiendo que se llama 'useFonts.js'
+import { supabase } from "../../src/supabase/client";
+import {
+  getClientProfile,
+  editClientProfile,
+  uploadAvatar,
+} from "../../src/services/profileInfo";
+import EventsModal from "../../components/EventsModal";
+import { seguidosService } from "../../src/services/seguidosService";
+import { useRouter } from "expo-router";
+import { useAuth } from "../../src/context/AuthContext";
+import * as ImagePicker from "expo-image-picker";
 
 // --- Componentes de la UI ---
 
@@ -33,7 +38,10 @@ const ArtisanAvatar = ({ imageUri, name, userId }) => {
   const router = useRouter();
   const handlePress = () => {
     if (userId) {
-      router.push({ pathname: '/ArtesanoProfileVistaVisitante', params: { userId } });
+      router.push({
+        pathname: "/ArtesanoProfileVistaVisitante",
+        params: { userId },
+      });
     }
   };
 
@@ -50,7 +58,10 @@ const ArtisanAvatar = ({ imageUri, name, userId }) => {
           <MaterialCommunityIcons name="account" size={32} color="#666" />
         </View>
       )}
-      <Text className="mt-2 text-sm text-center text-gray-700 font-['AlanSans-VariableFont_wght']" numberOfLines={1}>
+      <Text
+        className="mt-2 text-sm text-center text-gray-700 font-['AlanSans-VariableFont_wght']"
+        numberOfLines={1}
+      >
         {name}
       </Text>
     </TouchableOpacity>
@@ -64,21 +75,31 @@ const CraftCard = ({ productId, imageUri, title, artisan }) => {
   const router = useRouter();
   const handlePress = () => {
     if (productId) {
-      router.push({ pathname: '/ProductDetailPage', params: { productId } });
+      router.push({ pathname: "/ProductDetailPage", params: { productId } });
     }
   };
-  
+
   return (
     <TouchableOpacity onPress={handlePress} className="w-40 mr-4">
       <Image
-        source={{ uri: imageUri || `https://placehold.co/180x160/EAD8C0/805A3B?text=${title?.[0] || 'P'}` }}
+        source={{
+          uri:
+            imageUri ||
+            `https://placehold.co/180x160/EAD8C0/805A3B?text=${title?.[0] || "P"}`,
+        }}
         className="w-full h-40 rounded-xl bg-gray-200"
         resizeMode="cover"
       />
-      <Text className="text-base text-gray-900 mt-2 font-['AlanSans-VariableFont_wght'] font-medium" numberOfLines={1}>
+      <Text
+        className="text-base text-gray-900 mt-2 font-['AlanSans-VariableFont_wght'] font-medium"
+        numberOfLines={1}
+      >
         {title}
       </Text>
-      <Text className="text-sm text-gray-500 font-['AlanSans-VariableFont_wght']" numberOfLines={1}>
+      <Text
+        className="text-sm text-gray-500 font-['AlanSans-VariableFont_wght']"
+        numberOfLines={1}
+      >
         de {artisan}
       </Text>
     </TouchableOpacity>
@@ -90,21 +111,34 @@ const CraftCard = ({ productId, imageUri, title, artisan }) => {
  */
 const EventCard = ({ event, onPress }) => {
   const formatDate = (dateString) => {
-    if (!dateString) return 'Próximamente';
-    return new Date(dateString).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+    if (!dateString) return "Próximamente";
+    return new Date(dateString).toLocaleDateString("es-ES", {
+      day: "numeric",
+      month: "short",
+    });
   };
 
   return (
     <TouchableOpacity onPress={() => onPress(event)} className="w-40 mr-4">
       <Image
-        source={{ uri: event.imagen_url || `https://placehold.co/180x160/EAD8C0/805A3B?text=${event.nombre?.[0] || 'E'}` }}
+        source={{
+          uri:
+            event.imagen_url ||
+            `https://placehold.co/180x160/EAD8C0/805A3B?text=${event.nombre?.[0] || "E"}`,
+        }}
         className="w-full h-40 rounded-xl bg-gray-200"
         resizeMode="cover"
       />
-      <Text className="text-base text-gray-900 mt-2 font-['AlanSans-VariableFont_wght'] font-medium" numberOfLines={1}>
+      <Text
+        className="text-base text-gray-900 mt-2 font-['AlanSans-VariableFont_wght'] font-medium"
+        numberOfLines={1}
+      >
         {event.nombre}
       </Text>
-      <Text className="text-sm text-gray-500 font-['AlanSans-VariableFont_wght']" numberOfLines={1}>
+      <Text
+        className="text-sm text-gray-500 font-['AlanSans-VariableFont_wght']"
+        numberOfLines={1}
+      >
         {formatDate(event.fecha)}
       </Text>
     </TouchableOpacity>
@@ -129,8 +163,8 @@ export default function PerfilClienteScreen() {
   // Estados para la edición
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [editData, setEditData] = useState({
-    nombre_completo: '',
-    telefono: '',
+    nombre_completo: "",
+    telefono: "",
     avatar_url: null,
   });
   const [selectedImage, setSelectedImage] = useState(null);
@@ -173,16 +207,18 @@ export default function PerfilClienteScreen() {
   const fetchProfile = useCallback(async () => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
-        Alert.alert('Error', 'No se encontró la sesión del usuario');
+        Alert.alert("Error", "No se encontró la sesión del usuario");
         setLoading(false);
         return;
       }
 
       const { data, error } = await getClientProfile(user.id);
       if (error) {
-        Alert.alert('Error', 'No se pudo cargar el perfil: ' + error);
+        Alert.alert("Error", "No se pudo cargar el perfil: " + error);
         setLoading(false);
         return;
       }
@@ -198,9 +234,8 @@ export default function PerfilClienteScreen() {
 
       // Y finalmente, los eventos guardados
       fetchSavedEvents(user.id);
-
     } catch (_) {
-      Alert.alert('Error', 'Ocurrió un error inesperado');
+      Alert.alert("Error", "Ocurrió un error inesperado");
     } finally {
       setLoading(false);
     }
@@ -215,8 +250,8 @@ export default function PerfilClienteScreen() {
   const handleOpenEditModal = () => {
     if (profile) {
       setEditData({
-        nombre_completo: profile.nombre_completo || '',
-        telefono: profile.telefono || '',
+        nombre_completo: profile.nombre_completo || "",
+        telefono: profile.telefono || "",
         avatar_url: profile.avatar_url || null,
       });
       setSelectedImage(null);
@@ -230,8 +265,11 @@ export default function PerfilClienteScreen() {
 
   const handleSelectImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permisos requeridos', 'Se necesita acceso a tu galería para cambiar la foto.');
+    if (status !== "granted") {
+      Alert.alert(
+        "Permisos requeridos",
+        "Se necesita acceso a tu galería para cambiar la foto.",
+      );
       return;
     }
 
@@ -245,20 +283,22 @@ export default function PerfilClienteScreen() {
 
     if (!result.canceled && result.assets[0]) {
       setSelectedImage(result.assets[0]);
-      setEditData(prev => ({ ...prev, avatar_url: result.assets[0].uri }));
+      setEditData((prev) => ({ ...prev, avatar_url: result.assets[0].uri }));
     }
   };
 
   const handleSaveChanges = async () => {
     if (!editData.nombre_completo.trim()) {
-      Alert.alert('Error', 'El nombre completo es requerido.');
+      Alert.alert("Error", "El nombre completo es requerido.");
       return;
     }
 
     setSaving(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No se encontró la sesión del usuario.');
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("No se encontró la sesión del usuario.");
 
       let newAvatarUrl = editData.avatar_url;
       if (selectedImage) {
@@ -276,11 +316,11 @@ export default function PerfilClienteScreen() {
       const { error } = await editClientProfile(user.id, updates);
       if (error) throw new Error(error);
 
-      Alert.alert('Éxito', 'Perfil actualizado correctamente.');
+      Alert.alert("Éxito", "Perfil actualizado correctamente.");
       handleCloseEditModal();
       onRefresh(); // Refrescar los datos del perfil
     } catch (error) {
-      Alert.alert('Error', error.message || 'No se pudo guardar el perfil.');
+      Alert.alert("Error", error.message || "No se pudo guardar el perfil.");
     } finally {
       setSaving(false);
     }
@@ -308,9 +348,18 @@ export default function PerfilClienteScreen() {
   if (!profile) {
     return (
       <SafeAreaView className="flex-1 bg-gray-50 items-center justify-center p-4">
-        <MaterialCommunityIcons name="alert-circle-outline" size={48} color="rgb(156 163 175)" />
-        <Text className="text-lg text-center text-gray-600 mt-4">No se pudo cargar la información del perfil.</Text>
-        <TouchableOpacity onPress={fetchProfile} className="mt-6 bg-pink-600 px-6 py-2 rounded-full">
+        <MaterialCommunityIcons
+          name="alert-circle-outline"
+          size={48}
+          color="rgb(156 163 175)"
+        />
+        <Text className="text-lg text-center text-gray-600 mt-4">
+          No se pudo cargar la información del perfil.
+        </Text>
+        <TouchableOpacity
+          onPress={fetchProfile}
+          className="mt-6 bg-pink-600 px-6 py-2 rounded-full"
+        >
           <Text className="text-white font-bold">Reintentar</Text>
         </TouchableOpacity>
       </SafeAreaView>
@@ -326,21 +375,24 @@ export default function PerfilClienteScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#db2777']}
+            colors={["#db2777"]}
           />
-        }>
+        }
+      >
         {/* Header */}
         <View className="flex-row justify-between items-center pt-4 pb-2">
-          <TouchableOpacity onPress={() => router.back()} className="p-2">
-            <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
-          </TouchableOpacity>
+          <BackButton />
           <View className="flex-1">
             <Text className="text-xl text-center text-gray-900 font-['AlanSans-VariableFont_wght'] font-bold">
               Mi Perfil
             </Text>
           </View>
           <TouchableOpacity onPress={handleOpenEditModal} className="p-2">
-            <MaterialCommunityIcons name="pencil-outline" size={24} color="#333" />
+            <MaterialCommunityIcons
+              name="pencil-outline"
+              size={24}
+              color="#333"
+            />
           </TouchableOpacity>
         </View>
 
@@ -351,13 +403,13 @@ export default function PerfilClienteScreen() {
               profile.avatar_url
                 ? { uri: profile.avatar_url }
                 : {
-                    uri: `https://placehold.co/100x100/EAD8C0/805A3B?text=${profile.nombre_completo?.[0] || 'U'}&font=inter`,
+                    uri: `https://placehold.co/100x100/EAD8C0/805A3B?text=${profile.nombre_completo?.[0] || "U"}&font=inter`,
                   }
             }
             className="w-24 h-24 rounded-full"
           />
           <Text className="text-2xl text-gray-900 mt-4 font-['AlanSans-VariableFont_wght'] font-bold">
-            {profile.nombre_completo || 'Usuario'}
+            {profile.nombre_completo || "Usuario"}
           </Text>
           {/* 3. Aplicar la fuente personalizada y el peso */}
           <Text className="text-base text-gray-500 mt-1 font-['AlanSans-VariableFont_wght']">
@@ -393,7 +445,9 @@ export default function PerfilClienteScreen() {
               </View>
             </ScrollView>
           ) : (
-            <Text className="text-gray-500 text-center py-4">No sigues a ningún artesano</Text>
+            <Text className="text-gray-500 text-center py-4">
+              No sigues a ningún artesano
+            </Text>
           )}
         </View>
 
@@ -412,13 +466,15 @@ export default function PerfilClienteScreen() {
                     productId={product.id}
                     imageUri={product.imagen_url}
                     title={product.nombre}
-                    artisan={product.artesano?.nombre || 'Artesano Desconocido'}
+                    artisan={product.artesano?.nombre || "Artesano Desconocido"}
                   />
                 ))}
               </View>
             </ScrollView>
           ) : (
-            <Text className="text-gray-500 text-center py-4">No tienes productos guardados</Text>
+            <Text className="text-gray-500 text-center py-4">
+              No tienes productos guardados
+            </Text>
           )}
         </View>
 
@@ -443,15 +499,17 @@ export default function PerfilClienteScreen() {
               </View>
             </ScrollView>
           ) : (
-            <Text className="text-gray-500 text-center py-4">No tienes eventos guardados</Text>
+            <Text className="text-gray-500 text-center py-4">
+              No tienes eventos guardados
+            </Text>
           )}
         </View>
       </ScrollView>
 
       {/* Modal para detalles del evento */}
-      <EventsModal 
-        visible={isModalVisible} 
-        event={selectedEvent} 
+      <EventsModal
+        visible={isModalVisible}
+        event={selectedEvent}
         onClose={() => setIsModalVisible(false)}
         // Al cerrar el modal, volvemos a cargar los eventos para reflejar los cambios
         onDataChange={() => fetchSavedEvents(session?.user?.id)}
@@ -465,45 +523,67 @@ export default function PerfilClienteScreen() {
         onRequestClose={handleCloseEditModal}
       >
         {(() => {
-          const hasNameChanged = editData.nombre_completo !== (profile?.nombre_completo || '');
-          const hasPhoneChanged = editData.telefono !== (profile?.telefono || '');
+          const hasNameChanged =
+            editData.nombre_completo !== (profile?.nombre_completo || "");
+          const hasPhoneChanged =
+            editData.telefono !== (profile?.telefono || "");
           const hasImageChanged = selectedImage !== null;
-          const hasChanges = hasNameChanged || hasPhoneChanged || hasImageChanged;
+          const hasChanges =
+            hasNameChanged || hasPhoneChanged || hasImageChanged;
           const isSaveDisabled = saving || !hasChanges;
 
           return (
             <View className="flex-1 justify-center items-center bg-black/50">
               <View className="w-11/12 bg-white rounded-2xl p-5">
                 <Text className="text-xl font-bold mb-5">Editar Perfil</Text>
-                
+
                 <ScrollView>
                   {/* Avatar */}
                   <View className="items-center mb-4">
                     <TouchableOpacity onPress={handleSelectImage}>
                       <Image
-                        source={{ uri: editData.avatar_url || `https://placehold.co/100x100/EAD8C0/805A3B?text=${editData.nombre_completo?.[0] || 'U'}` }}
+                        source={{
+                          uri:
+                            editData.avatar_url ||
+                            `https://placehold.co/100x100/EAD8C0/805A3B?text=${editData.nombre_completo?.[0] || "U"}`,
+                        }}
                         className="w-24 h-24 rounded-full bg-gray-200"
                       />
                       <View className="absolute bottom-0 right-0 bg-pink-600 p-1.5 rounded-full border-2 border-white">
-                        <MaterialCommunityIcons name="camera-plus-outline" size={16} color="white" />
+                        <MaterialCommunityIcons
+                          name="camera-plus-outline"
+                          size={16}
+                          color="white"
+                        />
                       </View>
                     </TouchableOpacity>
                   </View>
 
                   {/* Nombre */}
-                  <Text className="text-sm font-medium text-gray-600 mb-1">Nombre Completo</Text>
+                  <Text className="text-sm font-medium text-gray-600 mb-1">
+                    Nombre Completo
+                  </Text>
                   <TextInput
                     className="bg-gray-100 p-3 rounded-lg mb-4"
                     value={editData.nombre_completo}
-                    onChangeText={(text) => setEditData(prev => ({ ...prev, nombre_completo: text }))}
+                    onChangeText={(text) =>
+                      setEditData((prev) => ({
+                        ...prev,
+                        nombre_completo: text,
+                      }))
+                    }
                   />
 
                   {/* Teléfono */}
-                  <Text className="text-sm font-medium text-gray-600 mb-1">Teléfono</Text>
+                  <Text className="text-sm font-medium text-gray-600 mb-1">
+                    Teléfono
+                  </Text>
                   <TextInput
                     className="bg-gray-100 p-3 rounded-lg mb-4"
                     value={editData.telefono}
-                    onChangeText={(text) => setEditData(prev => ({ ...prev, telefono: text }))}
+                    onChangeText={(text) =>
+                      setEditData((prev) => ({ ...prev, telefono: text }))
+                    }
                     keyboardType="phone-pad"
                   />
                 </ScrollView>
@@ -519,7 +599,7 @@ export default function PerfilClienteScreen() {
                   <TouchableOpacity
                     onPress={handleSaveChanges}
                     disabled={isSaveDisabled}
-                    className={`px-5 py-2.5 bg-pink-600 rounded-lg ${isSaveDisabled ? 'opacity-50' : ''}`}
+                    className={`px-5 py-2.5 bg-pink-600 rounded-lg ${isSaveDisabled ? "opacity-50" : ""}`}
                   >
                     {saving ? (
                       <ActivityIndicator color="white" />

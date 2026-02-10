@@ -11,12 +11,11 @@ import {
   StyleSheet,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import BackButton from "../../components/BackButton";
 import { useRouter } from "expo-router";
 import useCustomFonts from "../../hooks/useFonts";
 import { supabase } from "../../src/supabase/client";
-import {
-  deleteClientProfile,
-} from "../../src/services/profileInfo";
+import { deleteClientProfile } from "../../src/services/profileInfo";
 import { useAuth } from "../../src/context/AuthContext";
 import ChangePasswordModal from "../../components/ChangePasswordModal";
 
@@ -65,7 +64,7 @@ export default function GestionCuentaCliente() {
     if (isGoogleUser) {
       Alert.alert(
         "Información",
-        "No puedes cambiar la contraseña de una cuenta de Google desde aquí."
+        "No puedes cambiar la contraseña de una cuenta de Google desde aquí.",
       );
       return;
     }
@@ -83,12 +82,12 @@ export default function GestionCuentaCliente() {
     if (isGoogleUser) {
       Alert.alert(
         "Recuperar Cuenta de Google",
-        "Tu cuenta está gestionada por Google. Si no puedes acceder, utiliza las opciones de recuperación de tu cuenta de Google directamente."
+        "Tu cuenta está gestionada por Google. Si no puedes acceder, utiliza las opciones de recuperación de tu cuenta de Google directamente.",
       );
     } else {
       Alert.alert(
         "Recuperar Cuenta",
-        "Para recuperar tu cuenta si olvidas la contraseña, cierra la sesión actual y utiliza la opción '¿Olvidaste tu contraseña?' en la pantalla de inicio de sesión."
+        "Para recuperar tu cuenta si olvidas la contraseña, cierra la sesión actual y utiliza la opción '¿Olvidaste tu contraseña?' en la pantalla de inicio de sesión.",
       );
     }
   };
@@ -106,7 +105,7 @@ export default function GestionCuentaCliente() {
             style: "destructive",
             onPress: handleConfirmDeleteGoogleProfile,
           },
-        ]
+        ],
       );
     } else {
       Alert.alert(
@@ -119,7 +118,7 @@ export default function GestionCuentaCliente() {
             style: "destructive",
             onPress: handleConfirmDeleteProfile,
           },
-        ]
+        ],
       );
     }
   };
@@ -141,7 +140,7 @@ export default function GestionCuentaCliente() {
       Alert.alert(
         "Cuenta Eliminada",
         "Tu cuenta ha sido eliminada exitosamente.",
-        [{ text: "OK", onPress: signOut }]
+        [{ text: "OK", onPress: signOut }],
       );
     } catch (error) {
       Alert.alert("Error", error.message);
@@ -168,7 +167,7 @@ export default function GestionCuentaCliente() {
       Alert.alert(
         "Cuenta Eliminada",
         "Tu cuenta de Google ha sido desvinculada y tus datos eliminados.",
-        [{ text: "OK", onPress: signOut }]
+        [{ text: "OK", onPress: signOut }],
       );
     } catch (error) {
       Alert.alert("Error", error.message);
@@ -209,12 +208,7 @@ export default function GestionCuentaCliente() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <MaterialCommunityIcons name="chevron-left" size={28} color="#333" />
-        </TouchableOpacity>
+        <BackButton />
         <Text style={styles.headerTitle}>Gestión de la Cuenta</Text>
         <View style={{ width: 40 }} />
       </View>

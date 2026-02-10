@@ -1,17 +1,24 @@
 // app/(app)/AjustesPerfilArtesano.js
 // Pantalla de ajustes para el perfil del Artesano, replicando el estilo de ClientSettings.
-import React, { useState, useEffect } from 'react';
-import { View, Text as DefaultText, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import useCustomFonts from '../../hooks/useFonts';
-import { supabase } from '../../src/supabase/client';
-import { artesanoService } from '../../src/services/artesanoService';
-import { useAuth } from '../../src/context/AuthContext';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text as DefaultText,
+  ActivityIndicator,
+  Alert,
+  TouchableOpacity,
+} from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import BackButton from "../../components/BackButton";
+import { useRouter } from "expo-router";
+import useCustomFonts from "../../hooks/useFonts";
+import { supabase } from "../../src/supabase/client";
+import { artesanoService } from "../../src/services/artesanoService";
+import { useAuth } from "../../src/context/AuthContext";
 
 // Componente Text personalizado con la fuente AlanSans
 const Text = (props) => (
-  <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
+  <DefaultText {...props} style={[{ fontFamily: "Alan Sans" }, props.style]} />
 );
 
 export default function AjustesPerfilArtesano() {
@@ -29,20 +36,24 @@ export default function AjustesPerfilArtesano() {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
-        Alert.alert('Error', 'No se encontró la sesión del usuario');
+        Alert.alert("Error", "No se encontró la sesión del usuario");
         return;
       }
       // Usamos el servicio de artesano para obtener el perfil
-      const { artesano, error } = await artesanoService.getArtesanoCompleto(user.id);
+      const { artesano, error } = await artesanoService.getArtesanoCompleto(
+        user.id,
+      );
       if (error) {
-        Alert.alert('Error', 'No se pudo cargar el perfil: ' + error);
+        Alert.alert("Error", "No se pudo cargar el perfil: " + error);
         return;
       }
       setProfile(artesano);
     } catch (_) {
-      Alert.alert('Error', 'Ocurrió un error inesperado');
+      Alert.alert("Error", "Ocurrió un error inesperado");
     } finally {
       setLoading(false);
     }
@@ -50,41 +61,37 @@ export default function AjustesPerfilArtesano() {
 
   const navigateToAccountManagement = () => {
     // Navega a la nueva pantalla de gestión de cuenta del artesano
-    router.push('/gestionCuentaArtesano');
+    router.push("/gestionCuentaArtesano");
   };
 
   const navigateToNotifications = () => {
-    Alert.alert('Próximamente', 'Esta función estará disponible pronto');
+    Alert.alert("Próximamente", "Esta función estará disponible pronto");
   };
 
   const navigateToAppSettings = () => {
-    router.push('/AppSettings');
+    router.push("/AppSettings");
   };
 
   const navigateToHelpAndSupport = () => {
-    router.push('/ayudaSoporte');
+    router.push("/ayudaSoporte");
   };
 
   const navigateToTermsAndConditions = () => {
-    router.push('/TerminoCondiciones');
+    router.push("/TerminoCondiciones");
   };
 
   const handleLogout = async () => {
-    Alert.alert(
-      'Cerrar Sesión',
-      '¿Estás seguro de que deseas cerrar sesión?',
-      [
-        {
-          text: 'Cancelar',
-          style: 'cancel'
-        },
-        {
-          text: 'Cerrar Sesión',
-          style: 'destructive',
-          onPress: () => signOut()
-        }
-      ]
-    );
+    Alert.alert("Cerrar Sesión", "¿Estás seguro de que deseas cerrar sesión?", [
+      {
+        text: "Cancelar",
+        style: "cancel",
+      },
+      {
+        text: "Cerrar Sesión",
+        style: "destructive",
+        onPress: () => signOut(),
+      },
+    ]);
   };
 
   if (!fontsLoaded || loading) {
@@ -100,8 +107,10 @@ export default function AjustesPerfilArtesano() {
     return (
       <View className="flex-1 justify-center items-center bg-gray-50 p-4">
         <MaterialCommunityIcons name="alert-circle" size={48} color="#db4437" />
-        <Text className="mt-4 text-lg font-semibold text-red-600 text-center">No se pudo cargar el perfil</Text>
-        <TouchableOpacity 
+        <Text className="mt-4 text-lg font-semibold text-red-600 text-center">
+          No se pudo cargar el perfil
+        </Text>
+        <TouchableOpacity
           className="mt-4 bg-blue-500 py-2 px-6 rounded-lg"
           onPress={fetchProfile}
         >
@@ -115,27 +124,44 @@ export default function AjustesPerfilArtesano() {
     <View className="flex-1 bg-gray-50">
       {/* Header */}
       <View className="bg-white py-3 px-4 flex-row items-center justify-between border-b border-gray-200">
-        <TouchableOpacity onPress={() => router.back()} className="p-2">
-          <MaterialCommunityIcons name="chevron-left" size={28} color="#333" />
-        </TouchableOpacity>
-        <Text style={{fontFamily: 'Alan Sans', fontSize:24, fontWeight: 'bold'}} className="text-2xl text-gray-700 flex-1 text-center">Mi Cuenta</Text>
+        <BackButton />
+        <Text
+          style={{ fontFamily: "Alan Sans", fontSize: 24, fontWeight: "bold" }}
+          className="text-2xl text-gray-700 flex-1 text-center"
+        >
+          Mi Cuenta
+        </Text>
         <View style={{ width: 40 }} />
       </View>
 
       {/* Sección Gestión */}
       <View className="bg-white mb-4">
         <View className="px-4 py-3 border-b border-gray-200">
-          <Text style={{fontFamily: 'Alan Sans', fontSize:20,}} className="text-lg font-bold text-gray-700">Gestión</Text>
+          <Text
+            style={{ fontFamily: "Alan Sans", fontSize: 20 }}
+            className="text-lg font-bold text-gray-700"
+          >
+            Gestión
+          </Text>
         </View>
         <TouchableOpacity
           className="flex-row items-center px-4 py-3 border-b border-gray-200"
           onPress={navigateToAccountManagement}
         >
           <View className="w-12 h-12 bg-[#00000012] rounded-full mr-3 justify-center items-center">
-            <MaterialCommunityIcons name="account-circle-outline" size={26} color="#000" />
+            <MaterialCommunityIcons
+              name="account-circle-outline"
+              size={26}
+              color="#000"
+            />
           </View>
           <View className="flex-1">
-            <Text style={{fontFamily: 'Alan Sans', fontSize:15,}} className="font-bold text-gray-900">Gestión de la Cuenta</Text>
+            <Text
+              style={{ fontFamily: "Alan Sans", fontSize: 15 }}
+              className="font-bold text-gray-900"
+            >
+              Gestión de la Cuenta
+            </Text>
           </View>
           <MaterialCommunityIcons name="chevron-right" size={20} color="#000" />
         </TouchableOpacity>
@@ -144,10 +170,19 @@ export default function AjustesPerfilArtesano() {
           onPress={navigateToNotifications}
         >
           <View className="w-12 h-12 bg-[#00000012] rounded-full mr-3 justify-center items-center">
-            <MaterialCommunityIcons name="bell-ring-outline" size={26} color="#000" />
+            <MaterialCommunityIcons
+              name="bell-ring-outline"
+              size={26}
+              color="#000"
+            />
           </View>
           <View className="flex-1">
-            <Text style={{fontFamily: 'Alan Sans', fontSize:15,}} className="font-bold text-gray-900">Notificaciones</Text>
+            <Text
+              style={{ fontFamily: "Alan Sans", fontSize: 15 }}
+              className="font-bold text-gray-900"
+            >
+              Notificaciones
+            </Text>
           </View>
           <MaterialCommunityIcons name="chevron-right" size={20} color="#000" />
         </TouchableOpacity>
@@ -159,7 +194,12 @@ export default function AjustesPerfilArtesano() {
             <MaterialCommunityIcons name="tune" size={26} color="#000" />
           </View>
           <View className="flex-1">
-            <Text style={{fontFamily: 'Alan Sans', fontSize:15,}} className="font-bold text-gray-900">Configuración de la App</Text>
+            <Text
+              style={{ fontFamily: "Alan Sans", fontSize: 15 }}
+              className="font-bold text-gray-900"
+            >
+              Configuración de la App
+            </Text>
           </View>
           <MaterialCommunityIcons name="chevron-right" size={20} color="#000" />
         </TouchableOpacity>
@@ -168,17 +208,31 @@ export default function AjustesPerfilArtesano() {
       {/* Sección Soporte */}
       <View className="bg-white mb-4">
         <View className="px-4 py-3 border-b border-gray-200">
-          <Text style={{fontFamily: 'Alan Sans', fontSize:20,}} className="text-lg font-bold text-gray-700">Soporte</Text>
+          <Text
+            style={{ fontFamily: "Alan Sans", fontSize: 20 }}
+            className="text-lg font-bold text-gray-700"
+          >
+            Soporte
+          </Text>
         </View>
         <TouchableOpacity
           className="flex-row items-center px-4 py-3 border-b border-gray-200"
           onPress={navigateToHelpAndSupport}
         >
           <View className="w-12 h-12 bg-[#00000012] rounded-full mr-3 justify-center items-center">
-            <MaterialCommunityIcons name="information-outline" size={26} color="#000" />
+            <MaterialCommunityIcons
+              name="information-outline"
+              size={26}
+              color="#000"
+            />
           </View>
           <View className="flex-1">
-            <Text style={{fontFamily: 'Alan Sans', fontSize:15,}} className="font-bold text-gray-900">Ayuda y Soporte</Text>
+            <Text
+              style={{ fontFamily: "Alan Sans", fontSize: 15 }}
+              className="font-bold text-gray-900"
+            >
+              Ayuda y Soporte
+            </Text>
           </View>
           <MaterialCommunityIcons name="chevron-right" size={20} color="#000" />
         </TouchableOpacity>
@@ -187,10 +241,19 @@ export default function AjustesPerfilArtesano() {
           onPress={navigateToTermsAndConditions}
         >
           <View className="w-12 h-12 bg-[#00000012] rounded-full mr-3 justify-center items-center">
-            <MaterialCommunityIcons name="file-document-outline" size={26} color="#000" />
+            <MaterialCommunityIcons
+              name="file-document-outline"
+              size={26}
+              color="#000"
+            />
           </View>
           <View className="flex-1">
-            <Text style={{fontFamily: 'Alan Sans', fontSize:15,}} className="font-bold text-gray-900">Términos y Condiciones</Text>
+            <Text
+              style={{ fontFamily: "Alan Sans", fontSize: 15 }}
+              className="font-bold text-gray-900"
+            >
+              Términos y Condiciones
+            </Text>
           </View>
           <MaterialCommunityIcons name="chevron-right" size={20} color="#000" />
         </TouchableOpacity>
@@ -203,11 +266,16 @@ export default function AjustesPerfilArtesano() {
           onPress={handleLogout}
         >
           <MaterialCommunityIcons name="logout" size={20} color="#9D046D" />
-          <Text style={{fontFamily: 'Alan Sans', fontSize:20,}} className="ml-2 font-bold text-[#9D046D]">Cerrar Sesión</Text>
+          <Text
+            style={{ fontFamily: "Alan Sans", fontSize: 20 }}
+            className="ml-2 font-bold text-[#9D046D]"
+          >
+            Cerrar Sesión
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 }
 
-AjustesPerfilArtesano.displayName = 'AjustesPerfilArtesano';
+AjustesPerfilArtesano.displayName = "AjustesPerfilArtesano";

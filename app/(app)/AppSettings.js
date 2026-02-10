@@ -10,6 +10,7 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import BackButton from "../../components/BackButton";
 import { useRouter } from "expo-router";
 import {
   cacheDirectory,
@@ -27,8 +28,11 @@ const AppSettingsScreen = () => {
   const [cacheSize, setCacheSize] = useState("Calculando...");
 
   const Text = (props) => (
-      <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
-    );
+    <DefaultText
+      {...props}
+      style={[{ fontFamily: "Alan Sans" }, props.style]}
+    />
+  );
   // Función para formatear bytes a un formato legible (KB, MB, GB)
   const formatBytes = (bytes, decimals = 2) => {
     if (bytes === 0) return "0 Bytes";
@@ -52,12 +56,12 @@ const AppSettingsScreen = () => {
 
       const files = await readDirectoryAsync(cacheDirUri);
       const fileInfos = await Promise.all(
-        files.map((file) => getInfoAsync(`${cacheDirUri}${file}`))
+        files.map((file) => getInfoAsync(`${cacheDirUri}${file}`)),
       );
       const totalSize = fileInfos.reduce(
         (acc, fileInfo) =>
           acc + (fileInfo.exists && !fileInfo.isDirectory ? fileInfo.size : 0),
-        0
+        0,
       );
 
       setCacheSize(formatBytes(totalSize));
@@ -76,7 +80,7 @@ const AppSettingsScreen = () => {
     // Aquí iría la lógica para cambiar el tema de toda la app
     Alert.alert(
       "Próximamente",
-      "La función de cambio de tema estará disponible pronto."
+      "La función de cambio de tema estará disponible pronto.",
     );
   };
 
@@ -85,7 +89,9 @@ const AppSettingsScreen = () => {
     try {
       // Método más robusto: construir una ruta de caché segura
       const cacheDirUri = cacheDirectory || `${documentDirectory}cache/`;
-      console.log(`[Limpiar Caché] Directorio de caché a limpiar: ${cacheDirUri}`);
+      console.log(
+        `[Limpiar Caché] Directorio de caché a limpiar: ${cacheDirUri}`,
+      );
 
       // 1. Asegurarnos de que el directorio exista
       const dirInfo = await getInfoAsync(cacheDirUri);
@@ -93,7 +99,9 @@ const AppSettingsScreen = () => {
 
       if (!dirInfo.exists) {
         // Si no existe, lo creamos. No hay nada que borrar.
-        console.log("[Limpiar Caché] El directorio no existe. Creándolo y finalizando.");
+        console.log(
+          "[Limpiar Caché] El directorio no existe. Creándolo y finalizando.",
+        );
         await makeDirectoryAsync(cacheDirUri, { intermediates: true });
         Alert.alert("Éxito", "El caché ya estaba limpio.");
         return;
@@ -101,36 +109,49 @@ const AppSettingsScreen = () => {
 
       // 2. Leer los archivos dentro del directorio
       const files = await readDirectoryAsync(cacheDirUri);
-      console.log(`[Limpiar Caché] Se encontraron ${files.length} archivos en el directorio.`);
+      console.log(
+        `[Limpiar Caché] Se encontraron ${files.length} archivos en el directorio.`,
+      );
 
       // NUEVO: Filtrar la lista de archivos para excluir las fuentes (.ttf)
-      const filesToDelete = files.filter(file => !file.endsWith('.ttf'));
-      console.log(`[Limpiar Caché] Excluyendo fuentes. Archivos a borrar: ${filesToDelete.length}`);
+      const filesToDelete = files.filter((file) => !file.endsWith(".ttf"));
+      console.log(
+        `[Limpiar Caché] Excluyendo fuentes. Archivos a borrar: ${filesToDelete.length}`,
+      );
 
       if (filesToDelete.length === 0) {
-        console.log("[Limpiar Caché] No hay archivos (que no sean fuentes) para borrar. Proceso finalizado.");
+        console.log(
+          "[Limpiar Caché] No hay archivos (que no sean fuentes) para borrar. Proceso finalizado.",
+        );
         Alert.alert("Éxito", "El caché ya estaba limpio.");
         return;
       }
 
       // 3. Borrar cada archivo de la lista filtrada
-      console.log("[Limpiar Caché] Procediendo a borrar los archivos filtrados...");
+      console.log(
+        "[Limpiar Caché] Procediendo a borrar los archivos filtrados...",
+      );
       await Promise.all(
         filesToDelete.map((file) => {
           const filePath = `${cacheDirUri}${file}`;
           console.log(`[Limpiar Caché] Borrando archivo filtrado: ${filePath}`);
           return deleteAsync(filePath, { idempotent: true });
-        })
+        }),
       );
 
-      console.log("--- [Limpiar Caché] Proceso de limpieza completado exitosamente. ---");
+      console.log(
+        "--- [Limpiar Caché] Proceso de limpieza completado exitosamente. ---",
+      );
       Alert.alert("Éxito", "El caché ha sido limpiado correctamente.");
       calculateCacheSize(); // Recalcular el tamaño después de limpiar
     } catch (error) {
-      console.error("--- [Limpiar Caché] ¡ERROR! Ocurrió un error durante la limpieza. ---", error);
+      console.error(
+        "--- [Limpiar Caché] ¡ERROR! Ocurrió un error durante la limpieza. ---",
+        error,
+      );
       Alert.alert(
         "Error",
-        `Ocurrió un error al limpiar el caché: ${error.message}`
+        `Ocurrió un error al limpiar el caché: ${error.message}`,
       );
     }
   };
@@ -142,7 +163,7 @@ const AppSettingsScreen = () => {
       [
         { text: "Cancelar", style: "cancel" },
         { text: "Limpiar", onPress: performClearCache, style: "destructive" },
-      ]
+      ],
     );
   };
 
@@ -150,12 +171,7 @@ const AppSettingsScreen = () => {
     <SafeAreaView style={styles.safeArea}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color="#333" />
-        </TouchableOpacity>
+        <BackButton />
         <Text style={styles.headerTitle}>Configuración de la App</Text>
         <View style={{ width: 40 }} />
       </View>

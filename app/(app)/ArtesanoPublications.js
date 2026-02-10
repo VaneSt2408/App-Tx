@@ -4,18 +4,38 @@
 // También permite navegar al perfil del artesano y ver su información completa.
 
 // Importaciones
-import React, { useState, useEffect, useCallback } from 'react';
-import {View,Text as DefaultText,FlatList,Image,TouchableOpacity,StyleSheet,ActivityIndicator,RefreshControl,Alert,Dimensions,Modal,ScrollView,TextInput,PanResponder,Animated } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useAuth } from '../../src/context/AuthContext';
-import { getPublicacionesByArtesano, deletePublication, updatePublication } from '../../src/services/PublicacionService';
-
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  View,
+  Text as DefaultText,
+  FlatList,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  RefreshControl,
+  Alert,
+  Dimensions,
+  Modal,
+  ScrollView,
+  TextInput,
+  PanResponder,
+  Animated,
+} from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import BackButton from "../../components/BackButton";
+import { useRouter } from "expo-router";
+import { useAuth } from "../../src/context/AuthContext";
+import {
+  getPublicacionesByArtesano,
+  deletePublication,
+  updatePublication,
+} from "../../src/services/PublicacionService";
 
 const Text = (props) => (
-    <DefaultText {...props} style={[{ fontFamily: 'Alan Sans' }, props.style]} />
-  );
-const { width } = Dimensions.get('window'); // Obtener el ancho de la ventana
+  <DefaultText {...props} style={[{ fontFamily: "Alan Sans" }, props.style]} />
+);
+const { width } = Dimensions.get("window"); // Obtener el ancho de la ventana
 const imageSize = (width - 40) / 3; // Para grid de 3 columnas
 
 // Componente principal
@@ -32,40 +52,43 @@ export default function ArtesanoPublications() {
   const [selectedIndex, setSelectedIndex] = useState(0); // Establecer el estado del índice de la publicación seleccionada
   const [showPublicationModal, setShowPublicationModal] = useState(false); // Establecer el estado de la publicación modal
   const [showEditModal, setShowEditModal] = useState(false); // Establecer el estado de la modal de edición
-  const [editData, setEditData] = useState({ texto: '' }); // Establecer el estado de los datos de edición
+  const [editData, setEditData] = useState({ texto: "" }); // Establecer el estado de los datos de edición
   const [editLoading, setEditLoading] = useState(false); // Establecer el estado de carga de edición
   const swipeAnim = React.useRef(new Animated.Value(0)).current; // Referencia para la animación del swipe
-  
+
   // Usar el ID de la sesión como la fuente principal de verdad
   const userId = session?.user?.id;
   const isOwnProfile = true; // Esta pantalla siempre es del perfil propio
 
   // Función para cargar las publicaciones
-  const loadPublicaciones = useCallback(async (page = 0) => {
-    try {
-      if (page === 0) {
-        setLoading(true);
-      }
-      const result = await getPublicacionesByArtesano(userId, 20, page);
-      if (result.success) {
+  const loadPublicaciones = useCallback(
+    async (page = 0) => {
+      try {
         if (page === 0) {
-          setPublicaciones(result.data);
-        } else {
-          setPublicaciones(prev => [...prev, ...result.data]);
+          setLoading(true);
         }
-        setHasMore(result.hasMore);
-        setCurrentPage(page);
-        setTotalCount(result.totalCount || 0);
-      } else {
-        Alert.alert('Error', 'No se pudieron cargar las publicaciones');
+        const result = await getPublicacionesByArtesano(userId, 20, page);
+        if (result.success) {
+          if (page === 0) {
+            setPublicaciones(result.data);
+          } else {
+            setPublicaciones((prev) => [...prev, ...result.data]);
+          }
+          setHasMore(result.hasMore);
+          setCurrentPage(page);
+          setTotalCount(result.totalCount || 0);
+        } else {
+          Alert.alert("Error", "No se pudieron cargar las publicaciones");
+        }
+      } catch (_) {
+        Alert.alert("Error", "Ocurrió un error inesperado");
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
       }
-    } catch (_) {
-      Alert.alert('Error', 'Ocurrió un error inesperado');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [userId]);
+    },
+    [userId],
+  );
 
   // Efecto para cargar las publicaciones
   useEffect(() => {
@@ -148,47 +171,53 @@ export default function ArtesanoPublications() {
       onPanResponderMove: (evt, gestureState) => {
         swipeAnim.setValue(gestureState.dx);
       },
-    })
+    }),
   ).current;
 
   // Función para eliminar una publicación
   const handleDeletePublication = async (publicacionId) => {
     Alert.alert(
-      'Eliminar Publicación',
-      '¿Estás seguro de que quieres eliminar esta publicación? Esta acción no se puede deshacer.',
+      "Eliminar Publicación",
+      "¿Estás seguro de que quieres eliminar esta publicación? Esta acción no se puede deshacer.",
       [
         {
-          text: 'Cancelar',
-          style: 'cancel'
+          text: "Cancelar",
+          style: "cancel",
         },
         {
-          text: 'Eliminar',
-          style: 'destructive',
+          text: "Eliminar",
+          style: "destructive",
           onPress: async () => {
             try {
               const result = await deletePublication(publicacionId);
-              
+
               if (result.success) {
-                Alert.alert('Éxito', 'Publicación eliminada correctamente');
+                Alert.alert("Éxito", "Publicación eliminada correctamente");
                 // Cerrar modal y recargar las publicaciones
                 handleCloseModal();
                 loadPublicaciones(0);
               } else {
-                Alert.alert('Error', result.error || 'No se pudo eliminar la publicación');
+                Alert.alert(
+                  "Error",
+                  result.error || "No se pudo eliminar la publicación",
+                );
               }
             } catch (_) {
-              Alert.alert('Error', 'Ocurrió un error al eliminar la publicación');
+              Alert.alert(
+                "Error",
+                "Ocurrió un error al eliminar la publicación",
+              );
             }
-          }
-        }
-      ]
+          },
+        },
+      ],
     );
   };
 
   // Función para editar una publicación
   const handleEditPublication = () => {
     if (selectedPublication) {
-      setEditData({ texto: selectedPublication.texto || '' });
+      setEditData({ texto: selectedPublication.texto || "" });
       setShowPublicationModal(false); // Cerramos el modal de detalles
       setShowEditModal(true); // Abrimos el de edición
     } else {
@@ -198,7 +227,7 @@ export default function ArtesanoPublications() {
   // Función para cerrar el modal de edición
   const handleCloseEditModal = () => {
     setShowEditModal(false);
-    setEditData({ texto: '' });
+    setEditData({ texto: "" });
   };
 
   // Función para guardar la edición de una publicación
@@ -206,14 +235,19 @@ export default function ArtesanoPublications() {
     if (!selectedPublication) return;
     setEditLoading(true);
     try {
-      await updatePublication(selectedPublication.id, { texto: editData.texto });
-      Alert.alert('Éxito', 'Publicación editada correctamente');
+      await updatePublication(selectedPublication.id, {
+        texto: editData.texto,
+      });
+      Alert.alert("Éxito", "Publicación editada correctamente");
       handleCloseEditModal();
       setShowPublicationModal(false); // Asegurarse de que el modal de detalles también se cierre
       // Recargar las publicaciones
       loadPublicaciones(0);
     } catch (error) {
-      Alert.alert('Error', error.message || 'Ocurrió un error al editar la publicación');
+      Alert.alert(
+        "Error",
+        error.message || "Ocurrió un error al editar la publicación",
+      );
     } finally {
       setEditLoading(false);
     }
@@ -222,12 +256,12 @@ export default function ArtesanoPublications() {
   // Función para formatear la fecha de una publicación
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleDateString("es-ES", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -245,12 +279,14 @@ export default function ArtesanoPublications() {
           <MaterialCommunityIcons name="image" size={30} color="#ccc" />
         </View>
       )}
-      
+
       {/* Overlay con información */}
       <View style={styles.overlay}>
         <View style={styles.overlayContent}>
           <MaterialCommunityIcons name="heart" size={14} color="#fff" />
-          <Text style={[styles.overlayText,{fontFamily: 'Alan Sans'}]}>{item.likes_count || 0}</Text>
+          <Text style={[styles.overlayText, { fontFamily: "Alan Sans" }]}>
+            {item.likes_count || 0}
+          </Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -269,15 +305,18 @@ export default function ArtesanoPublications() {
   // Función para renderizar el contenido vacío
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <MaterialCommunityIcons name="image-multiple-outline" size={80} color="#ccc" />
-      <Text style={[styles.emptyText,{fontFamily: 'Alan Sans'}]}>
-        {isOwnProfile ? 'No tienes publicaciones aún' : 'No hay publicaciones'}
+      <MaterialCommunityIcons
+        name="image-multiple-outline"
+        size={80}
+        color="#ccc"
+      />
+      <Text style={[styles.emptyText, { fontFamily: "Alan Sans" }]}>
+        {isOwnProfile ? "No tienes publicaciones aún" : "No hay publicaciones"}
       </Text>
-      <Text style={[styles.emptySubtext,{fontFamily: 'Alan Sans'}]}>
-        {isOwnProfile 
-          ? 'Crea tu primera publicación para compartir tu trabajo'
-          : 'Este artesano aún no ha compartido publicaciones'
-        }
+      <Text style={[styles.emptySubtext, { fontFamily: "Alan Sans" }]}>
+        {isOwnProfile
+          ? "Crea tu primera publicación para compartir tu trabajo"
+          : "Este artesano aún no ha compartido publicaciones"}
       </Text>
     </View>
   );
@@ -286,7 +325,9 @@ export default function ArtesanoPublications() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#9D046D" />
-        <Text style={[styles.loadingText,{fontFamily: 'Alan Sans'}]}>Cargando publicaciones...</Text>
+        <Text style={[styles.loadingText, { fontFamily: "Alan Sans" }]}>
+          Cargando publicaciones...
+        </Text>
       </View>
     );
   }
@@ -294,18 +335,13 @@ export default function ArtesanoPublications() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <MaterialCommunityIcons name="arrow-left" size={28} color="#333" />
-        </TouchableOpacity>
+        <BackButton />
         <View style={styles.headerContent}>
-          <Text style={[styles.headerTitle,{fontFamily: 'Alan Sans'}]}>
-            {isOwnProfile ? 'Mis Publicaciones' : 'Publicaciones'}
+          <Text style={[styles.headerTitle, { fontFamily: "Alan Sans" }]}>
+            {isOwnProfile ? "Mis Publicaciones" : "Publicaciones"}
           </Text>
-          <Text style={[styles.headerSubtitle,{fontFamily: 'Alan Sans'}]}>
-            {totalCount} {totalCount === 1 ? 'publicación' : 'publicaciones'}
+          <Text style={[styles.headerSubtitle, { fontFamily: "Alan Sans" }]}>
+            {totalCount} {totalCount === 1 ? "publicación" : "publicaciones"}
           </Text>
         </View>
         <View style={{ width: 40 }} />
@@ -318,13 +354,15 @@ export default function ArtesanoPublications() {
         numColumns={3}
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
-        contentContainerStyle={publicaciones.length === 0 ? styles.emptyList : styles.list}
+        contentContainerStyle={
+          publicaciones.length === 0 ? styles.emptyList : styles.list
+        }
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#9D046D']}
+            colors={["#9D046D"]}
             tintColor="#9D046D"
           />
         }
@@ -336,7 +374,7 @@ export default function ArtesanoPublications() {
       {isOwnProfile && (
         <TouchableOpacity
           style={styles.fab}
-          onPress={() => router.push('/CreatePostPage')}
+          onPress={() => router.push("/CreatePostPage")}
         >
           <MaterialCommunityIcons name="plus" size={28} color="#fff" />
         </TouchableOpacity>
@@ -358,10 +396,14 @@ export default function ArtesanoPublications() {
                     style={styles.navButton}
                     onPress={handlePreviousPublication}
                   >
-                    <MaterialCommunityIcons name="chevron-left" size={24} color="#333" />
+                    <MaterialCommunityIcons
+                      name="chevron-left"
+                      size={24}
+                      color="#333"
+                    />
                   </TouchableOpacity>
                 )}
-                <Text style={[styles.modalTitle,{fontFamily: 'Alan Sans'}]}>
+                <Text style={[styles.modalTitle, { fontFamily: "Alan Sans" }]}>
                   Publicación {selectedIndex + 1} de {publicaciones.length}
                 </Text>
               </View>
@@ -370,7 +412,7 @@ export default function ArtesanoPublications() {
               </TouchableOpacity>
             </View>
 
-            <Animated.View 
+            <Animated.View
               style={[
                 styles.modalBody,
                 {
@@ -382,78 +424,158 @@ export default function ArtesanoPublications() {
                 },
               ]}
             >
-            <ScrollView>
-              {selectedPublication && (
-                <>
-                  {/* Imagen */}
-                  {selectedPublication.imagen_url ? (
-                    <Image 
-                      source={{ uri: selectedPublication.imagen_url }} 
-                      style={styles.modalImage}
-                      resizeMode="cover"
-                    />
-                  ) : (
-                    <View style={styles.modalImagePlaceholder}>
-                      <MaterialCommunityIcons name="image" size={60} color="#ccc" />
-                    </View>
-                  )}
-
-                  {/* Información */}
-                  <View style={styles.modalInfo}>
-                    <View style={styles.infoRow}>
-                      <MaterialCommunityIcons name="heart" size={20} color="#e91e63" />
-                      <Text style={[styles.infoLabel,{fontFamily: 'Alan Sans'}]}>Likes:</Text>
-                      <Text style={[styles.infoValue,{fontFamily: 'Alan Sans'}]}>{selectedPublication.likes_count || 0}</Text>
-                    </View>
-
-                    <View style={styles.infoRow}>
-                      <MaterialCommunityIcons name="calendar" size={20} color="#2196f3" />
-                      <Text style={[styles.infoLabel,{fontFamily: 'Alan Sans'}]}>Fecha:</Text>
-                      <Text style={[styles.infoValue,{fontFamily: 'Alan Sans'}]}>{formatDate(selectedPublication.created_at)}</Text>
-                    </View>
-
-                    {/* Texto de la publicación */}
-                    {selectedPublication.texto && (
-                      <View style={styles.textSection}>
-                        <Text style={[styles.textLabel,{fontFamily: 'Alan Sans'}]}>Descripción:</Text>
-                        <Text style={[styles.textContent,{fontFamily: 'Alan Sans'}]}>{selectedPublication.texto}</Text>
+              <ScrollView>
+                {selectedPublication && (
+                  <>
+                    {/* Imagen */}
+                    {selectedPublication.imagen_url ? (
+                      <Image
+                        source={{ uri: selectedPublication.imagen_url }}
+                        style={styles.modalImage}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View style={styles.modalImagePlaceholder}>
+                        <MaterialCommunityIcons
+                          name="image"
+                          size={60}
+                          color="#ccc"
+                        />
                       </View>
                     )}
-                  </View>
-                </>
-              )}
-            </ScrollView>
+
+                    {/* Información */}
+                    <View style={styles.modalInfo}>
+                      <View style={styles.infoRow}>
+                        <MaterialCommunityIcons
+                          name="heart"
+                          size={20}
+                          color="#e91e63"
+                        />
+                        <Text
+                          style={[
+                            styles.infoLabel,
+                            { fontFamily: "Alan Sans" },
+                          ]}
+                        >
+                          Likes:
+                        </Text>
+                        <Text
+                          style={[
+                            styles.infoValue,
+                            { fontFamily: "Alan Sans" },
+                          ]}
+                        >
+                          {selectedPublication.likes_count || 0}
+                        </Text>
+                      </View>
+
+                      <View style={styles.infoRow}>
+                        <MaterialCommunityIcons
+                          name="calendar"
+                          size={20}
+                          color="#2196f3"
+                        />
+                        <Text
+                          style={[
+                            styles.infoLabel,
+                            { fontFamily: "Alan Sans" },
+                          ]}
+                        >
+                          Fecha:
+                        </Text>
+                        <Text
+                          style={[
+                            styles.infoValue,
+                            { fontFamily: "Alan Sans" },
+                          ]}
+                        >
+                          {formatDate(selectedPublication.created_at)}
+                        </Text>
+                      </View>
+
+                      {/* Texto de la publicación */}
+                      {selectedPublication.texto && (
+                        <View style={styles.textSection}>
+                          <Text
+                            style={[
+                              styles.textLabel,
+                              { fontFamily: "Alan Sans" },
+                            ]}
+                          >
+                            Descripción:
+                          </Text>
+                          <Text
+                            style={[
+                              styles.textContent,
+                              { fontFamily: "Alan Sans" },
+                            ]}
+                          >
+                            {selectedPublication.texto}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  </>
+                )}
+              </ScrollView>
             </Animated.View>
 
             {/* Botones de navegación */}
             <View style={styles.modalNavigation}>
               <TouchableOpacity
-                style={[styles.navButton, selectedIndex === 0 && styles.navButtonDisabled]}
+                style={[
+                  styles.navButton,
+                  selectedIndex === 0 && styles.navButtonDisabled,
+                ]}
                 onPress={handlePreviousPublication}
                 disabled={selectedIndex === 0}
               >
-                <MaterialCommunityIcons 
-                  name="chevron-left" 
-                  size={24} 
-                  color={selectedIndex === 0 ? '#9D046D' : 'rgba(238, 3, 89, 0.35)'} 
+                <MaterialCommunityIcons
+                  name="chevron-left"
+                  size={24}
+                  color={
+                    selectedIndex === 0 ? "#9D046D" : "rgba(238, 3, 89, 0.35)"
+                  }
                 />
-                <Text style={[styles.navButtonText,{fontFamily: 'Alan Sans', fontSize: 15}, selectedIndex === 0 && styles.navButtonTextDisabled]}>
+                <Text
+                  style={[
+                    styles.navButtonText,
+                    { fontFamily: "Alan Sans", fontSize: 15 },
+                    selectedIndex === 0 && styles.navButtonTextDisabled,
+                  ]}
+                >
                   Anterior
                 </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.navButton, selectedIndex === publicaciones.length - 1 && styles.navButtonDisabled]}
+                style={[
+                  styles.navButton,
+                  selectedIndex === publicaciones.length - 1 &&
+                    styles.navButtonDisabled,
+                ]}
                 onPress={handleNextPublication}
                 disabled={selectedIndex === publicaciones.length - 1}
               >
-                <Text style={[styles.navButtonText, {fontFamily: 'Alan Sans', fontSize: 15},selectedIndex === publicaciones.length - 1 && styles.navButtonTextDisabled]}>
+                <Text
+                  style={[
+                    styles.navButtonText,
+                    { fontFamily: "Alan Sans", fontSize: 15 },
+                    selectedIndex === publicaciones.length - 1 &&
+                      styles.navButtonTextDisabled,
+                  ]}
+                >
                   Siguiente
                 </Text>
-                <MaterialCommunityIcons 
-                  name="chevron-right" 
-                  size={24} 
-                  color={selectedIndex === publicaciones.length - 1 ? 'rgba(238, 3, 89, 0.35)' : '#9D046D'} 
+                <MaterialCommunityIcons
+                  name="chevron-right"
+                  size={24}
+                  color={
+                    selectedIndex === publicaciones.length - 1
+                      ? "rgba(238, 3, 89, 0.35)"
+                      : "#9D046D"
+                  }
                 />
               </TouchableOpacity>
             </View>
@@ -467,16 +589,40 @@ export default function ArtesanoPublications() {
                     handleEditPublication();
                   }}
                 >
-                  <MaterialCommunityIcons name="pencil" size={20} color="#fff" />
-                  <Text style={[styles.buttonText,{fontFamily: 'Alan Sans', fontSize: 18}]}>Editar</Text>
+                  <MaterialCommunityIcons
+                    name="pencil"
+                    size={20}
+                    color="#fff"
+                  />
+                  <Text
+                    style={[
+                      styles.buttonText,
+                      { fontFamily: "Alan Sans", fontSize: 18 },
+                    ]}
+                  >
+                    Editar
+                  </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={styles.deleteButton}
-                  onPress={() => handleDeletePublication(selectedPublication?.id)}
+                  onPress={() =>
+                    handleDeletePublication(selectedPublication?.id)
+                  }
                 >
-                  <MaterialCommunityIcons name="delete" size={20} color="#fff" />
-                  <Text style={[styles.buttonText,{fontFamily: 'Alan Sans', fontSize: 18}]}>Eliminar</Text>
+                  <MaterialCommunityIcons
+                    name="delete"
+                    size={20}
+                    color="#fff"
+                  />
+                  <Text
+                    style={[
+                      styles.buttonText,
+                      { fontFamily: "Alan Sans", fontSize: 18 },
+                    ]}
+                  >
+                    Eliminar
+                  </Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -492,73 +638,97 @@ export default function ArtesanoPublications() {
         onRequestClose={handleCloseEditModal}
       >
         {(() => {
-          const hasChanges = editData.texto !== (selectedPublication?.texto || '');
+          const hasChanges =
+            editData.texto !== (selectedPublication?.texto || "");
           const isSaveDisabled = editLoading || !hasChanges;
-        return (
-          <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle,{fontFamily: 'Alan Sans', fontSize: 21}]}>Editar Publicación</Text>
-              <TouchableOpacity onPress={handleCloseEditModal}>
-                <MaterialCommunityIcons name="close" size={24} color="#333" />
-              </TouchableOpacity>
-            </View>
+          return (
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <Text
+                    style={[
+                      styles.modalTitle,
+                      { fontFamily: "Alan Sans", fontSize: 21 },
+                    ]}
+                  >
+                    Editar Publicación
+                  </Text>
+                  <TouchableOpacity onPress={handleCloseEditModal}>
+                    <MaterialCommunityIcons
+                      name="close"
+                      size={24}
+                      color="#333"
+                    />
+                  </TouchableOpacity>
+                </View>
 
-            <ScrollView style={styles.modalBody}>
-              {/* Campo de texto editable */}
-              <View style={styles.editSection}>
-                <Text style={styles.editLabel}>Descripción:</Text>
-                <TextInput
-                  style={styles.editTextInput}
-                  placeholder="¿Qué estás pensando?"
-                  placeholderTextColor="#000"
-                  multiline
-                  value={editData.texto}
-                  onChangeText={(text) => setEditData({ texto: text })}
-                  maxLength={2000}
-                />
-                <Text style={styles.characterCount}>
-                  {editData.texto.length}/500 caracteres
-                  {editData.texto.length}/2000 caracteres
-                </Text>
+                <ScrollView style={styles.modalBody}>
+                  {/* Campo de texto editable */}
+                  <View style={styles.editSection}>
+                    <Text style={styles.editLabel}>Descripción:</Text>
+                    <TextInput
+                      style={styles.editTextInput}
+                      placeholder="¿Qué estás pensando?"
+                      placeholderTextColor="#000"
+                      multiline
+                      value={editData.texto}
+                      onChangeText={(text) => setEditData({ texto: text })}
+                      maxLength={2000}
+                    />
+                    <Text style={styles.characterCount}>
+                      {editData.texto.length}/500 caracteres
+                      {editData.texto.length}/2000 caracteres
+                    </Text>
+                  </View>
+
+                  {/* Nota sobre la imagen */}
+                  <View style={styles.noteSection}>
+                    <MaterialCommunityIcons
+                      name="information"
+                      size={20}
+                      color="#666"
+                    />
+                    <Text style={styles.noteText}>
+                      Nota: La imagen no se puede editar. Si necesitas cambiar
+                      la imagen, elimina esta publicación y crea una nueva.
+                    </Text>
+                  </View>
+                </ScrollView>
+
+                {/* Botones de acción */}
+                <View style={styles.modalActions}>
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={handleCloseEditModal}
+                  >
+                    <Text style={styles.cancelButtonText}>Cancelar</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.saveButton,
+                      isSaveDisabled && styles.disabledButton,
+                    ]}
+                    onPress={handleSaveEdit}
+                    disabled={isSaveDisabled}
+                  >
+                    {editLoading ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <>
+                        <MaterialCommunityIcons
+                          name="check"
+                          size={20}
+                          color="#fff"
+                        />
+                        <Text style={styles.buttonText}>Guardar</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                </View>
               </View>
-
-              {/* Nota sobre la imagen */}
-              <View style={styles.noteSection}>
-                <MaterialCommunityIcons name="information" size={20} color="#666" />
-                <Text style={styles.noteText}>
-                  Nota: La imagen no se puede editar. Si necesitas cambiar la imagen, elimina esta publicación y crea una nueva.
-                </Text>
-              </View>
-            </ScrollView>
-
-            {/* Botones de acción */}
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={handleCloseEditModal}
-              >
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.saveButton, isSaveDisabled && styles.disabledButton]}
-                onPress={handleSaveEdit}
-                disabled={isSaveDisabled}
-              >
-                {editLoading ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <>
-                    <MaterialCommunityIcons name="check" size={20} color="#fff" />
-                    <Text style={styles.buttonText}>Guardar</Text>
-                  </>
-                )}
-              </TouchableOpacity>
             </View>
-          </View>
-        </View>
-        );
+          );
         })()}
       </Modal>
     </View>
@@ -568,27 +738,27 @@ export default function ArtesanoPublications() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
   },
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    color: '#666',
+    color: "#666",
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: "#e0e0e0",
   },
   backButton: {
     padding: 8,
@@ -599,12 +769,12 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
   },
   headerSubtitle: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginTop: 2,
   },
   addButton: {
@@ -619,199 +789,199 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 40,
     paddingVertical: 60,
   },
   emptyText: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#666',
+    fontWeight: "600",
+    color: "#666",
     marginTop: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#999',
+    color: "#999",
     marginTop: 8,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 20,
   },
   createButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#9D046D',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#9D046D",
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 25,
   },
   createButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginLeft: 8,
   },
   gridItem: {
     width: imageSize,
     height: imageSize,
     margin: 4,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 8,
-    overflow: 'hidden',
+    overflow: "hidden",
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
-    position: 'relative',
+    position: "relative",
   },
   gridImage: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   placeholderImage: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#f0f0f0",
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   thumbnailDeleteButton: {
-    position: 'absolute',
+    position: "absolute",
     top: 8,
     right: 8,
-    backgroundColor: 'rgba(220, 53, 69, 0.8)',
+    backgroundColor: "rgba(220, 53, 69, 0.8)",
     borderRadius: 12,
     width: 24,
     height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   overlay: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     right: 0,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: "rgba(0,0,0,0.6)",
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderTopLeftRadius: 8,
   },
   overlayContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   overlayText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 12,
     marginLeft: 4,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   footerLoader: {
     paddingVertical: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   // Estilos del modal
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
     zIndex: 1000,
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 20,
-    width: '90%',
-    maxHeight: '80%',
+    width: "90%",
+    maxHeight: "80%",
     elevation: 10,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 10,
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: "#e0e0e0",
   },
   headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
   },
   modalBody: {
     maxHeight: 400,
   },
   modalNavigation: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     padding: 15,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-    backgroundColor: '#f8f9fa',
+    borderTopColor: "#e0e0e0",
+    backgroundColor: "#f8f9fa",
   },
   navButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 15,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: "#e0e0e0",
   },
   navButtonDisabled: {
     opacity: 0.5,
   },
   navButtonText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     marginHorizontal: 5,
   },
   navButtonTextDisabled: {
-    color: '#ccc',
+    color: "#ccc",
   },
   modalImage: {
-    width: '100%',
+    width: "100%",
     height: 250,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: "#f0f0f0",
   },
   modalImagePlaceholder: {
-    width: '100%',
+    width: "100%",
     height: 250,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#f0f0f0",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalInfo: {
     padding: 20,
   },
   infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 15,
   },
   infoLabel: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     marginLeft: 10,
     marginRight: 10,
   },
   infoValue: {
     fontSize: 16,
-    color: '#666',
+    color: "#666",
     flex: 1,
   },
   textSection: {
@@ -819,44 +989,44 @@ const styles = StyleSheet.create({
   },
   textLabel: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     marginBottom: 8,
   },
   textContent: {
     fontSize: 15,
-    color: '#666',
+    color: "#666",
     lineHeight: 22,
   },
   modalActions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 20,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: "#e0e0e0",
     gap: 10,
   },
   editButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#9D046D',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#9D046D",
     paddingVertical: 12,
     borderRadius: 8,
   },
   deleteButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#81049D',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#81049D",
     paddingVertical: 12,
     borderRadius: 8,
   },
   buttonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginLeft: 8,
   },
   // Estilos del modal de edición
@@ -865,82 +1035,82 @@ const styles = StyleSheet.create({
   },
   editLabel: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     marginBottom: 8,
   },
   editTextInput: {
     minHeight: 100,
     borderWidth: 1,
-    borderColor: '#ced4da',
+    borderColor: "#ced4da",
     borderRadius: 8,
     padding: 15,
     fontSize: 16,
-    textAlignVertical: 'top',
-    backgroundColor: '#fff',
+    textAlignVertical: "top",
+    backgroundColor: "#fff",
   },
   characterCount: {
     fontSize: 12,
-    color: '#666',
-    textAlign: 'right',
+    color: "#666",
+    textAlign: "right",
     marginTop: 4,
   },
   noteSection: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#f8f9fa',
+    flexDirection: "row",
+    alignItems: "flex-start",
+    backgroundColor: "#f8f9fa",
     padding: 15,
     margin: 20,
     borderRadius: 8,
     borderLeftWidth: 4,
-    borderLeftColor: '#81049D',
+    borderLeftColor: "#81049D",
   },
   noteText: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginLeft: 10,
     flex: 1,
     lineHeight: 20,
   },
   cancelButton: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(235, 53, 20,0.9)',
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(235, 53, 20,0.9)",
     paddingVertical: 12,
     borderRadius: 8,
     marginRight: 5,
   },
   cancelButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   saveButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#9D046D',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#9D046D",
     paddingVertical: 12,
     borderRadius: 8,
     marginLeft: 5,
   },
   disabledButton: {
-    backgroundColor: '#6c757d',
+    backgroundColor: "#6c757d",
   },
-    fab: {
-    position: 'absolute',
+  fab: {
+    position: "absolute",
     width: 56,
     height: 56,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     right: 20,
     bottom: 20, // Se ajustará sobre el tab bar
-    backgroundColor: '#9D046D',
+    backgroundColor: "#9D046D",
     borderRadius: 28,
     elevation: 8,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
