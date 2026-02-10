@@ -1,31 +1,41 @@
 {
   "expo": {
     "name": "DöniApp",
-    "slug": "DöniApp",
+    "slug": "DoniApp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/LogoDöniAppOficial.png",
-    "scheme": "txapp",
+    "scheme": "doniapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    
     "ios": {
       "supportsTablet": true
     },
     "android": {
-      "networkSecurityConfig": "./network_security_config.xml",
       "intentFilters": [
-        { "action": "VIEW", "data": [{ "scheme": "https", "host": "*.txapp.example.com" }], "category": ["BROWSABLE", "DEFAULT"] }
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "https",
+              "host": "*.doniapp.example.com"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
       ],
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "foregroundImage": "",
+        "backgroundImage": "./assets/images/LogoDöniAppOficial.png",
+        "monochromeImage": ""
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.tx_app.txapp"
+      "package": "com.doniapp.doniapp"
     },
     "web": {
       "output": "static",
@@ -48,7 +58,6 @@
       ],
       "expo-web-browser",
       "expo-font"
-      
     ],
     "experiments": {
       "typedRoutes": true,
@@ -57,7 +66,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "40bdec8f-f7c6-4dc9-b483-4100d4e3324a"
+        "projectId": "557c3c56-05b6-42c6-90b3-0659c4b759c7"
       }
     }
   }
