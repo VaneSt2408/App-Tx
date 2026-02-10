@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   View,
   Text,
@@ -6,7 +7,6 @@ import {
   ScrollView,
   Linking,
   TouchableOpacity,
-  SafeAreaView,
   LayoutAnimation,
   Platform,
   UIManager,

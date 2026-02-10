@@ -1,5 +1,6 @@
 // En: app/(app)/ArtesanoProfileVistaVisitante.js -> Vista de perfil para visitantes
 import React, { useState, useEffect, useCallback } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   View,
   Text as DefaultText,
@@ -7,7 +8,6 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
-  SafeAreaView,
   Dimensions,
   Alert,
   RefreshControl,

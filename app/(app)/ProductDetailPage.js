@@ -4,6 +4,7 @@
 
 // Importaciones (Añadir FlatList y Dimensions)
 import React, { useState, useEffect, useCallback } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   View,
   Text as DefaultText,
@@ -18,7 +19,6 @@ import {
   Linking,
   Share,
   Dimensions,
-  SafeAreaView,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import BackButton from "../../components/BackButton";
@@ -296,319 +296,322 @@ export default function ProductDetailPage() {
 
   return (
     <>
-      <SafeAreaView style={{ backgroundColor: "#fff" }} />
-      <View style={styles.container}>
-        {/* Botón de retroceso flotante */}
-        <View style={styles.floatingBackButton}>
-          <BackButton color="#333" />
-        </View>
-        <ScrollView
-          style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={["#9D046D"]}
-            />
-          }
-        >
-          {/* Imagen del Producto */}
-          <View style={styles.imageContainer}>
-            {imageGallery.length > 0 ? (
-              <>
-                <GestureFlatList
-                  data={imageGallery}
-                  renderItem={({ item }) => (
-                    <Image
-                      source={{ uri: item.imagen_url }}
-                      style={styles.image}
-                      resizeMode="cover"
-                    />
-                  )}
-                  keyExtractor={(item) => item.id.toString()}
-                  horizontal
-                  pagingEnabled
-                  showsHorizontalScrollIndicator={false}
-                  onViewableItemsChanged={onViewableItemsChanged}
-                  viewabilityConfig={{
-                    itemVisiblePercentThreshold: 50,
-                  }}
-                />
-                <View style={styles.pagination}>
-                  {imageGallery.map((_, index) => (
-                    <View
-                      key={index}
-                      style={[
-                        styles.dot,
-                        index === activeIndex ? styles.dotActive : {},
-                      ]}
-                    />
-                  ))}
-                </View>
-              </>
-            ) : (
-              <View style={[styles.image, styles.imagePlaceholder]}>
-                <MaterialCommunityIcons
-                  name="image-off"
-                  size={80}
-                  color="#ccc"
-                />
-              </View>
-            )}
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+        <View style={styles.container}>
+          {/* Botón de retroceso flotante */}
+          <View style={styles.floatingBackButton}>
+            <BackButton color="#333" />
           </View>
-
-          {/* Contenido Principal */}
-          <View style={styles.content}>
-            {/* Precio */}
-            <Text style={styles.price}>{formatPrice(product.precio)}</Text>
-
-            {/* Título */}
-            <Text style={styles.title}>{product.nombre}</Text>
-
-            {/* Disponibilidad */}
-            <View style={styles.availabilityContainer}>
-              <MaterialCommunityIcons
-                name={
-                  product.estado === "activo"
-                    ? "check-circle"
-                    : product.estado === "vendido"
-                      ? "alert-circle-outline"
-                      : "close-circle"
-                }
-                size={20}
-                color={
-                  product.estado === "activo"
-                    ? "#4caf50"
-                    : product.estado === "vendido"
-                      ? "#e5be01"
-                      : "#f44336"
-                }
+          <ScrollView
+            style={styles.scrollView}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={["#9D046D"]}
               />
-              <Text
-                style={[
-                  styles.availabilityText,
-                  {
-                    color:
-                      product.estado === "activo"
-                        ? "#4caf50"
-                        : product.estado === "vendido"
-                          ? "#e5be01"
-                          : "#f44336",
-                  },
-                ]}
-              >
-                {product.estado === "activo"
-                  ? "Publicación disponible"
-                  : product.estado === "vendido"
-                    ? "Publicación pausada"
-                    : "Publicación detenida"}
-              </Text>
-            </View>
-
-            {/* Stock Disponible */}
-            {product.estado === "activo" &&
-              product.stock !== null &&
-              product.stock > 0 && (
-                <View style={styles.availabilityContainer}>
-                  <MaterialCommunityIcons
-                    name="package-variant-closed"
-                    size={20}
-                    color="#6200ea"
+            }
+          >
+            {/* Imagen del Producto */}
+            <View style={styles.imageContainer}>
+              {imageGallery.length > 0 ? (
+                <>
+                  <GestureFlatList
+                    data={imageGallery}
+                    renderItem={({ item }) => (
+                      <Image
+                        source={{ uri: item.imagen_url }}
+                        style={styles.image}
+                        resizeMode="cover"
+                      />
+                    )}
+                    keyExtractor={(item) => item.id.toString()}
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                    onViewableItemsChanged={onViewableItemsChanged}
+                    viewabilityConfig={{
+                      itemVisiblePercentThreshold: 50,
+                    }}
                   />
-                  <Text style={[styles.availabilityText, { color: "#6200ea" }]}>
-                    {product.stock}{" "}
-                    {product.stock === 1
-                      ? "unidad disponible"
-                      : "unidades disponibles"}
-                  </Text>
+                  <View style={styles.pagination}>
+                    {imageGallery.map((_, index) => (
+                      <View
+                        key={index}
+                        style={[
+                          styles.dot,
+                          index === activeIndex ? styles.dotActive : {},
+                        ]}
+                      />
+                    ))}
+                  </View>
+                </>
+              ) : (
+                <View style={[styles.image, styles.imagePlaceholder]}>
+                  <MaterialCommunityIcons
+                    name="image-off"
+                    size={80}
+                    color="#ccc"
+                  />
                 </View>
               )}
+            </View>
 
-            {/* Tipo de Venta */}
-            {product.min_may && (
+            {/* Contenido Principal */}
+            <View style={styles.content}>
+              {/* Precio */}
+              <Text style={styles.price}>{formatPrice(product.precio)}</Text>
+
+              {/* Título */}
+              <Text style={styles.title}>{product.nombre}</Text>
+
+              {/* Disponibilidad */}
               <View style={styles.availabilityContainer}>
                 <MaterialCommunityIcons
-                  name="storefront-outline"
+                  name={
+                    product.estado === "activo"
+                      ? "check-circle"
+                      : product.estado === "vendido"
+                        ? "alert-circle-outline"
+                        : "close-circle"
+                  }
                   size={20}
-                  color="#333"
+                  color={
+                    product.estado === "activo"
+                      ? "#4caf50"
+                      : product.estado === "vendido"
+                        ? "#e5be01"
+                        : "#f44336"
+                  }
                 />
-                <Text style={[styles.availabilityText, { color: "#333" }]}>
-                  {product.min_may === "minoreo"
-                    ? "Venta por minoreo"
-                    : product.min_may === "mayoreo"
-                      ? "Venta por mayoreo"
-                      : "Venta minorista y mayorista"}
+                <Text
+                  style={[
+                    styles.availabilityText,
+                    {
+                      color:
+                        product.estado === "activo"
+                          ? "#4caf50"
+                          : product.estado === "vendido"
+                            ? "#e5be01"
+                            : "#f44336",
+                    },
+                  ]}
+                >
+                  {product.estado === "activo"
+                    ? "Publicación disponible"
+                    : product.estado === "vendido"
+                      ? "Publicación pausada"
+                      : "Publicación detenida"}
                 </Text>
               </View>
-            )}
 
-            {/* Botones de Acción */}
-            <View style={styles.actionsContainer}>
-              {role === "cliente" && (
-                <TouchableOpacity
-                  style={[
-                    styles.actionButton,
-                    styles.saveButton,
-                    saved && styles.savedButton,
-                  ]}
-                  onPress={handleSave}
-                >
+              {/* Stock Disponible */}
+              {product.estado === "activo" &&
+                product.stock !== null &&
+                product.stock > 0 && (
+                  <View style={styles.availabilityContainer}>
+                    <MaterialCommunityIcons
+                      name="package-variant-closed"
+                      size={20}
+                      color="#6200ea"
+                    />
+                    <Text
+                      style={[styles.availabilityText, { color: "#6200ea" }]}
+                    >
+                      {product.stock}{" "}
+                      {product.stock === 1
+                        ? "unidad disponible"
+                        : "unidades disponibles"}
+                    </Text>
+                  </View>
+                )}
+
+              {/* Tipo de Venta */}
+              {product.min_may && (
+                <View style={styles.availabilityContainer}>
                   <MaterialCommunityIcons
-                    name={saved ? "bookmark" : "bookmark-outline"}
+                    name="storefront-outline"
                     size={20}
-                    color={saved ? "#9D046D" : "#666"}
+                    color="#333"
                   />
-                  <Text
-                    style={[
-                      styles.actionButtonText,
-                      saved && styles.savedButtonText,
-                    ]}
-                  >
-                    {saved ? " " : " "}
+                  <Text style={[styles.availabilityText, { color: "#333" }]}>
+                    {product.min_may === "minoreo"
+                      ? "Venta por minoreo"
+                      : product.min_may === "mayoreo"
+                        ? "Venta por mayoreo"
+                        : "Venta minorista y mayorista"}
                   </Text>
-                </TouchableOpacity>
+                </View>
               )}
 
-              {/* Contactar al artesano */}
-              <TouchableOpacity
-                style={[styles.actionButton, styles.contactButton]}
-                onPress={handleContact}
-              >
-                <MaterialCommunityIcons name="phone" size={20} color="#fff" />
-                <Text style={styles.contactButtonText}>Contactar</Text>
-              </TouchableOpacity>
-
-              {/* Compartir */}
-              <TouchableOpacity
-                style={[styles.actionButton, styles.shareButton]}
-                onPress={handleShare}
-              >
-                <MaterialCommunityIcons
-                  name="share-variant-outline"
-                  size={20}
-                  color="#29297A"
-                />
-              </TouchableOpacity>
-
-              {/* Me gusta / like */}
-              <TouchableOpacity
-                style={[styles.actionButton, styles.shareButton]}
-                onPress={() => handleLike(product.id ?? productId)}
-              >
-                <MaterialCommunityIcons
-                  name={isLiked ? "heart" : "heart-outline"}
-                  size={20}
-                  color="#FF69B4"
-                />
-                <Text style={styles.likeCountText}>{likesCount}</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Separador */}
-            <View style={styles.separator} />
-
-            {/* Descripción */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Descripción</Text>
-              <Text style={styles.description}>{product.descripcion}</Text>
-            </View>
-
-            {/* Separador */}
-            <View style={styles.separator} />
-
-            {/* Categoría */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Categoría</Text>
-              <View style={styles.categoryTag}>
-                <MaterialCommunityIcons
-                  name="tag-outline"
-                  size={16}
-                  color="#9D046D"
-                />
-                <Text style={styles.categoryText}>
-                  {product.categoria || "General"}
-                </Text>
-              </View>
-            </View>
-
-            {/* Separador */}
-            <View style={styles.separator} />
-
-            {/* Información del Artesano */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Artesano</Text>
-              <TouchableOpacity
-                style={styles.artesanoCard}
-                onPress={handleArtesanoPress}
-                activeOpacity={0.7}
-              >
-                <View style={styles.artesanoAvatar}>
-                  {product.artesano.avatar_url ? (
-                    <Image
-                      source={{ uri: product.artesano.avatar_url }}
-                      style={styles.avatarImage}
+              {/* Botones de Acción */}
+              <View style={styles.actionsContainer}>
+                {role === "cliente" && (
+                  <TouchableOpacity
+                    style={[
+                      styles.actionButton,
+                      styles.saveButton,
+                      saved && styles.savedButton,
+                    ]}
+                    onPress={handleSave}
+                  >
+                    <MaterialCommunityIcons
+                      name={saved ? "bookmark" : "bookmark-outline"}
+                      size={20}
+                      color={saved ? "#9D046D" : "#666"}
                     />
-                  ) : (
-                    <View style={styles.avatarPlaceholder}>
-                      <MaterialCommunityIcons
-                        name="account"
-                        size={32}
-                        color="#666"
-                      />
-                    </View>
-                  )}
-                </View>
-                <View style={styles.artesanoInfo}>
-                  <Text style={styles.artesanoName}>
-                    {product.artesano.nombre}
-                  </Text>
-                  {product.artesano.categoria && (
-                    <Text style={styles.artesanoCategory}>
-                      {product.artesano.categoria}
+                    <Text
+                      style={[
+                        styles.actionButtonText,
+                        saved && styles.savedButtonText,
+                      ]}
+                    >
+                      {saved ? " " : " "}
                     </Text>
-                  )}
-                </View>
-                <MaterialCommunityIcons
-                  name="chevron-right"
-                  size={24}
-                  color="#9D046D"
-                />
-              </TouchableOpacity>
-            </View>
+                  </TouchableOpacity>
+                )}
 
-            {/* Separador */}
-            <View style={styles.separator} />
-
-            {/* Ubicación */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Ubicación</Text>
-              {/* Lógica de ubicación unificada para que el nombre sea el enlace */}
-              {product?.artesano?.link_ubicacion &&
-              product?.artesano?.ubicacion ? (
+                {/* Contactar al artesano */}
                 <TouchableOpacity
-                  style={styles.infoRow}
-                  onPress={() =>
-                    Linking.openURL(product.artesano.link_ubicacion)
-                  }
+                  style={[styles.actionButton, styles.contactButton]}
+                  onPress={handleContact}
+                >
+                  <MaterialCommunityIcons name="phone" size={20} color="#fff" />
+                  <Text style={styles.contactButtonText}>Contactar</Text>
+                </TouchableOpacity>
+
+                {/* Compartir */}
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.shareButton]}
+                  onPress={handleShare}
                 >
                   <MaterialCommunityIcons
-                    name="map-marker-outline"
-                    size={16}
-                    color="#ED2100"
+                    name="share-variant-outline"
+                    size={20}
+                    color="#29297A"
                   />
-                  <Text style={[styles.infoText, styles.linkText]}>
-                    {product.artesano.ubicacion}
-                  </Text>
                 </TouchableOpacity>
-              ) : null}
-            </View>
 
-            {/* Espaciado inferior */}
-            <View style={styles.bottomSpacer} />
-          </View>
-        </ScrollView>
-      </View>
+                {/* Me gusta / like */}
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.shareButton]}
+                  onPress={() => handleLike(product.id ?? productId)}
+                >
+                  <MaterialCommunityIcons
+                    name={isLiked ? "heart" : "heart-outline"}
+                    size={20}
+                    color="#FF69B4"
+                  />
+                  <Text style={styles.likeCountText}>{likesCount}</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Separador */}
+              <View style={styles.separator} />
+
+              {/* Descripción */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Descripción</Text>
+                <Text style={styles.description}>{product.descripcion}</Text>
+              </View>
+
+              {/* Separador */}
+              <View style={styles.separator} />
+
+              {/* Categoría */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Categoría</Text>
+                <View style={styles.categoryTag}>
+                  <MaterialCommunityIcons
+                    name="tag-outline"
+                    size={16}
+                    color="#9D046D"
+                  />
+                  <Text style={styles.categoryText}>
+                    {product.categoria || "General"}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Separador */}
+              <View style={styles.separator} />
+
+              {/* Información del Artesano */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Artesano</Text>
+                <TouchableOpacity
+                  style={styles.artesanoCard}
+                  onPress={handleArtesanoPress}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.artesanoAvatar}>
+                    {product.artesano.avatar_url ? (
+                      <Image
+                        source={{ uri: product.artesano.avatar_url }}
+                        style={styles.avatarImage}
+                      />
+                    ) : (
+                      <View style={styles.avatarPlaceholder}>
+                        <MaterialCommunityIcons
+                          name="account"
+                          size={32}
+                          color="#666"
+                        />
+                      </View>
+                    )}
+                  </View>
+                  <View style={styles.artesanoInfo}>
+                    <Text style={styles.artesanoName}>
+                      {product.artesano.nombre}
+                    </Text>
+                    {product.artesano.categoria && (
+                      <Text style={styles.artesanoCategory}>
+                        {product.artesano.categoria}
+                      </Text>
+                    )}
+                  </View>
+                  <MaterialCommunityIcons
+                    name="chevron-right"
+                    size={24}
+                    color="#9D046D"
+                  />
+                </TouchableOpacity>
+              </View>
+
+              {/* Separador */}
+              <View style={styles.separator} />
+
+              {/* Ubicación */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Ubicación</Text>
+                {/* Lógica de ubicación unificada para que el nombre sea el enlace */}
+                {product?.artesano?.link_ubicacion &&
+                product?.artesano?.ubicacion ? (
+                  <TouchableOpacity
+                    style={styles.infoRow}
+                    onPress={() =>
+                      Linking.openURL(product.artesano.link_ubicacion)
+                    }
+                  >
+                    <MaterialCommunityIcons
+                      name="map-marker-outline"
+                      size={16}
+                      color="#ED2100"
+                    />
+                    <Text style={[styles.infoText, styles.linkText]}>
+                      {product.artesano.ubicacion}
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+
+              {/* Espaciado inferior */}
+              <View style={styles.bottomSpacer} />
+            </View>
+          </ScrollView>
+        </View>
+      </SafeAreaView>
 
       {/* Modal de Contacto */}
       <Modal

@@ -1,12 +1,12 @@
 // Este documento de Términos y Condiciones fue redactado específicamente para AppTx.
 // No está basado en ningún texto externo y es propiedad exclusiva del equipo de desarrollo.
 import React from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  SafeAreaView,
   TouchableOpacity,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
