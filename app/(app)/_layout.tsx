@@ -86,6 +86,8 @@ export default function AppLayout() {
         <Stack.Screen name="gestionCuentaCliente" options={{ headerShown: false }} />
 
         {/* Rutas Comunes y de Ajustes */}
+        <Stack.Screen name="perfilcliente" options={{ headerShown: false }} />
+        <Stack.Screen name="ArtesanoProfileVistaVisitante" options={{ headerShown: false }} />
         <Stack.Screen name="AppSettings" options={{ headerShown: false }} />
         <Stack.Screen name="ayudaSoporte" options={{ headerShown: false }} />
         <Stack.Screen name="TerminoCondiciones" options={{ headerShown: false }} />
